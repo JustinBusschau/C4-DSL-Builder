@@ -7,7 +7,7 @@ jest.mock('configstore');
 jest.mock('./logger');
 
 describe('config.ts', () => {
-  const mockConfigstore = Configstore as jest.MockedClass<typeof Configstore>;
+  const mockConfigstore = Configstore;
   const mockLogger = logger as jest.Mocked<typeof logger>;
 
   beforeEach(() => {
@@ -116,7 +116,7 @@ describe('config.ts', () => {
 });
 
 describe('setConfig', () => {
-  const mockConfigstore = Configstore as jest.MockedClass<typeof Configstore>;
+  const mockConfigstore = Configstore;
   const mockLogger = logger as jest.Mocked<typeof logger>;
 
   beforeEach(() => {
@@ -151,7 +151,7 @@ describe('setConfig', () => {
 });
 
 describe('deleteConfig', () => {
-  const mockConfigstore = Configstore as jest.MockedClass<typeof Configstore>;
+  const mockConfigstore = Configstore;
   const mockLogger = logger as jest.Mocked<typeof logger>;
 
   beforeEach(() => {
