@@ -18,7 +18,7 @@ const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: st
     },
   }) as unknown as Configstore;
 
-  describe('cmdDsl', () => {
+describe('cmdDsl', () => {
   const mockedChildProcess = childProcess as jest.Mocked<typeof childProcess>;
   const mockedFs = fsModule as jest.Mocked<typeof fsModule>;
 
