@@ -1,7 +1,7 @@
 import Configstore from 'configstore';
-import { logger } from './logger';
+import { logger } from './logger.js';
 import path from 'path';
-import { getStrConfig, getBoolConfig, setConfig, deleteConfig } from './config';
+import { getStrConfig, getBoolConfig, setConfig, deleteConfig } from './config.js';
 
 jest.mock('configstore');
 jest.mock('./logger');

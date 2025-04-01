@@ -9,9 +9,9 @@ import {
   safeReadFile,
   safeCopyFile,
   safeEnsureDir,
-} from './tree';
+} from './tree.js';
 import Configstore from 'configstore';
-import { logger as mockLogger } from './logger';
+import { logger as mockLogger } from './logger.js';
 
 jest.mock('fs', () => ({
   promises: {
@@ -151,7 +151,7 @@ describe('tree.ts', () => {
         .mockResolvedValueOnce({ isDirectory: () => false });
       (fs.readFile as jest.Mock).mockResolvedValue(Buffer.from('file contents'));
 
-      const tree = await generateTree('/root', mockConfigstore);
+      const tree = await generateTree('/root');
 
       expect(tree).toEqual([
         {
@@ -177,7 +177,7 @@ describe('tree.ts', () => {
 
     it('should handle empty directories gracefully', async () => {
       (fs.readdir as jest.Mock).mockResolvedValue([]);
-      const tree = await generateTree('/root', mockConfigstore);
+      const tree = await generateTree('/root');
       expect(tree).toEqual([
         {
           dir: '/root',

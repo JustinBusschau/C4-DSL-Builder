@@ -46,7 +46,7 @@ describe('cmdConfig', () => {
   });
 
   it('prompts user for config values and saves them to configstore', async () => {
-    await cmdConfigModule.cmdConfig(mockConfig);
+    await cmdConfigModule.cmdConfig();
 
     Object.entries(mockAnswers).forEach(([key, value]) => {
       expect(setMock).toHaveBeenCalledWith(key, value);
@@ -63,7 +63,7 @@ describe('cmdConfig', () => {
       return undefined;
     });
 
-    await cmdConfigModule.cmdConfig(mockConfig);
+    await cmdConfigModule.cmdConfig();
 
     expect(inquirer.prompt).toHaveBeenCalled();
   });
@@ -111,7 +111,7 @@ describe('cmdConfig', () => {
 
       (inquirer.prompt as unknown as jest.Mock).mockResolvedValue(answersWithMissingOptionals);
 
-      await cmdConfigModule.cmdConfig(mockConfig);
+      await cmdConfigModule.cmdConfig();
 
       expect(setMock).toHaveBeenCalledWith('docsifyTemplate', '');
       expect(setMock).toHaveBeenCalledWith('pdfCss', '');
@@ -123,7 +123,7 @@ describe('cmdConfig', () => {
         return mockAnswers[key as keyof typeof mockAnswers];
       });
 
-      await cmdConfigModule.cmdConfig(mockConfig);
+      await cmdConfigModule.cmdConfig();
 
       expect(setMock).toHaveBeenCalledWith('dslCli', 'structurizr-cli');
     });
@@ -134,7 +134,7 @@ describe('cmdConfig', () => {
         return mockAnswers[key as keyof typeof mockAnswers];
       });
 
-      await cmdConfigModule.cmdConfig(mockConfig);
+      await cmdConfigModule.cmdConfig();
 
       expect(setMock).toHaveBeenCalledWith('workspaceDsl', 'workspace.dsl');
     });
@@ -145,7 +145,7 @@ describe('cmdConfig', () => {
         return mockAnswers[key as keyof typeof mockAnswers];
       });
 
-      await cmdConfigModule.cmdConfig(mockConfig);
+      await cmdConfigModule.cmdConfig();
 
       expect(setMock).toHaveBeenCalledWith('charset', 'utf-8');
     });

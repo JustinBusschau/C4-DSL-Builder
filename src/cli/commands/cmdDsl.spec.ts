@@ -31,9 +31,8 @@ const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: st
 
   it('should log error and return if workspace.dsl does not exist', () => {
     fsExistsMock.mockReturnValue(false);
-    const config = mockConfig('structurizr-cli', 'src', 'workspace.dsl');
 
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.error).toHaveBeenCalledWith('Workspace file not found: src/_dsl/workspace.dsl');
     expect(logger.log).toHaveBeenCalledWith(
@@ -44,9 +43,8 @@ const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: st
 
   it('should run structurizr-cli locally if dslCli is "structurizr-cli"', () => {
     fsExistsMock.mockReturnValue(true);
-    const config = mockConfig('structurizr-cli', 'src', 'workspace.dsl');
 
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.log).toHaveBeenCalledWith('Using local structurizr-cli...');
     expect(execSyncMock).toHaveBeenCalledWith(
@@ -57,9 +55,8 @@ const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: st
 
   it('should pull and run docker command if dslCli is "docker"', () => {
     fsExistsMock.mockReturnValue(true);
-    const config = mockConfig('docker', 'src', 'workspace.dsl');
 
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.log).toHaveBeenCalledWith('Using Dockerized structurizr-cli...');
     expect(execSyncMock).toHaveBeenCalledWith('docker pull structurizr/cli:latest', {
@@ -73,9 +70,8 @@ const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: st
 
   it('should handle unknown dslCli value', () => {
     fsExistsMock.mockReturnValue(true);
-    const config = mockConfig('something-weird', 'src', 'workspace.dsl');
 
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.error).toHaveBeenCalledWith(
       "Unknown dslCli config setting: something-weird. Please set it to 'structurizr-cli' or 'docker'.",
@@ -85,9 +81,8 @@ const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: st
 
   it('should handle missing dslCli config gracefully', () => {
     fsExistsMock.mockReturnValue(true);
-    const config = mockConfig(undefined, 'src', 'workspace.dsl');
 
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.error).toHaveBeenCalledWith(
       "Unknown dslCli config setting: undefined. Please set it to 'structurizr-cli' or 'docker'.",
@@ -97,12 +92,11 @@ const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: st
 
   it('should log error if execSync throws an Error', () => {
     fsExistsMock.mockReturnValue(true);
-    const config = mockConfig('structurizr-cli', 'src', 'workspace.dsl');
     execSyncMock.mockImplementation(() => {
       throw new Error('mock exec failure');
     });
 
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.error).toHaveBeenCalledWith('Failed to execute DSL command.');
     expect(logger.error).toHaveBeenCalledWith('mock exec failure');
@@ -110,29 +104,24 @@ const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: st
 
   it('should log error if execSync throws non-Error', () => {
     fsExistsMock.mockReturnValue(true);
-    const config = mockConfig('structurizr-cli', 'src', 'workspace.dsl');
     execSyncMock.mockImplementation(() => {
       throw new Error(String('non-error exception'));
     });
 
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.error).toHaveBeenCalledWith('Failed to execute DSL command.');
   });
 
   it('should log error if rootFolder is missing', () => {
-    const config = mockConfig('docker', undefined, 'workspace.dsl');
-
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.error).toHaveBeenCalledWith('Failed to execute DSL command.');
     expect(execSyncMock).toHaveBeenCalled();
   });
 
   it('should log error if workspaceDsl is missing', () => {
-    const config = mockConfig('docker', 'src');
-
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.error).toHaveBeenCalledWith('Failed to execute DSL command.');
     expect(execSyncMock).toHaveBeenCalled();
@@ -140,9 +129,8 @@ const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: st
 
   it('should treat whitespace-only dslCli as unknown', () => {
     fsExistsMock.mockReturnValue(true);
-    const config = mockConfig('   ', 'src', 'workspace.dsl');
 
-    cmdDsl(config);
+    cmdDsl();
 
     expect(logger.error).toHaveBeenCalledWith(
       "Unknown dslCli config setting: . Please set it to 'structurizr-cli' or 'docker'.",

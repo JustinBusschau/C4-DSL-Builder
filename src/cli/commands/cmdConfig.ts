@@ -1,4 +1,4 @@
-import Configstore from 'configstore';
+import { getStrConfig, getBoolConfig, setConfig } from '../utilities/config.js';
 import inquirer from 'inquirer';
 import { logger } from '../utilities/logger.js';
 import chalk from 'chalk';
@@ -39,7 +39,7 @@ export function isValidUrl(input: string): string | boolean {
   }
 }
 
-export async function cmdConfig(config: Configstore): Promise<void> {
+export async function cmdConfig(): Promise<void> {
   logger.log(chalk.cyan('Configure your project settings:\n'));
 
   const answers = await inquirer.prompt<ConfigAnswers>([
@@ -47,106 +47,106 @@ export async function cmdConfig(config: Configstore): Promise<void> {
       type: 'input',
       name: 'projectName',
       message: 'Project name:',
-      default: String(config.get('projectName')),
+      default: getStrConfig('projectName'),
       validate: isValidProjectName,
     },
     {
       type: 'input',
       name: 'homepageName',
       message: 'Homepage name:',
-      default: String(config.get('homepageName') ?? 'Overview'),
+      default: getStrConfig('homepageName') ?? 'Overview',
     },
     {
       type: 'input',
       name: 'rootFolder',
       message: 'Root folder:',
-      default: String(config.get('rootFolder') ?? 'src'),
+      default: getStrConfig('rootFolder') ?? 'src',
     },
     {
       type: 'input',
       name: 'distFolder',
       message: 'Destination folder:',
-      default: String(config.get('distFolder') ?? 'docs'),
+      default: getStrConfig('distFolder') ?? 'docs',
     },
     {
       type: 'confirm',
       name: 'generateWebsite',
       message: 'Generate website?',
-      default: Boolean(config.get('generateWebsite') ?? false),
+      default: getBoolConfig('generateWebsite') ?? false,
     },
     {
       type: 'input',
       name: 'webTheme',
       message: 'Website Docsify theme (URL):',
-      default: String(config.get('webTheme') ?? 'https://unpkg.com/docsify/lib/themes/vue.css'),
+      default: getStrConfig('webTheme') ?? 'https://unpkg.com/docsify/lib/themes/vue.css',
       validate: isValidUrl,
     },
     {
       type: 'input',
       name: 'docsifyTemplate',
       message: 'Path to a specific Docsify template:',
-      default: String(config.get('docsifyTemplate') ?? ''),
+      default: getStrConfig('docsifyTemplate') ?? '',
     },
     {
       type: 'input',
       name: 'repoName',
       message: 'Repository URL:',
-      default: String(config.get('repoName') ?? ''),
+      default: getStrConfig('repoName') ?? '',
       validate: isValidUrl,
     },
     {
       type: 'confirm',
       name: 'embedDiagram',
       message: 'Embed diagrams?',
-      default: Boolean(config.get('embedDiagram') ?? false),
+      default: getBoolConfig('embedDiagram') ?? false,
     },
     {
       type: 'confirm',
       name: 'includeLinkToDiagram',
       message: 'Replace diagrams with a link?',
-      default: Boolean(config.get('includeLinkToDiagram') ?? false),
+      default: getBoolConfig('includeLinkToDiaram') ?? false,
     },
     {
       type: 'confirm',
       name: 'diagramsOnTop',
       message: 'Place diagrams before text?',
-      default: Boolean(config.get('diagramsOnTop') ?? false),
+      default: getBoolConfig('diagramsOnTop') ?? false,
     },
     {
       type: 'list',
       name: 'dslCli',
       message: 'Which Structurizr CLI would you prefer to use:',
       choices: ['structurizr-cli', 'docker'],
-      default: config.get('dslCli') ?? 'structurizr-cli',
+      default: getStrConfig('dslCli') ?? 'structurizr-cli',
     },
     {
       type: 'input',
       name: 'workspaceDsl',
       message: 'Where should the Structurizr CLI start looking when exporting diagrams:',
-      default: String(config.get('workspaceDsl') ?? 'workspace.dsl'),
+      default: getStrConfig('workspaceDsl') ?? 'workspace.dsl',
     },
     {
       type: 'input',
       name: 'charset',
       message: 'Character set (e.g., utf-8):',
-      default: String(config.get('charset') ?? 'utf-8'),
+      default: getStrConfig('charset') ?? 'utf-8',
     },
     {
       type: 'confirm',
       name: 'excludeOtherFiles',
       message: 'Exclude other files?',
-      default: Boolean(config.get('excludeOtherFiles') ?? false),
+      default: getBoolConfig('excludeOtherFile') ?? false,
     },
     {
       type: 'input',
       name: 'pdfCss',
       message: 'PDF CSS file path:',
-      default: String(config.get('pdfCss') ?? ''),
+      default: getStrConfig('pdfCss') ?? '',
     },
   ]);
 
   Object.entries(answers).forEach(([key, value]) => {
-    config.set(key, value);
+    setConfig(key, String(value));
   });
 
   logger.log(chalk.green('\n✅ Configuration updated successfully.'));

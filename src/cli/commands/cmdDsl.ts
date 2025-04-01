@@ -2,12 +2,12 @@ import { execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { logger } from '../utilities/logger.js';
-import Configstore from 'configstore';
+import { getStrConfig } from '../utilities/config.js';
 
-export const cmdDsl = (config: Configstore) => {
-  const dslCli = String(config.get('dslCli')).trim();
-  const rootFolder = String(config.get('rootFolder') ?? 'src');
-  const workspaceDsl = String(config.get('workspaceDsl') ?? 'workspace.dsl');
+export const cmdDsl = () => {
+  const dslCli = getStrConfig('dslCli').trim();
+  const rootFolder = getStrConfig('rootFolder') ?? 'src';
+  const workspaceDsl = getStrConfig('workspaceDsl') ?? 'workspace.dsl';
 
   const workspacePath = path.join(rootFolder, '_dsl', workspaceDsl);
   const outputPath = path.join(rootFolder, 'diagrams');

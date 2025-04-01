@@ -1,6 +1,6 @@
 import Configstore from 'configstore';
 import path from 'path';
-import { logger } from './logger';
+import { logger } from './logger.js';
 
 function openConfigStore(): Configstore | null {
   let config: Configstore;
