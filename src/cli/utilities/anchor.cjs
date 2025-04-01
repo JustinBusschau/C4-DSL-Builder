@@ -1,0 +1,1 @@
+MediaSourceHandle.exports = __dirname;

@@ -1,0 +1,61 @@
+{
+  "name": "c4dslbuilder",
+  "version": "0.0.1",
+  "description": "A CLI tool designed to compile a folder structure of markdowns and mermaid files into a site, pdf, single file markdown or a collection of markdowns with links - inspired by c4builder",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "c4dslbuilder": "./index.js"
+  },
+  "homepage": "https://JustinBusschau.github.io/C4-DSL-Builder/",
+  "bugs": {
+    "url": "https://github.com/JustinBusschau/C4-DSL-Builder/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JustinBusschau/C4-DSL-Builder.git"
+  },
+  "scripts": {
+    "clean": "rimraf coverage lib",
+    "build": "npm run clean && tsc -p .",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "test": "jest",
+    "test:cov": "jest --coverage",
+    "local": "npm run clean && npm run format && npm run build && npm run lint && npm run test && npm i -g && c4dslbuilder"
+  },
+  "keywords": [
+    "C4",
+    "C4Model",
+    "Architecture",
+    "Mermaid",
+    "Markdown",
+    "Documentation",
+    "Software Architecture",
+    "PDF",
+    "Generator"
+  ],
+  "author": "Justin Busschau",
+  "license": "MIT",
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "^10.9.1",
+    "chalk": "^2.4.1",
+    "commander": "^11.1.0",
+    "conf": "^13.1.0",
+    "configstore": "^7.0.0",
+    "express": "^4.17.1",
+    "fs-extra": "^7.0.1",
+    "inquirer": "^8.2.2",
+    "joi": "^17.12.2",
+    "md-to-pdf": "^5.1.0",
+    "node-watch": "^0.6.3",
+    "zlib": "^1.0.5"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.17",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.1"
+  }
+}
