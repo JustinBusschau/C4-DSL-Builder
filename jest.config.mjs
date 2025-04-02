@@ -1,23 +1,21 @@
-import { readFileSync } from 'fs';
-import { parse } from 'jsonc-parser';
-const tsconfig = parse(
-  readFileSync(new URL('./tsconfig.json', import.meta.url), 'utf8')
-);
 export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { useESM: true }],
+    '^.+\\.tsx?$': ['ts-jest', { 
+      useESM: true,
+      tsconfig: './tsconfig.json'
+    }],
     '^.+\\.m?js$': 'ts-jest',
     '\\.(css|less|scss|sass|json)$': 'jest-transform-stub'
   },
   moduleNameMapper: {
-    '(.+)\\.js': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transformIgnorePatterns: [
     '/coverage/',
-    '/node_modules/(?!(unified|remark-parse|remark-stringify|unist-util-visit|mdast|micromark|configstore)/)',
+    '/node_modules/(?!(configstore|unified|remark-parse|remark-stringify|unist-util-visit|mdast|micromark)/)',
   ],
   testPathIgnorePatterns: [
     '/node_modules/',

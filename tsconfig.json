@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "types": ["node", "jest"],
     "declaration": true,
     "removeComments": true,
@@ -19,8 +20,9 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "isolatedModules": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "src/**/*.cjs"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
+  "include": ["src/**/*.ts", "**/*.spec.ts", "src/**/*.cjs"],
+  "exclude": ["node_modules"]
 }

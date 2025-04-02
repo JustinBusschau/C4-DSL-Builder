@@ -17,7 +17,7 @@
   },
   "scripts": {
     "clean": "rimraf coverage lib Example tsconfig.tsbuildinfo",
-    "build": "npm run clean && tsc -p . && copyfiles -u 1 'src/**/*.cjs' lib/",
+    "build": "npm run clean && tsc -p . && copyfiles -u 1 'src/**/*.{cjs,json}' lib/",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest",
