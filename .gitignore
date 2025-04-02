@@ -6,6 +6,7 @@ service.core*.*
 **/node_modules
 **/Example
 **/coverage
+*.tsbuildinfo
 
 # Logs
 logs

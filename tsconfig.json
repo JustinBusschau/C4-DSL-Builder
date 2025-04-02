@@ -9,7 +9,9 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "outDir": "./lib",
-    "baseUrl": "./",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,
@@ -18,5 +20,7 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "resolveJsonModule": true
-  }
+  },
+  "include": ["src/**/*.ts", "src/**/*.cjs"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }

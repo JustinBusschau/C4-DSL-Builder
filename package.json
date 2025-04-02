@@ -16,8 +16,8 @@
     "url": "https://github.com/JustinBusschau/C4-DSL-Builder.git"
   },
   "scripts": {
-    "clean": "rimraf coverage lib Example",
-    "build": "npm run clean && tsc -p .",
+    "clean": "rimraf coverage lib Example tsconfig.tsbuildinfo",
+    "build": "npm run clean && tsc -p . && copyfiles -u 1 'src/**/*.cjs' lib/",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest",
@@ -66,6 +66,7 @@
     "@types/node": "^22.13.17",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
+    "copyfiles": "^2.4.1",
     "eslint": "^9.23.0",
     "figlet": "^1.8.0",
     "jest": "^29.7.0",
