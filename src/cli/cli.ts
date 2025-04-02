@@ -1,4 +1,3 @@
-import clear from 'clear';
 import { setConfig, deleteConfig } from './utilities/config.js';
 import { logger } from './utilities/logger.js';
 import { Command } from 'commander';
@@ -25,7 +24,6 @@ export const registerCommands = () => {
     .command('new')
     .description('create a new project from template')
     .action(async () => {
-      clear();
       logger.log(getIntroText(pkg.version));
       await cmdNewProject();
     });
