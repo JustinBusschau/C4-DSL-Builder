@@ -6,13 +6,14 @@ import chalk from 'chalk';
 import { logger } from '../utilities/logger.js';
 import __dirname from '../utilities/anchor.cjs';
 
-export const isValidProjectName = (name: string): true | string => {
+export const isValidProjectName = async (name: string): Promise<boolean | string> => {
   if (!/^[a-zA-Z0-9_-]{2,}$/.test(name)) {
     return 'Name must be at least 2 characters and contain only letters, numbers, hyphens, or underscores';
   }
 
   const targetPath = path.resolve(process.cwd(), name);
-  if (fs.existsSync(targetPath)) {
+  const folderExists = await fs.pathExists(targetPath);
+  if (folderExists) {
     return 'A folder with this name already exists';
   }
 

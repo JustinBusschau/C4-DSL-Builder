@@ -23,6 +23,7 @@
     "test": "jest",
     "test:cov": "jest --coverage",
     "local": "npm run clean && npm run format && npm run build && echo 'npm run lint' && npm run test && npm i -g && c4dslbuilder",
+    "cli": "node ./lib/index.js",
     "i": "npm run build && npm run format && npm run lint && npm run test:cov && npm i -g"
   },
   "keywords": [
