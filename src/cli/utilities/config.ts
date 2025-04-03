@@ -13,12 +13,7 @@ function openConfigStore(): Configstore | null {
       },
     );
   } catch (error) {
-    if (error instanceof Error) {
-      logger.error(`Error accessing config store: ${error.message}`);
-    } else {
-      /* istanbul ignore next */
-      logger.error('Error accessing config store.');
-    }
+    logger.error('Error accessing config store.', error);
     return null;
   }
   return config;

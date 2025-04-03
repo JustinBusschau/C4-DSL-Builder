@@ -1,8 +1,12 @@
-import { getIntroText } from './intro.js';
+import { jest } from '@jest/globals';
 
-jest.mock('figlet', () => ({
-  textSync: jest.fn(() => '<<ASCII ART>>'),
+jest.unstable_mockModule('figlet', () => ({
+  default: {
+    textSync: () => '<<ASCII ART>>',
+  },
 }));
+
+const { getIntroText } = await import('./intro.js');
 
 describe('Intro', () => {
   it('should return formatted intro text with version', () => {

@@ -1,10 +1,12 @@
 import inquirer from 'inquirer';
 import path from 'path';
-import fs from 'fs-extra';
+import * as fs from 'fs-extra';
 import Configstore from 'configstore';
 import chalk from 'chalk';
 import { logger } from '../utilities/logger.js';
-import __dirname from '../utilities/anchor.cjs';
+import { getCurrentDir } from '../utilities/paths.js';
+
+const __dirname = getCurrentDir(import.meta.url);
 
 export const isValidProjectName = async (name: string): Promise<boolean | string> => {
   if (!/^[a-zA-Z0-9_-]{2,}$/.test(name)) {
@@ -53,11 +55,7 @@ export const cmdNewProject = async () => {
     logger.log(chalk.blue(`\nNext steps:`));
     logger.log(chalk.white(`  cd ${response.projectName}`));
     logger.log(chalk.white(`  c4dslbuilder config\n`));
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      logger.error(chalk.red(`Error creating project: ${error.message}`));
-    } else {
-      logger.error(chalk.red('An unknown error occurred during project creation.'));
-    }
+  } catch (error) {
+    logger.error('Error creating project.', error);
   }
 };

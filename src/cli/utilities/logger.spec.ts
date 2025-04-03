@@ -1,8 +1,12 @@
+import { jest } from '@jest/globals';
+import { SpyInstance } from 'jest-mock';
 import { logger } from './logger.js';
 import chalk from 'chalk';
 
 describe('logger', () => {
-  let stdoutSpy: jest.SpyInstance;
+  let stdoutSpy: SpyInstance<
+    (str: string | Uint8Array, encoding?: BufferEncoding, cb?: (err?: Error) => void) => boolean
+  >;
 
   beforeEach(() => {
     stdoutSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
@@ -44,6 +48,15 @@ describe('logger', () => {
     const output = getLastLoggedString();
     expect(output).toContain('[ERROR]');
     expect(output).toContain('Something went wrong!');
+    expect(output).toContain(chalk.red(''));
+  });
+
+  it('logs an error message with red color and ERROR label, and error message if present', () => {
+    logger.error('Something went wrong!', new Error('Error details'));
+    const output = getLastLoggedString();
+    expect(output).toContain('[ERROR]');
+    expect(output).toContain('Something went wrong!');
+    expect(output).toContain('Error details');
     expect(output).toContain(chalk.red(''));
   });
 

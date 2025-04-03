@@ -14,6 +14,7 @@ const config: JestConfigWithTsJest = {
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
+  detectOpenHandles: true,
 };
 
 export default config;

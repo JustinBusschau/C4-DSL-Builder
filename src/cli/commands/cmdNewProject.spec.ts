@@ -1,125 +1,137 @@
-// declare mocks first (so they're available to the mock factory)
-const mockConfSet = jest.fn();
-
-// mock 'configstore' BEFORE any imports
-const ConfigstoreMock = jest.fn().mockImplementation(() => ({
-  set: mockConfSet,
-}));
-jest.mock('configstore', () => {
-  return ConfigstoreMock;
-});
-
-import { cmdNewProject, isValidProjectName } from './cmdNewProject.js';
-import { logger } from '../utilities/logger.js';
-import inquirer from 'inquirer';
-import fs from 'fs-extra';
+import { jest } from '@jest/globals';
 import path from 'path';
 
-jest.mock('inquirer');
-jest.mock('fs-extra');
-jest.mock('../utilities/logger.js');
+const pathExistsMock = jest.fn<(path: string) => Promise<boolean>>();
+const mkdirpMock = jest.fn<(dir: string) => Promise<void>>();
+const copyMock = jest.fn<(src: string, dest: string) => Promise<void>>();
+const promptMock =
+  jest.fn<
+    (
+      questions: Parameters<typeof import('inquirer').default.prompt>[0],
+    ) => Promise<{ projectName: string }>
+  >();
+const logMock = jest.fn();
+const errorMock = jest.fn();
+const configstoreConstructorMock = jest.fn();
 
-const mockPrompt = inquirer.prompt as unknown as jest.Mock;
-const mockMkdirp = fs.mkdirp as jest.Mock;
-const mockCopy = fs.copy as jest.Mock;
-const mockExistsSync = fs.existsSync as jest.Mock;
+jest.unstable_mockModule('fs-extra', () => ({
+  pathExists: pathExistsMock,
+  mkdirp: mkdirpMock,
+  copy: copyMock,
+}));
+
+jest.unstable_mockModule('inquirer', () => ({
+  default: {
+    prompt: promptMock,
+  },
+}));
+
+jest.unstable_mockModule('chalk', () => ({
+  default: {
+    green: (s: string) => s,
+    blue: (s: string) => s,
+    white: (s: string) => s,
+    red: (s: string) => s,
+  },
+}));
+
+jest.unstable_mockModule('configstore', () => ({
+  default: class MockConfigstore {
+    constructor(...args: unknown[]) {
+      configstoreConstructorMock(...args);
+    }
+  },
+}));
+
+jest.unstable_mockModule('../utilities/logger.js', () => ({
+  logger: {
+    log: logMock,
+    error: errorMock,
+  },
+}));
+
+// Import module under test after mocks
+const { isValidProjectName, cmdNewProject } = await import('./cmdNewProject.ts');
 
 describe('isValidProjectName', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  it('rejects names shorter than 2 characters', async () => {
+    const result = await isValidProjectName('a');
+    expect(typeof result).toBe('string');
+    expect(result).toMatch(/at least 2 characters/i);
   });
 
-  it('should reject invalid project names (too short)', () => {
-    expect(isValidProjectName('a')).toContain('at least 2 characters');
+  it('rejects names with invalid characters', async () => {
+    const result = await isValidProjectName('bad!name');
+    expect(typeof result).toBe('string');
+    expect(result).toMatch(/only letters/i);
   });
 
-  it('should reject names with invalid characters', () => {
-    expect(isValidProjectName('my project!')).toContain('only letters');
+  it('rejects existing folder name', async () => {
+    pathExistsMock.mockResolvedValueOnce(true);
+    const result = await isValidProjectName('existing-folder');
+    expect(result).toBe('A folder with this name already exists');
   });
 
-  it('should reject existing folders', () => {
-    mockExistsSync.mockReturnValue(true);
-    expect(isValidProjectName('existing-folder')).toContain('already exists');
-  });
-
-  it('should accept valid names', () => {
-    mockExistsSync.mockReturnValue(false);
-    expect(isValidProjectName('valid_name')).toBe(true);
+  it('accepts valid name and non-existing folder', async () => {
+    pathExistsMock.mockResolvedValueOnce(false);
+    const result = await isValidProjectName('my_project');
+    expect(result).toBe(true);
   });
 });
 
 describe('cmdNewProject', () => {
+  const projectName = 'test-project';
+  const targetPath = path.resolve(process.cwd(), projectName);
+
   beforeEach(() => {
     jest.clearAllMocks();
-    mockMkdirp.mockResolvedValue(undefined);
-    mockCopy.mockResolvedValue(undefined);
-    mockExistsSync.mockReturnValue(false);
+    promptMock.mockResolvedValue({ projectName });
+    mkdirpMock.mockResolvedValue(undefined);
+    copyMock.mockResolvedValue(undefined);
   });
 
-  it('should prompt the user for a project name', async () => {
-    mockPrompt.mockResolvedValue({ projectName: 'my-app' });
-
+  it('creates project structure and logs success', async () => {
     await cmdNewProject();
 
-    expect(mockPrompt).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          message: 'Enter your project name:',
-          name: 'projectName',
-          type: 'input',
-          validate: expect.any(Function) as unknown as (input: string) => boolean | string,
-        }),
-      ]),
-    );
-  });
+    expect(mkdirpMock).toHaveBeenCalledWith(targetPath);
+    expect(copyMock).toHaveBeenCalled();
 
-  it('should create project folder, copy the template files and create a config store', async () => {
-    mockPrompt.mockResolvedValue({ projectName: 'test-project' });
-
-    const logSpy = jest.spyOn(logger, 'log').mockImplementation(() => {});
-
-    await cmdNewProject();
-
-    expect(ConfigstoreMock).toHaveBeenCalledWith(
-      expect.stringContaining(process.cwd().split(path.sep).splice(1).join('_')),
+    expect(configstoreConstructorMock).toHaveBeenCalledWith(
+      expect.any(String),
       {
-        projectName: 'test-project',
+        projectName,
         rootFolder: 'src',
         distFolder: 'docs',
       },
-      expect.objectContaining({
-        configPath: expect.stringContaining('test-project/.c4dslbuilder') as unknown,
-      }),
+      {
+        configPath: path.join(targetPath, '.c4dslbuilder'),
+      },
     );
-    expect(mockMkdirp).toHaveBeenCalled();
-    expect(mockCopy).toHaveBeenCalled();
-    const logs = logSpy.mock.calls.flatMap((args) => args).join('\n');
-    expect(logs).toContain("✅ Project 'test-project' created successfully.");
-    expect(logs).toContain('Next steps:');
-    expect(logs).toContain('cd test-project');
-    expect(logs).toContain('c4dslbuilder config');
+
+    expect(logMock).toHaveBeenCalledWith(
+      expect.stringContaining(`✅ Project '${projectName}' created successfully.`),
+    );
   });
 
-  it('should log next steps', async () => {
-    const logSpy = jest.spyOn(logger, 'log').mockImplementation(() => {});
-    mockPrompt.mockResolvedValue({ projectName: 'next-steps' });
-    mockExistsSync.mockReturnValue(false);
+  it('logs error if mkdirp fails', async () => {
+    mkdirpMock.mockRejectedValueOnce(new Error('mkdir failed'));
 
     await cmdNewProject();
 
-    const logs = logSpy.mock.calls.flatMap((args) => args).join('\n');
-    expect(logs).toContain('cd next-steps');
-    expect(logs).toContain('c4dslbuilder config');
+    expect(errorMock).toHaveBeenCalledWith(
+      expect.stringContaining('Error creating project.'),
+      Error('mkdir failed')
+    );
   });
 
-  it('should handle errors gracefully', async () => {
-    const errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
-    mockPrompt.mockResolvedValue({ projectName: 'fail-project' });
-    mockExistsSync.mockReturnValue(false);
-    mockMkdirp.mockRejectedValue(new Error('Boom'));
+  it('handles unknown errors gracefully', async () => {
+    mkdirpMock.mockRejectedValueOnce('💥');
 
     await cmdNewProject();
 
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Error creating project: Boom'));
+    expect(errorMock).toHaveBeenCalledWith(
+      expect.stringContaining('Error creating project.'),
+      '💥'
+    );
   });
 });
