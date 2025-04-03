@@ -8,7 +8,7 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
     "resolveJsonModule": true
   },
   "exclude": ["node_modules", "./*.ts", "**/*.spec.ts"]
