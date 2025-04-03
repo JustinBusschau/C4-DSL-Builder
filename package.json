@@ -20,8 +20,8 @@
     "build": "npm run clean && tsc -p .",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\" --fix",
-    "test": "jest",
-    "test:cov": "jest --coverage",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:cov": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
     "local": "npm run clean && npm run format && npm run build && echo 'npm run lint' && npm run test && npm i -g && c4dslbuilder",
     "cli": "node ./lib/index.js",
     "i": "npm run build && npm run format && npm run lint && npm run test:cov && npm i -g"
@@ -78,6 +78,7 @@
     "jsonc-parser": "^3.3.1",
     "prettier": "^3.5.3",
     "ts-jest": "^29.3.1",
+    "ts-node": "^10.9.2",
     "typescript-eslint": "^8.29.0"
   },
   "jest-junit": {
