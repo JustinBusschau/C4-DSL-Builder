@@ -1,6 +1,7 @@
 import { getStrConfig, getBoolConfig, setConfig } from '../utilities/config.js';
 import inquirer from 'inquirer';
 import { logger } from '../utilities/logger.js';
+import { LogLevel } from '../types/logLevel.js';
 import chalk from 'chalk';
 
 type ConfigAnswers = {
@@ -20,6 +21,7 @@ type ConfigAnswers = {
   charset: string; // not used yet
   excludeOtherFiles: boolean;
   pdfCss: string; // not used yet
+  logLevel: LogLevel;
 };
 
 export function isValidProjectName(input: string): string | boolean {
@@ -104,7 +106,7 @@ export async function cmdConfig(): Promise<void> {
       type: 'confirm',
       name: 'includeLinkToDiagram',
       message: 'Replace diagrams with a link?',
-      default: getBoolConfig('includeLinkToDiaram') ?? false,
+      default: getBoolConfig('includeLinkToDiagram') ?? false,
     },
     {
       type: 'confirm',
@@ -135,13 +137,20 @@ export async function cmdConfig(): Promise<void> {
       type: 'confirm',
       name: 'excludeOtherFiles',
       message: 'Exclude other files?',
-      default: getBoolConfig('excludeOtherFile') ?? false,
+      default: getBoolConfig('excludeOtherFiles') ?? false,
     },
     {
       type: 'input',
       name: 'pdfCss',
       message: 'PDF CSS file path:',
       default: getStrConfig('pdfCss') ?? '',
+    },
+    {
+      type: 'list',
+      name: 'logLevel',
+      message: 'Log level:',
+      choices: ['debug', 'info', 'warn', 'error', 'log'],
+      default: getStrConfig('logLevel') ?? 'error',
     },
   ]);
 

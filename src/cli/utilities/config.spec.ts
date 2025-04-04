@@ -5,6 +5,8 @@ const mockSet = jest.fn();
 const mockDelete = jest.fn();
 const mockClear = jest.fn();
 const loggerErrorMock = jest.fn();
+const loggerWarnMock = jest.fn();
+const loggerInfoMock = jest.fn();
 
 let throwConfigstore: boolean = false;
 let throwNonError: boolean = false;
@@ -34,6 +36,8 @@ jest.unstable_mockModule('configstore', () => ({
 jest.unstable_mockModule('./logger.js', () => ({
   logger: {
     error: loggerErrorMock,
+    warn: loggerWarnMock,
+    info: loggerInfoMock,
   },
 }));
 
@@ -56,16 +60,18 @@ describe('Config Utility', () => {
         expect.stringContaining('Error accessing config store.'),
         Error('Mock config error'),
       );
+      expect(loggerInfoMock).toHaveBeenCalledWith('Expected string for foo, but got undefined');
     });
 
     it('logs and handles Configstore instantiation error (non-Error)', () => {
       throwConfigstore = true;
       throwNonError = true;
-      getStrConfig('foo');
+      getStrConfig('bar');
       expect(loggerErrorMock).toHaveBeenCalledWith(
         expect.stringContaining('Error accessing config store.'),
         Error('💥'),
       );
+      expect(loggerInfoMock).toHaveBeenCalledWith('Expected string for bar, but got undefined');
     });
   });
 
@@ -125,14 +131,15 @@ describe('Config Utility', () => {
     it('logs and returns empty string if value is not a string', () => {
       mockGet.mockReturnValue(true);
       const result = getStrConfig('myKey');
-      expect(loggerErrorMock).toHaveBeenCalledWith(expect.stringContaining('Expected string for'));
+      expect(loggerInfoMock).toHaveBeenCalledWith(expect.stringContaining('Expected string for'));
       expect(result).toBe('');
     });
 
     it('logs and returns empty string if key not found', () => {
       mockGet.mockReturnValue(undefined);
       const result = getStrConfig('missingKey');
-      expect(loggerErrorMock).toHaveBeenCalledWith(expect.stringContaining('not found'));
+      expect(loggerWarnMock).toHaveBeenCalledWith(expect.stringContaining('not found'));
+      expect(loggerInfoMock).toHaveBeenCalledWith(expect.stringContaining('Expected string for'));
       expect(result).toBe('');
     });
   });
@@ -154,14 +161,15 @@ describe('Config Utility', () => {
     it('logs and returns false for invalid string', () => {
       mockGet.mockReturnValue('maybe');
       const result = getBoolConfig('flag');
-      expect(loggerErrorMock).toHaveBeenCalledWith(expect.stringContaining('Expected boolean'));
+      expect(loggerInfoMock).toHaveBeenCalledWith(expect.stringContaining('Expected boolean'));
       expect(result).toBe(false);
     });
 
     it('logs and returns false if value is undefined', () => {
       mockGet.mockReturnValue(undefined);
       const result = getBoolConfig('missing');
-      expect(loggerErrorMock).toHaveBeenCalledWith(expect.stringContaining('not found'));
+      expect(loggerWarnMock).toHaveBeenCalledWith(expect.stringContaining('not found'));
+      expect(loggerInfoMock).toHaveBeenCalledWith(expect.stringContaining('Expected boolean'));
       expect(result).toBe(false);
     });
   });

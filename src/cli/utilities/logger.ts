@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-
-type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'log';
+import { getStrConfig } from './config.js';
+import { LogLevel } from '../types/logLevel.js';
 
 const write = (message: string): void => {
   process.stdout.write(message + '\n');
@@ -26,9 +26,27 @@ const formatMessage = (level: LogLevel, message: string, error: unknown = null):
 };
 
 export const logger = {
-  debug: (msg: string) => write(formatMessage('debug', msg)),
-  info: (msg: string) => write(formatMessage('info', msg)),
-  warn: (msg: string) => write(formatMessage('warn', msg)),
-  error: (msg: string, error: unknown = null) => write(formatMessage('error', msg, error)),
+  debug: (msg: string) => {
+    if (getStrConfig('logLevel') === 'debug') {
+      write(formatMessage('debug', msg));
+    }
+  },
+  info: (msg: string) => {
+    const logLevel = getStrConfig('logLevel');
+    if (logLevel === 'debug' || logLevel === 'info') {
+      write(formatMessage('info', msg));
+    }
+  },
+  warn: (msg: string) => {
+    const logLevel = getStrConfig('logLevel');
+    if (logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn') {
+      write(formatMessage('warn', msg));
+    }
+  },
+  error: (msg: string, error: unknown = null) => {
+    if (getStrConfig('logLevel') !== 'log') {
+      write(formatMessage('error', msg, error));
+    }
+  },
   log: (msg: string) => write(formatMessage('log', msg)),
 };

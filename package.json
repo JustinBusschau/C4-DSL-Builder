@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "A CLI tool designed to compile a folder structure of markdowns and mermaid files into a site, pdf, single file markdown or a collection of markdowns with links - inspired by c4builder",
   "main": "index.js",
+  "bin": {
+    "c4dslbuilder": "./lib/index.js"
+  },
   "type": "module",
   "homepage": "https://JustinBusschau.github.io/C4-DSL-Builder/",
   "author": "Justin Busschau",
@@ -32,9 +35,9 @@
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "test:cov": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
-    "local": "npm run clean && npm run format && npm run build && echo 'npm run lint' && npm run test && npm i -g && c4dslbuilder",
+    "local": "npm run clean && npm run format && npm run build && npm run lint && npm run test && npm i -g && c4dslbuilder",
     "cli": "node ./lib/index.js",
-    "i": "npm run build && npm run format && npm run lint && npm run test:cov && npm i -g"
+    "i": "npm run clean && npm run format && npm run lint && npm run build && npm run test:cov && npm i -g"
   },
   "dependencies": {
     "@mermaid-js/mermaid-cli": "^11.4.2",

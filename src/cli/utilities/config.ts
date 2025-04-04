@@ -19,17 +19,17 @@ function openConfigStore(): Configstore | null {
   return config;
 }
 
-function getStoredValue(key: string): string | boolean {
+function getStoredValue(key: string): string | boolean | undefined {
   const config = openConfigStore();
   if (!config) {
     logger.error('Failed to open config store.');
-    return false;
+    return undefined;
   }
 
   const configValue = config.get(key) as string | boolean;
   if (configValue === undefined) {
-    logger.error(`Configuration key ${key} not found.`);
-    return false;
+    logger.warn(`Configuration key ${key} not found.`);
+    return undefined;
   }
 
   return configValue;
@@ -40,7 +40,7 @@ export function getStrConfig(key: string): string {
   if (typeof configValue === 'string') {
     return configValue;
   }
-  logger.error(`Expected string for ${key}, but got ${typeof configValue}`);
+  logger.info(`Expected string for ${key}, but got ${typeof configValue}`);
   return '';
 }
 
@@ -60,7 +60,7 @@ export function getBoolConfig(key: string): boolean {
     }
   }
 
-  logger.error(`Expected boolean for ${key}, but got ${typeof configValue}`);
+  logger.info(`Expected boolean for ${key}, but got ${typeof configValue}`);
   return false;
 }
 
