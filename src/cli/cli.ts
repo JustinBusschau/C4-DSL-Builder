@@ -1,28 +1,20 @@
-import { setConfig, deleteConfig } from './utilities/config.js';
-import { logger } from './utilities/logger.js';
 import { Command } from 'commander';
+import { createLogger } from './utilities/logger.js';
 import { getIntroText } from './utilities/intro.js';
-import { cmdNewProject } from './commands/cmdNewProject.js';
-import { cmdListConfig } from './commands/cmdListConfig.js';
-import { cmdResetConfig } from './commands/cmdResetConfig.js';
-import { cmdDsl } from './commands/cmdDsl.js';
-import { cmdMd } from './commands/cmdMd.js';
-import { cmdConfig } from './commands/cmdConfig.js';
 import pkg from '../../package.json' with { type: 'json' };
-import chalk from 'chalk';
+import { cmdNewProject } from './commands/cmdNewProject.js';
+import { cmdConfig } from './commands/cmdConfig.js';
+import { LogLevel } from './types/logLevel.js';
 
-interface MdOptions {
-  split?: boolean;
-}
-
-export const registerCommands = () => {
+export function registerCommands() {
   const program = new Command();
+  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
 
-  program.name('c4dslbuilder').version(pkg.version);
+  program.name(pkg.name).version(pkg.version);
 
   program
     .command('new')
-    .description('create a new project from template')
+    .description('create a new project from the template')
     .action(async () => {
       logger.log(getIntroText(pkg.version));
       await cmdNewProject();

@@ -1,8 +1,7 @@
 import { jest } from '@jest/globals';
-import { Question } from 'inquirer';
+import type { Question } from 'inquirer';
 
 // ----------------- Mocks -----------------
-
 const getStrConfigMock = jest.fn();
 const getBoolConfigMock = jest.fn();
 const setConfigMock = jest.fn();
@@ -17,9 +16,13 @@ jest.unstable_mockModule('../utilities/config.js', () => ({
 }));
 
 jest.unstable_mockModule('../utilities/logger.js', () => ({
-  logger: {
+  createLogger: () => ({
     log: logMock,
-  },
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
 }));
 
 jest.unstable_mockModule('inquirer', () => ({
@@ -35,18 +38,33 @@ jest.unstable_mockModule('chalk', () => ({
   },
 }));
 
-// Import module under test after mocks
-const { cmdConfig, isValidProjectName, isValidUrl } = await import('./cmdConfig.ts');
+// ----------------- Imports (after mocks) -----------------
+let cmdConfig: typeof import('./cmdConfig.js').cmdConfig;
+let isValidProjectName: typeof import('./cmdConfig.js').isValidProjectName;
+let isValidUrl: typeof import('./cmdConfig.js').isValidUrl;
+
+beforeEach(async () => {
+  // Reset all mocks
+  getStrConfigMock.mockReset();
+  getBoolConfigMock.mockReset();
+  setConfigMock.mockReset();
+  logMock.mockReset();
+  promptMock.mockReset();
+
+  // Load the module under test in a clean context with mocks applied
+  await jest.isolateModulesAsync(async () => {
+    const configModule = await import('./cmdConfig.js');
+    cmdConfig = configModule.cmdConfig;
+    isValidProjectName = configModule.isValidProjectName;
+    isValidUrl = configModule.isValidUrl;
+  });
+});
 
 // ----------------- Tests -----------------
 
 describe('cmdConfig', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('should prompt for all config options, store them, and log success', async () => {
-    // Provide mocked defaults
+    // Mock current config defaults
     getStrConfigMock.mockImplementation((key) => {
       return {
         projectName: 'Test Project',
@@ -96,7 +114,7 @@ describe('cmdConfig', () => {
 
     await cmdConfig();
 
-    // All entries should be passed to setConfig
+    // Ensure all values are saved
     Object.entries(mockAnswers).forEach(([key, value]) => {
       expect(setConfigMock).toHaveBeenCalledWith(key, String(value));
     });
@@ -155,7 +173,7 @@ describe('isValidUrl', () => {
     expect(isValidUrl('http://localhost')).toBe(true);
   });
 
-  it('accepts empty string', () => {
+  it('accepts empty string or undefined', () => {
     expect(isValidUrl('')).toBe(true);
     expect(isValidUrl(undefined as unknown as string)).toBe(true);
   });

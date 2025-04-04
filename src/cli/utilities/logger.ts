@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { getStrConfig } from './config.js';
 import { LogLevel } from '../types/logLevel.js';
 
 const write = (message: string): void => {
@@ -25,28 +24,26 @@ const formatMessage = (level: LogLevel, message: string, error: unknown = null):
   }
 };
 
-export const logger = {
+export const createLogger = (level: LogLevel = 'log') => ({
   debug: (msg: string) => {
-    if (getStrConfig('logLevel') === 'debug') {
+    if (level === 'debug') {
       write(formatMessage('debug', msg));
     }
   },
   info: (msg: string) => {
-    const logLevel = getStrConfig('logLevel');
-    if (logLevel === 'debug' || logLevel === 'info') {
+    if (level === 'debug' || level === 'info') {
       write(formatMessage('info', msg));
     }
   },
   warn: (msg: string) => {
-    const logLevel = getStrConfig('logLevel');
-    if (logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn') {
+    if (level === 'debug' || level === 'info' || level === 'warn') {
       write(formatMessage('warn', msg));
     }
   },
   error: (msg: string, error: unknown = null) => {
-    if (getStrConfig('logLevel') !== 'log') {
+    if (level !== 'log') {
       write(formatMessage('error', msg, error));
     }
   },
   log: (msg: string) => write(formatMessage('log', msg)),
-};
+});

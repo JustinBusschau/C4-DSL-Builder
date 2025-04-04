@@ -1,8 +1,9 @@
 import Configstore from 'configstore';
 import path from 'path';
-import { logger } from './logger.js';
+import { createLogger } from './logger.js';
+import { LogLevel } from '../types/logLevel.js';
 
-function openConfigStore(): Configstore | null {
+export function openConfigStore(): Configstore | null {
   let config: Configstore;
   try {
     config = new Configstore(
@@ -13,6 +14,7 @@ function openConfigStore(): Configstore | null {
       },
     );
   } catch (error) {
+    const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
     logger.error('Error accessing config store.', error);
     return null;
   }
@@ -20,6 +22,7 @@ function openConfigStore(): Configstore | null {
 }
 
 function getStoredValue(key: string): string | boolean | undefined {
+  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
   const config = openConfigStore();
   if (!config) {
     logger.error('Failed to open config store.');
@@ -40,6 +43,7 @@ export function getStrConfig(key: string): string {
   if (typeof configValue === 'string') {
     return configValue;
   }
+  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
   logger.info(`Expected string for ${key}, but got ${typeof configValue}`);
   return '';
 }
@@ -60,6 +64,7 @@ export function getBoolConfig(key: string): boolean {
     }
   }
 
+  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
   logger.info(`Expected boolean for ${key}, but got ${typeof configValue}`);
   return false;
 }
@@ -67,6 +72,7 @@ export function getBoolConfig(key: string): boolean {
 export function setConfig(key: string, value: string | boolean): void {
   const config = openConfigStore();
   if (!config) {
+    const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
     logger.error('Failed to open config store.');
     return;
   }
@@ -77,6 +83,7 @@ export function setConfig(key: string, value: string | boolean): void {
 export function deleteConfig(key: string): void {
   const config = openConfigStore();
   if (!config) {
+    const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
     logger.error('Failed to open config store.');
     return;
   }
@@ -87,6 +94,7 @@ export function deleteConfig(key: string): void {
 export function clearConfig(): void {
   const config = openConfigStore();
   if (!config) {
+    const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
     logger.error('Failed to open config store.');
     return;
   }

@@ -4,17 +4,18 @@ const mockGet = jest.fn();
 const mockSet = jest.fn();
 const mockDelete = jest.fn();
 const mockClear = jest.fn();
+
 const loggerErrorMock = jest.fn();
 const loggerWarnMock = jest.fn();
 const loggerInfoMock = jest.fn();
 
-let throwConfigstore: boolean = false;
-let throwNonError: boolean = false;
+let throwConfigstore = false;
+let throwNonError = false;
 
+// 👇 mock configstore
 jest.unstable_mockModule('configstore', () => ({
   default: class MockConfigstore {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(...args: ConstructorParameters<typeof import('configstore').default>) {
+    constructor() {
       if (throwConfigstore) {
         if (throwNonError) {
           throw new Error('💥');
@@ -33,17 +34,44 @@ jest.unstable_mockModule('configstore', () => ({
   },
 }));
 
-jest.unstable_mockModule('./logger.js', () => ({
-  logger: {
+// 👇 mock logger
+jest.unstable_mockModule('../utilities/logger.js', () => ({
+  createLogger: () => ({
     error: loggerErrorMock,
     warn: loggerWarnMock,
     info: loggerInfoMock,
-  },
+    log: jest.fn(),
+    debug: jest.fn(),
+  }),
 }));
 
-const { getStrConfig, getBoolConfig, setConfig, deleteConfig, clearConfig } = await import(
-  './config.ts'
-);
+let getStrConfig: typeof import('../utilities/config.js').getStrConfig;
+let getBoolConfig: typeof import('../utilities/config.js').getBoolConfig;
+let setConfig: typeof import('../utilities/config.js').setConfig;
+let deleteConfig: typeof import('../utilities/config.js').deleteConfig;
+let clearConfig: typeof import('../utilities/config.js').clearConfig;
+
+beforeEach(async () => {
+  // 🧼 Reset everything before each test
+  mockGet.mockReset();
+  mockSet.mockReset();
+  mockDelete.mockReset();
+  mockClear.mockReset();
+  loggerErrorMock.mockReset();
+  loggerWarnMock.mockReset();
+  loggerInfoMock.mockReset();
+  throwConfigstore = false;
+  throwNonError = false;
+
+  await jest.isolateModulesAsync(async () => {
+    const config = await import('../utilities/config.js');
+    getStrConfig = config.getStrConfig;
+    getBoolConfig = config.getBoolConfig;
+    setConfig = config.setConfig;
+    deleteConfig = config.deleteConfig;
+    clearConfig = config.clearConfig;
+  });
+});
 
 describe('Config Utility', () => {
   beforeEach(() => {

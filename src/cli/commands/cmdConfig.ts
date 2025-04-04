@@ -1,8 +1,8 @@
 import { getStrConfig, getBoolConfig, setConfig } from '../utilities/config.js';
 import inquirer from 'inquirer';
-import { logger } from '../utilities/logger.js';
-import { LogLevel } from '../types/logLevel.js';
+import { createLogger } from '../utilities/logger.js';
 import chalk from 'chalk';
+import { LogLevel } from '../types/logLevel.js';
 
 type ConfigAnswers = {
   projectName: string;
@@ -21,7 +21,6 @@ type ConfigAnswers = {
   charset: string; // not used yet
   excludeOtherFiles: boolean;
   pdfCss: string; // not used yet
-  logLevel: LogLevel;
 };
 
 export function isValidProjectName(input: string): string | boolean {
@@ -42,6 +41,8 @@ export function isValidUrl(input: string): string | boolean {
 }
 
 export async function cmdConfig(): Promise<void> {
+  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
+
   logger.log(chalk.cyan('Configure your project settings:\n'));
 
   const answers = await inquirer.prompt<ConfigAnswers>([
@@ -144,13 +145,6 @@ export async function cmdConfig(): Promise<void> {
       name: 'pdfCss',
       message: 'PDF CSS file path:',
       default: getStrConfig('pdfCss') || '',
-    },
-    {
-      type: 'list',
-      name: 'logLevel',
-      message: 'Log level:',
-      choices: ['debug', 'info', 'warn', 'error', 'log'],
-      default: getStrConfig('logLevel') || 'error',
     },
   ]);
 

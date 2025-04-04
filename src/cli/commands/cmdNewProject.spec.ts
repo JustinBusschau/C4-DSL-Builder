@@ -10,8 +10,7 @@ const promptMock =
       questions: Parameters<typeof import('inquirer').default.prompt>[0],
     ) => Promise<{ projectName: string }>
   >();
-const logMock = jest.fn();
-const errorMock = jest.fn();
+
 const configstoreConstructorMock = jest.fn();
 
 jest.unstable_mockModule('fs-extra', () => ({
@@ -44,11 +43,30 @@ jest.unstable_mockModule('configstore', () => ({
 }));
 
 jest.unstable_mockModule('../utilities/logger.js', () => ({
-  logger: {
-    log: logMock,
-    error: errorMock,
-  },
+  createLogger: jest.fn(),
 }));
+
+let createLogger: jest.Mock;
+const logSpy = jest.fn();
+const errorSpy = jest.fn();
+
+beforeEach(async () => {
+  await jest.isolateModulesAsync(async () => {
+    const loggerModule = await import('../utilities/logger.js');
+    createLogger = loggerModule.createLogger as jest.Mock;
+
+    createLogger.mockReturnValue({
+      log: logSpy,
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: errorSpy,
+    });
+  });
+
+  logSpy.mockClear();
+  errorSpy.mockClear();
+});
 
 // Import module under test after mocks
 const { isValidProjectName, cmdNewProject } = await import('./cmdNewProject.ts');
@@ -102,14 +120,13 @@ describe('cmdNewProject', () => {
         projectName,
         rootFolder: 'src',
         distFolder: 'docs',
-        logLevel: 'log',
       },
       {
         configPath: path.join(targetPath, '.c4dslbuilder'),
       },
     );
 
-    expect(logMock).toHaveBeenCalledWith(
+    expect(logSpy).toHaveBeenCalledWith(
       expect.stringContaining(`✅ Project '${projectName}' created successfully.`),
     );
   });
@@ -119,7 +136,7 @@ describe('cmdNewProject', () => {
 
     await cmdNewProject();
 
-    expect(errorMock).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Error creating project.'),
       Error('mkdir failed'),
     );
@@ -130,9 +147,6 @@ describe('cmdNewProject', () => {
 
     await cmdNewProject();
 
-    expect(errorMock).toHaveBeenCalledWith(
-      expect.stringContaining('Error creating project.'),
-      '💥',
-    );
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Error creating project.'), '💥');
   });
 });

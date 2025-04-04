@@ -1,5 +1,6 @@
+import { LogLevel } from '../types/logLevel.js';
 import { getStrConfig, getBoolConfig } from '../utilities/config.js';
-import { logger } from '../utilities/logger.js';
+import { createLogger } from '../utilities/logger.js';
 import chalk from 'chalk';
 
 const boolValueToString = (value: boolean): string => {
@@ -13,48 +14,60 @@ const getPrintValue = (value: string): string => {
   return value === 'undefined' ? chalk.red('Not set') : chalk.green(value);
 };
 
-const printConfigValue = (title: string, value: string) => {
+const printConfigValue = (
+  logger: { log: (message: string) => void },
+  title: string,
+  value: string,
+) => {
   logger.log(`${title.padEnd(40)} : ${value}`);
 };
 
 export function cmdListConfig(): void {
+  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
   logger.log(chalk.cyan('Current Configuration\n'));
 
-  printConfigValue('Project name', getPrintValue(getStrConfig('projectName')));
-  printConfigValue('Homepage Name', getPrintValue(getStrConfig('homepageName')));
-  printConfigValue('Root Folder', getPrintValue(getStrConfig('rootFolder')));
-  printConfigValue('Destination Folder', getPrintValue(getStrConfig('distFolder')));
+  printConfigValue(logger, 'Project name', getPrintValue(getStrConfig('projectName')));
+  printConfigValue(logger, 'Homepage Name', getPrintValue(getStrConfig('homepageName')));
+  printConfigValue(logger, 'Root Folder', getPrintValue(getStrConfig('rootFolder')));
+  printConfigValue(logger, 'Destination Folder', getPrintValue(getStrConfig('distFolder')));
   printConfigValue(
+    logger,
     'Generate website',
     getPrintValue(boolValueToString(getBoolConfig('generateWebsite'))),
   );
-  printConfigValue('Website docsify theme', getPrintValue(getStrConfig('webTheme')));
+  printConfigValue(logger, 'Website docsify theme', getPrintValue(getStrConfig('webTheme')));
   printConfigValue(
+    logger,
     'Path to a specific Docsify template',
     getPrintValue(getStrConfig('docsifyTemplate')),
   );
-  printConfigValue('Repository Url', getPrintValue(getStrConfig('repoName')));
+  printConfigValue(logger, 'Repository Url', getPrintValue(getStrConfig('repoName')));
   printConfigValue(
+    logger,
     'Embed diagrams',
     getPrintValue(boolValueToString(getBoolConfig('embedDiagram'))),
   );
   printConfigValue(
+    logger,
     'Replace diagrams with a link',
     getPrintValue(boolValueToString(getBoolConfig('includeLinkToDiagram'))),
   );
   printConfigValue(
+    logger,
     'Place diagrams before text',
     getPrintValue(boolValueToString(getBoolConfig('diagramsOnTop'))),
   );
-  printConfigValue('Structurizr DSL CLI to use', getPrintValue(getStrConfig('dslCli')));
+  printConfigValue(logger, 'Structurizr DSL CLI to use', getPrintValue(getStrConfig('dslCli')));
   printConfigValue(
+    logger,
     'Where Structurizr starts looking for diagrams to extract',
     getPrintValue(getStrConfig('workspaceDsl')),
   );
-  printConfigValue('Charset', getPrintValue(getStrConfig('charset')));
+  printConfigValue(logger, 'Charset', getPrintValue(getStrConfig('charset')));
   printConfigValue(
+    logger,
     'Exclude other files',
     getPrintValue(boolValueToString(getBoolConfig('excludeOtherFiles'))),
   );
-  printConfigValue('PDF CSS', getPrintValue(getStrConfig('pdfCss')));
+  printConfigValue(logger, 'PDF CSS', getPrintValue(getStrConfig('pdfCss')));
 }

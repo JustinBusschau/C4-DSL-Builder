@@ -3,8 +3,9 @@ import path from 'path';
 import * as fs from 'fs-extra';
 import Configstore from 'configstore';
 import chalk from 'chalk';
-import { logger } from '../utilities/logger.js';
+import { createLogger } from '../utilities/logger.js';
 import { getCurrentDir } from '../utilities/paths.js';
+import { LogLevel } from '../types/logLevel.js';
 
 const __dirname = getCurrentDir(import.meta.url);
 
@@ -23,6 +24,8 @@ export const isValidProjectName = async (name: string): Promise<boolean | string
 };
 
 export const cmdNewProject = async () => {
+  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
+
   const response: { projectName: string } = await inquirer.prompt([
     {
       name: 'projectName',
@@ -45,7 +48,6 @@ export const cmdNewProject = async () => {
         projectName: response.projectName,
         rootFolder: 'src',
         distFolder: 'docs',
-        logLevel: 'log',
       },
       {
         configPath: path.join(process.cwd(), response.projectName, `.c4dslbuilder`),

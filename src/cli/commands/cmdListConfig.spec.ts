@@ -1,56 +1,96 @@
+import { jest } from '@jest/globals';
 import chalk from 'chalk';
-import Configstore from 'configstore';
-import { logger } from '../utilities/logger.js';
-import { cmdListConfig } from './cmdListConfig.js';
 
-describe('cmdListConfig', () => {
-  let mockConfig: Partial<Record<string, unknown>>;
-  let configStoreMock: Configstore;
+jest.unstable_mockModule('../utilities/logger.js', () => ({
+  createLogger: jest.fn(),
+}));
 
-  const logSpy = jest.spyOn(logger, 'log').mockImplementation(() => {});
+jest.unstable_mockModule('../utilities/config.js', () => ({
+  getStrConfig: jest.fn(),
+  getBoolConfig: jest.fn(),
+}));
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+let cmdListConfig: typeof import('./cmdListConfig.js').cmdListConfig;
+let getStrConfig: jest.Mock;
+let getBoolConfig: jest.Mock;
+let createLogger: jest.Mock;
+const logSpy = jest.fn();
 
-    mockConfig = {
-      projectName: 'My New Project',
-      homepageName: undefined,
-      rootFolder: '/docs',
-    };
+beforeEach(async () => {
+  await jest.isolateModulesAsync(async () => {
+    const configModule = await import('../utilities/config.js');
+    getStrConfig = configModule.getStrConfig as jest.Mock;
+    getBoolConfig = configModule.getBoolConfig as jest.Mock;
 
-    configStoreMock = {
-      get: (key: string) => mockConfig[key],
-    } as unknown as Configstore;
+    const loggerModule = await import('../utilities/logger.js');
+    createLogger = loggerModule.createLogger as jest.Mock;
+    createLogger.mockReturnValue({
+      log: logSpy,
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    });
+
+    ({ cmdListConfig } = await import('./cmdListConfig.js'));
   });
 
+  logSpy.mockClear();
+  getStrConfig.mockReset();
+  getBoolConfig.mockReset();
+});
+
+describe('cmdListConfig', () => {
   it('prints all config keys with correctly formatted values', () => {
+    // 🎯 Setup config return values
+    getStrConfig.mockImplementation((key: unknown) => {
+      key = key as string;
+      const map: Record<string, string> = {
+        projectName: 'My Project',
+        homepageName: 'undefined', // should show as "Not set"
+        rootFolder: '/src',
+        distFolder: '/dist',
+        webTheme: 'vue',
+        docsifyTemplate: 'template.html',
+        repoName: 'github.com/me/repo',
+        dslCli: 'dsl-cli',
+        workspaceDsl: '/workspace.dsl',
+        charset: 'utf-8',
+        pdfCss: 'pdf.css',
+      };
+      return map[key as string] ?? 'undefined';
+    });
+
+    getBoolConfig.mockImplementation((key: unknown) => {
+      const map: Record<string, boolean> = {
+        generateWebsite: true,
+        embedDiagram: true,
+        includeLinkToDiagram: false,
+        diagramsOnTop: true,
+        excludeOtherFiles: false,
+      };
+      return map[key as string] ?? false;
+    });
+
+    // ✅ Run it
     cmdListConfig();
 
+    // ✅ Check top title
     expect(logSpy).toHaveBeenCalledWith(chalk.cyan('Current Configuration\n'));
 
+    // ✅ Check a few specific values
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Project name'.padEnd(40)));
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.green('My New Project')));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.green('My Project')));
 
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Homepage Name'.padEnd(40)));
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.red('Not set')));
 
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.green('/docs')));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Embed diagrams'.padEnd(40)));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.green('Yes')));
 
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Replace diagrams with a link'.padEnd(40)),
+    );
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.green('No')));
-  });
-
-  it('prints "Not set" for undefined values', () => {
-    mockConfig = {
-      projectName: undefined,
-      generateWebsite: undefined,
-    };
-
-    configStoreMock = {
-      get: (key: string) => mockConfig[key],
-    } as unknown as Configstore;
-
-    cmdListConfig();
-
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.red('Not set')));
   });
 });
