@@ -6,22 +6,19 @@ const mockDelete = jest.fn();
 const mockClear = jest.fn();
 const loggerErrorMock = jest.fn();
 
-const configstoreConstructorMock = jest.fn(() => ({
-  get: mockGet,
-  set: mockSet,
-  delete: mockDelete,
-  clear: mockClear,
-}));
-
 let throwConfigstore: boolean = false;
 let throwNonError: boolean = false;
 
 jest.unstable_mockModule('configstore', () => ({
   default: class MockConfigstore {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(...args: ConstructorParameters<typeof import('configstore').default>) {
       if (throwConfigstore) {
-        if (throwNonError) throw '💥';
-        else throw new Error('Mock config error');
+        if (throwNonError) {
+          throw new Error('💥');
+        } else {
+          throw new Error('Mock config error');
+        }
       }
 
       return {
@@ -40,13 +37,9 @@ jest.unstable_mockModule('./logger.js', () => ({
   },
 }));
 
-const {
-  getStrConfig,
-  getBoolConfig,
-  setConfig,
-  deleteConfig,
-  clearConfig,
-} = await import('./config.ts');
+const { getStrConfig, getBoolConfig, setConfig, deleteConfig, clearConfig } = await import(
+  './config.ts'
+);
 
 describe('Config Utility', () => {
   beforeEach(() => {
@@ -61,7 +54,7 @@ describe('Config Utility', () => {
       getStrConfig('foo');
       expect(loggerErrorMock).toHaveBeenCalledWith(
         expect.stringContaining('Error accessing config store.'),
-        Error('Mock config error')
+        Error('Mock config error'),
       );
     });
 
@@ -71,7 +64,7 @@ describe('Config Utility', () => {
       getStrConfig('foo');
       expect(loggerErrorMock).toHaveBeenCalledWith(
         expect.stringContaining('Error accessing config store.'),
-        "💥"
+        Error('💥'),
       );
     });
   });
@@ -84,30 +77,40 @@ describe('Config Utility', () => {
     it('getStrConfig returns "" and logs', () => {
       const result = getStrConfig('missing');
       expect(result).toBe('');
-      expect(loggerErrorMock).toHaveBeenCalledWith(expect.stringContaining('Failed to open config store.'));
+      expect(loggerErrorMock).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to open config store.'),
+      );
     });
 
     it('getBoolConfig returns false and logs', () => {
       const result = getBoolConfig('missingBool');
       expect(result).toBe(false);
-      expect(loggerErrorMock).toHaveBeenCalledWith(expect.stringContaining('Failed to open config store.'));
+      expect(loggerErrorMock).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to open config store.'),
+      );
     });
 
     it('setConfig logs and does not crash', () => {
       setConfig('key', true);
-      expect(loggerErrorMock).toHaveBeenCalledWith(expect.stringContaining('Failed to open config store.'));
+      expect(loggerErrorMock).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to open config store.'),
+      );
       expect(mockSet).not.toHaveBeenCalled();
     });
 
     it('deleteConfig logs and does not crash', () => {
       deleteConfig('key');
-      expect(loggerErrorMock).toHaveBeenCalledWith(expect.stringContaining('Failed to open config store.'));
+      expect(loggerErrorMock).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to open config store.'),
+      );
       expect(mockDelete).not.toHaveBeenCalled();
     });
 
     it('clearConfig logs and does not crash', () => {
       clearConfig();
-      expect(loggerErrorMock).toHaveBeenCalledWith(expect.stringContaining('Failed to open config store.'));
+      expect(loggerErrorMock).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to open config store.'),
+      );
       expect(mockClear).not.toHaveBeenCalled();
     });
   });
