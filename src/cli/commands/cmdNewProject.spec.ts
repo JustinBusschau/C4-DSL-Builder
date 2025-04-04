@@ -120,7 +120,7 @@ describe('cmdNewProject', () => {
 
     expect(errorMock).toHaveBeenCalledWith(
       expect.stringContaining('Error creating project.'),
-      Error('mkdir failed')
+      Error('mkdir failed'),
     );
   });
 
@@ -131,7 +131,7 @@ describe('cmdNewProject', () => {
 
     expect(errorMock).toHaveBeenCalledWith(
       expect.stringContaining('Error creating project.'),
-      '💥'
+      '💥',
     );
   });
 });

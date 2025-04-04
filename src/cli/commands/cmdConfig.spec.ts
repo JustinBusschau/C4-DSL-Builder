@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { Question } from 'inquirer';
 
 // ----------------- Mocks -----------------
 
@@ -66,9 +67,9 @@ describe('cmdConfig', () => {
       return {
         generateWebsite: true,
         embedDiagram: false,
-        includeLinkToDiaram: true, // intentional typo from source
+        includeLinkToDiagram: true,
         diagramsOnTop: false,
-        excludeOtherFile: true, // intentional typo from source
+        excludeOtherFiles: true,
       }[key];
     });
 
@@ -101,8 +102,12 @@ describe('cmdConfig', () => {
     });
 
     expect(promptMock).toHaveBeenCalled();
-    expect(logMock).toHaveBeenCalledWith(expect.stringContaining('Configure your project settings:'));
-    expect(logMock).toHaveBeenCalledWith(expect.stringContaining('✅ Configuration updated successfully.'));
+    expect(logMock).toHaveBeenCalledWith(
+      expect.stringContaining('Configure your project settings:'),
+    );
+    expect(logMock).toHaveBeenCalledWith(
+      expect.stringContaining('✅ Configuration updated successfully.'),
+    );
   });
 
   it('wires up validators in prompt config', async () => {
@@ -113,18 +118,18 @@ describe('cmdConfig', () => {
 
     await cmdConfig();
 
-    const promptArgs = promptMock.mock.calls[0][0]; // Array of prompt configs
-    const projectNameField = promptArgs.find((q: any) => q.name === 'projectName');
-    const repoNameField = promptArgs.find((q: any) => q.name === 'repoName');
+    const promptArgs = promptMock.mock.calls[0][0] as Question[];
+    const projectNameField = promptArgs.find((q) => q.name === 'projectName');
+    const repoNameField = promptArgs.find((q) => q.name === 'repoName');
 
-    expect(typeof projectNameField.validate).toBe('function');
-    expect(typeof repoNameField.validate).toBe('function');
+    expect(typeof projectNameField?.validate).toBe('function');
+    expect(typeof repoNameField?.validate).toBe('function');
 
-    expect(projectNameField.validate('Valid Name')).toBe(true);
-    expect(projectNameField.validate('!')).toMatch(/at least 2 characters/i);
+    expect(projectNameField?.validate('Valid Name')).toBe(true);
+    expect(projectNameField?.validate('!')).toMatch(/at least 2 characters/i);
 
-    expect(repoNameField.validate('https://example.com')).toBe(true);
-    expect(repoNameField.validate('not-a-url')).toBe('Please enter a valid URL.');
+    expect(repoNameField?.validate('https://example.com')).toBe(true);
+    expect(repoNameField?.validate('not-a-url')).toBe('Please enter a valid URL.');
   });
 });
 
