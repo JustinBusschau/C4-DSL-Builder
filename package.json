@@ -35,9 +35,8 @@
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "test:cov": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
-    "local": "npm run clean && npm run format && npm run build && npm run lint && npm run test && npm i -g && c4dslbuilder",
-    "cli": "node ./lib/index.js",
-    "i": "npm run clean && npm run format && npm run lint && npm run build && npm run test:cov && npm i -g"
+    "local": "npm run clean && npm run format && npm run lint && npm run build && npm run test:cov && npm uninstall -g c4dslbuilder && npm i -g && c4dslbuilder",
+    "cli": "node ./lib/index.js"
   },
   "dependencies": {
     "@mermaid-js/mermaid-cli": "^11.4.2",

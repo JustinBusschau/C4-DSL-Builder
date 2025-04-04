@@ -45,6 +45,7 @@ export const cmdNewProject = async () => {
         projectName: response.projectName,
         rootFolder: 'src',
         distFolder: 'docs',
+        logLevel: 'log',
       },
       {
         configPath: path.join(process.cwd(), response.projectName, `.c4dslbuilder`),

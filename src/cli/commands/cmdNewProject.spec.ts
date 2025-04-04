@@ -102,6 +102,7 @@ describe('cmdNewProject', () => {
         projectName,
         rootFolder: 'src',
         distFolder: 'docs',
+        logLevel: 'log',
       },
       {
         configPath: path.join(targetPath, '.c4dslbuilder'),
