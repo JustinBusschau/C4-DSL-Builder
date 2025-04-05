@@ -1,15 +1,34 @@
-import { cmdResetConfig } from './cmdResetConfig.js';
-import { logger } from '../utilities/logger.js';
-import Configstore from 'configstore';
+import { jest } from '@jest/globals';
 import chalk from 'chalk';
 
-describe('cmdResetConfig', () => {
-  let clearMock: jest.Mock;
-  let logSpy: jest.SpyInstance;
+const logMock = jest.fn();
+const clearMock = jest.fn();
 
-  beforeEach(() => {
-    clearMock = jest.fn();
-    logSpy = jest.spyOn(logger, 'log').mockImplementation(() => {});
+jest.unstable_mockModule('../utilities/logger.js', () => ({
+  createLogger: () => ({
+    log: logMock,
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
+}));
+
+jest.unstable_mockModule('../utilities/config.js', () => ({
+  clearConfig: clearMock,
+}));
+
+describe('cmdResetConfig', () => {
+  let cmdResetConfig: typeof import('./cmdResetConfig.js').cmdResetConfig;
+
+  beforeEach(async () => {
+    logMock.mockReset();
+    clearMock.mockReset();
+
+    await jest.isolateModulesAsync(async () => {
+      const mod = await import('./cmdResetConfig.js');
+      cmdResetConfig = mod.cmdResetConfig;
+    });
   });
 
   afterEach(() => {
@@ -17,13 +36,9 @@ describe('cmdResetConfig', () => {
   });
 
   it('clears the config and logs a confirmation message', () => {
-    const mockConfig = {
-      clear: clearMock,
-    } as unknown as Configstore;
-
     cmdResetConfig();
 
     expect(clearMock).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(chalk.yellow('✅ Configuration has been reset.'));
+    expect(logMock).toHaveBeenCalledWith(chalk.yellow('✅ Configuration has been reset.'));
   });
 });

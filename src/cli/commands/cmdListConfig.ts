@@ -11,7 +11,7 @@ const boolValueToString = (value: boolean): string => {
 };
 
 const getPrintValue = (value: string): string => {
-  return value === 'undefined' ? chalk.red('Not set') : chalk.green(value);
+  return value?.trim?.() && value !== 'undefined' ? chalk.green(value) : chalk.red('Not set');
 };
 
 const printConfigValue = (

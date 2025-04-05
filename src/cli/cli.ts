@@ -5,6 +5,8 @@ import pkg from '../../package.json' with { type: 'json' };
 import { cmdNewProject } from './commands/cmdNewProject.js';
 import { cmdConfig } from './commands/cmdConfig.js';
 import { LogLevel } from './types/logLevel.js';
+import { cmdListConfig } from './commands/cmdListConfig.js';
+import { cmdResetConfig } from './commands/cmdResetConfig.js';
 
 export function registerCommands() {
   const program = new Command();
@@ -83,8 +85,8 @@ export function registerCommands() {
     });
 
   return program;
-};
+}
 
-export const run = () => {
+export function run() {
   registerCommands().parse(process.argv);
-};
+}
