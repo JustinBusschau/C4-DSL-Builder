@@ -1,17 +1,23 @@
 import { Command } from 'commander';
+import chalk from 'chalk';
 import { createLogger } from './utilities/logger.js';
 import { getIntroText } from './utilities/intro.js';
 import pkg from '../../package.json' with { type: 'json' };
+import { setConfig, deleteConfig } from './utilities/config.js';
 import { cmdNewProject } from './commands/cmdNewProject.js';
 import { cmdConfig } from './commands/cmdConfig.js';
-import { LogLevel } from './types/logLevel.js';
 import { cmdListConfig } from './commands/cmdListConfig.js';
 import { cmdResetConfig } from './commands/cmdResetConfig.js';
 import { cmdDsl } from './commands/cmdDsl.js';
+import { cmdMd } from './commands/cmdMd.js';
+
+interface RenderOptions {
+  split?: boolean;
+}
 
 export function registerCommands() {
   const program = new Command();
-  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
+  const logger = createLogger();
 
   program.name(pkg.name).version(pkg.version);
 
@@ -56,7 +62,7 @@ export function registerCommands() {
     .description('generate markdown documentation')
     .option('-s, --split', 'generate separate markdown documents for each folder')
     .action(async function () {
-      const options = this.opts<MdOptions>();
+      const options = this.opts<RenderOptions>();
       if (options.split) {
         logger.log(chalk.green('Generating split Markdown ...'));
         setConfig('generateCompleteMdFile', false);

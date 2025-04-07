@@ -24,7 +24,7 @@ const formatMessage = (level: LogLevel, message: string, error: unknown = null):
   }
 };
 
-export const createLogger = (level: LogLevel = 'log') => ({
+export const createLogger = (level: LogLevel = (process.env.LOG_LEVEL as LogLevel) ?? 'log') => ({
   debug: (msg: string) => {
     if (level === 'debug') {
       write(formatMessage('debug', msg));

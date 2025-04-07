@@ -39,10 +39,7 @@ export async function cmdDsl(): Promise<void> {
         `Unknown dslCli config setting: ${dslCli}. Please set it to 'structurizr-cli' or 'docker'.`,
       );
     }
-  } catch (err) {
-    logger.error('Failed to execute DSL command.');
-    if (err instanceof Error) {
-      logger.error(err.message);
-    }
+  } catch (error) {
+    logger.error('Failed to execute DSL command.', error);
   }
 }

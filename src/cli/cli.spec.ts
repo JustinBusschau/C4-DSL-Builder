@@ -9,6 +9,7 @@ const cmdConfigMock = jest.fn();
 const cmdListConfigMock = jest.fn();
 const cmdResetConfigMock = jest.fn();
 const cmdDslMock = jest.fn();
+const cmdMdMock = jest.fn();
 
 // 👇 Use new logger API
 jest.unstable_mockModule('./utilities/logger.js', () => ({
@@ -45,6 +46,10 @@ jest.unstable_mockModule('./commands/cmdDsl.js', () => ({
   cmdDsl: cmdDslMock,
 }));
 
+jest.unstable_mockModule('./commands/cmdMd.js', () => ({
+  cmdMd: cmdMdMock,
+}));
+
 // These will be assigned inside isolateModules
 let run: typeof import('./cli.js').run;
 let registerCommands: typeof import('./cli.js').registerCommands;
@@ -59,6 +64,7 @@ beforeEach(async () => {
   cmdListConfigMock.mockReset();
   cmdResetConfigMock.mockReset();
   cmdDslMock.mockReset();
+  cmdMdMock.mockReset();
 
   // Reset CLI args
   process.argv = ['node', 'cli'];
@@ -112,6 +118,16 @@ describe('Register commands', () => {
   it("should call cmdDsl when running 'dsl'", () => {
     testCommand(['dsl']);
     expect(cmdDslMock).toHaveBeenCalled();
+  });
+
+  it("should call cmdMd when running 'md' without options", () => {
+    testCommand(['md'], 'Generating Markdown');
+    expect(cmdMdMock).toHaveBeenCalled();
+  });
+
+  it("should call cmdMd when running 'md' with --split option", () => {
+    testCommand(['md', '--split'], 'Generating split Markdown');
+    expect(cmdMdMock).toHaveBeenCalled();
   });
 });
 

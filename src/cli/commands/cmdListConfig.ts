@@ -1,4 +1,3 @@
-import { LogLevel } from '../types/logLevel.js';
 import { getStrConfig, getBoolConfig } from '../utilities/config.js';
 import { createLogger } from '../utilities/logger.js';
 import chalk from 'chalk';
@@ -23,7 +22,7 @@ const printConfigValue = (
 };
 
 export function cmdListConfig(): void {
-  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
+  const logger = createLogger();
   logger.log(chalk.cyan('Current Configuration\n'));
 
   printConfigValue(logger, 'Project name', getPrintValue(getStrConfig('projectName')));

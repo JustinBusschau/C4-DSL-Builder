@@ -5,7 +5,6 @@ import Configstore from 'configstore';
 import chalk from 'chalk';
 import { createLogger } from '../utilities/logger.js';
 import { getCurrentDir } from '../utilities/paths.js';
-import { LogLevel } from '../types/logLevel.js';
 
 const __dirname = getCurrentDir(import.meta.url);
 
@@ -24,7 +23,7 @@ export const isValidProjectName = async (name: string): Promise<boolean | string
 };
 
 export const cmdNewProject = async () => {
-  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
+  const logger = createLogger();
 
   const response: { projectName: string } = await inquirer.prompt([
     {

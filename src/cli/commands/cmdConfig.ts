@@ -2,7 +2,6 @@ import { getStrConfig, getBoolConfig, setConfig } from '../utilities/config.js';
 import inquirer from 'inquirer';
 import { createLogger } from '../utilities/logger.js';
 import chalk from 'chalk';
-import { LogLevel } from '../types/logLevel.js';
 
 type ConfigAnswers = {
   projectName: string;
@@ -41,7 +40,7 @@ export function isValidUrl(input: string): string | boolean {
 }
 
 export async function cmdConfig(): Promise<void> {
-  const logger = createLogger((process.env.LOG_LEVEL as LogLevel) ?? 'log');
+  const logger = createLogger();
 
   logger.log(chalk.cyan('Configure your project settings:\n'));
 

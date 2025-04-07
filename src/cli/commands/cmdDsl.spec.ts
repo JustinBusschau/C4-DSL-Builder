@@ -192,8 +192,10 @@ describe('cmdDsl', () => {
 
     await cmdDsl();
 
-    expect(errorMock).toHaveBeenCalledWith('Failed to execute DSL command.');
-    expect(errorMock).toHaveBeenCalledWith('mock exec failure');
+    expect(errorMock).toHaveBeenCalledWith(
+      'Failed to execute DSL command.',
+      Error('mock exec failure'),
+    );
   });
 
   it('should log error if execSync throws non-Error', async () => {
@@ -216,20 +218,29 @@ describe('cmdDsl', () => {
 
     await cmdDsl();
 
-    expect(errorMock).toHaveBeenCalledWith('Failed to execute DSL command.');
+    expect(errorMock).toHaveBeenCalledWith(
+      'Failed to execute DSL command.',
+      Error('non-error exception'),
+    );
   });
 
   it('should log error if rootFolder is missing', async () => {
     await cmdDsl();
 
-    expect(errorMock).toHaveBeenCalledWith('Failed to execute DSL command.');
+    expect(errorMock).toHaveBeenCalledWith(
+      'Failed to execute DSL command.',
+      Error('non-error exception'),
+    );
     expect(execSyncMock).toHaveBeenCalled();
   });
 
   it('should log error if workspaceDsl is missing', async () => {
     await cmdDsl();
 
-    expect(errorMock).toHaveBeenCalledWith('Failed to execute DSL command.');
+    expect(errorMock).toHaveBeenCalledWith(
+      'Failed to execute DSL command.',
+      Error('non-error exception'),
+    );
     expect(execSyncMock).toHaveBeenCalled();
   });
 
