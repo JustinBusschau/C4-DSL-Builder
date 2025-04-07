@@ -1,18 +1,19 @@
 import { execSync } from 'child_process';
 import path from 'path';
-import fs from 'fs';
-import { logger } from '../utilities/logger.js';
+import * as fsExtra from 'fs-extra';
 import { getStrConfig } from '../utilities/config.js';
+import { createLogger } from '../utilities/logger.js';
 
-export const cmdDsl = () => {
+export async function cmdDsl(): Promise<void> {
   const dslCli = getStrConfig('dslCli').trim();
   const rootFolder = getStrConfig('rootFolder') ?? 'src';
   const workspaceDsl = getStrConfig('workspaceDsl') ?? 'workspace.dsl';
+  const logger = createLogger();
 
   const workspacePath = path.join(rootFolder, '_dsl', workspaceDsl);
   const outputPath = path.join(rootFolder, 'diagrams');
 
-  if (!fs.existsSync(workspacePath)) {
+  if (!(await fsExtra.pathExists(workspacePath))) {
     logger.error(`Workspace file not found: ${workspacePath}`);
     logger.log('Please make sure the DSL file exists before running this command.');
     return;
@@ -44,4 +45,4 @@ export const cmdDsl = () => {
       logger.error(err.message);
     }
   }
-};
+}

@@ -1,64 +1,122 @@
-import { cmdDsl } from './cmdDsl.js';
-import * as childProcess from 'child_process';
-import * as fsModule from 'fs';
-import { logger } from '../utilities/logger.js';
-import type Configstore from 'configstore';
+import { jest } from '@jest/globals';
 
-jest.mock('child_process');
-jest.mock('fs');
-jest.mock('../utilities/logger.js');
+const execSyncMock = jest.fn();
+const getStrConfigMock = jest.fn<(key: string) => string | undefined>();
+const pathExistsMock = jest.fn<(path: string) => Promise<boolean>>();
+const logMock = jest.fn();
+const errorMock = jest.fn();
 
-const mockConfig = (dslCliValue?: string, rootFolder?: string, workspaceDsl?: string) =>
-  ({
-    get: (key: string) => {
-      if (key === 'dslCli') return dslCliValue;
-      if (key === 'rootFolder') return rootFolder;
-      if (key === 'workspaceDsl') return workspaceDsl;
-      return undefined;
-    },
-  }) as unknown as Configstore;
+jest.unstable_mockModule('child_process', () => ({
+  execSync: execSyncMock,
+}));
+
+jest.unstable_mockModule('../utilities/config.js', () => ({
+  getStrConfig: getStrConfigMock,
+}));
+
+jest.unstable_mockModule('fs-extra', () => ({
+  pathExists: pathExistsMock,
+}));
+
+jest.unstable_mockModule('../utilities/logger.js', () => ({
+  createLogger: () => ({
+    log: logMock,
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: errorMock,
+  }),
+}));
+
+const childProcess = await import('child_process');
 
 describe('cmdDsl', () => {
+  let cmdDsl: typeof import('./cmdDsl.js').cmdDsl;
+
+  beforeEach(async () => {
+    logMock.mockReset();
+    errorMock.mockReset();
+
+    const imported = await import('./cmdDsl.js');
+    cmdDsl = imported.cmdDsl;
+  });
+
   const mockedChildProcess = childProcess as jest.Mocked<typeof childProcess>;
-  const mockedFs = fsModule as jest.Mocked<typeof fsModule>;
 
   const execSyncMock = mockedChildProcess.execSync;
-  const fsExistsMock = mockedFs.existsSync;
 
-  beforeEach(() => {
+  afterEach(() => {
+    jest.restoreAllMocks();
     jest.clearAllMocks();
   });
 
-  it('should log error and return if workspace.dsl does not exist', () => {
-    fsExistsMock.mockReturnValue(false);
+  it('should log error and return if workspace.dsl does not exist', async () => {
+    pathExistsMock.mockResolvedValue(false);
+    getStrConfigMock.mockImplementation((key: string) => {
+      switch (key) {
+        case 'dslCli':
+          return 'structurizr-cli';
+        case 'rootFolder':
+          return 'src';
+        case 'workspaceDsl':
+          return 'workspace.dsl';
+        default:
+          return undefined;
+      }
+    });
 
-    cmdDsl();
+    await cmdDsl();
 
-    expect(logger.error).toHaveBeenCalledWith('Workspace file not found: src/_dsl/workspace.dsl');
-    expect(logger.log).toHaveBeenCalledWith(
+    expect(pathExistsMock).toHaveBeenCalled();
+    expect(errorMock).toHaveBeenCalledWith('Workspace file not found: src/_dsl/workspace.dsl');
+    expect(logMock).toHaveBeenCalledWith(
       'Please make sure the DSL file exists before running this command.',
     );
     expect(execSyncMock).not.toHaveBeenCalled();
   });
 
-  it('should run structurizr-cli locally if dslCli is "structurizr-cli"', () => {
-    fsExistsMock.mockReturnValue(true);
+  it('should run structurizr-cli locally if dslCli is "structurizr-cli"', async () => {
+    pathExistsMock.mockResolvedValue(true);
+    getStrConfigMock.mockImplementation((key: string) => {
+      switch (key) {
+        case 'dslCli':
+          return 'structurizr-cli';
+        case 'rootFolder':
+          return 'src';
+        case 'workspaceDsl':
+          return 'workspace.dsl';
+        default:
+          return undefined;
+      }
+    });
 
-    cmdDsl();
+    await cmdDsl();
 
-    expect(logger.log).toHaveBeenCalledWith('Using local structurizr-cli...');
+    expect(logMock).toHaveBeenCalledWith('Using local structurizr-cli...');
     expect(execSyncMock).toHaveBeenCalledWith(
       'structurizr-cli export -workspace src/_dsl/workspace.dsl --format mermaid --output src/diagrams',
       { stdio: 'inherit' },
     );
   });
 
-  it('should pull and run docker command if dslCli is "docker"', () => {
-    fsExistsMock.mockReturnValue(true);
+  it('should pull and run docker command if dslCli is "docker"', async () => {
+    pathExistsMock.mockResolvedValue(true);
+    getStrConfigMock.mockImplementation((key: string) => {
+      switch (key) {
+        case 'dslCli':
+          return 'docker';
+        case 'rootFolder':
+          return 'src';
+        case 'workspaceDsl':
+          return 'workspace.dsl';
+        default:
+          return undefined;
+      }
+    });
 
-    cmdDsl();
+    await cmdDsl();
 
-    expect(logger.log).toHaveBeenCalledWith('Using Dockerized structurizr-cli...');
+    expect(logMock).toHaveBeenCalledWith('Using Dockerized structurizr-cli...');
     expect(execSyncMock).toHaveBeenCalledWith('docker pull structurizr/cli:latest', {
       stdio: 'inherit',
     });
@@ -68,71 +126,131 @@ describe('cmdDsl', () => {
     );
   });
 
-  it('should handle unknown dslCli value', () => {
-    fsExistsMock.mockReturnValue(true);
+  it('should handle unknown dslCli value', async () => {
+    pathExistsMock.mockResolvedValue(true);
+    getStrConfigMock.mockImplementation((key: string) => {
+      switch (key) {
+        case 'dslCli':
+          return 'something-weird';
+        case 'rootFolder':
+          return 'src';
+        case 'workspaceDsl':
+          return 'workspace.dsl';
+        default:
+          return undefined;
+      }
+    });
 
-    cmdDsl();
+    await cmdDsl();
 
-    expect(logger.error).toHaveBeenCalledWith(
+    expect(errorMock).toHaveBeenCalledWith(
       "Unknown dslCli config setting: something-weird. Please set it to 'structurizr-cli' or 'docker'.",
     );
     expect(execSyncMock).not.toHaveBeenCalled();
   });
 
-  it('should handle missing dslCli config gracefully', () => {
-    fsExistsMock.mockReturnValue(true);
+  it('should handle missing dslCli config gracefully', async () => {
+    pathExistsMock.mockResolvedValue(true);
+    getStrConfigMock.mockImplementation((key: string) => {
+      switch (key) {
+        case 'dslCli':
+          return '';
+        case 'rootFolder':
+          return 'src';
+        case 'workspaceDsl':
+          return 'workspace.dsl';
+        default:
+          return undefined;
+      }
+    });
 
-    cmdDsl();
+    await cmdDsl();
 
-    expect(logger.error).toHaveBeenCalledWith(
-      "Unknown dslCli config setting: undefined. Please set it to 'structurizr-cli' or 'docker'.",
+    expect(errorMock).toHaveBeenCalledWith(
+      "Unknown dslCli config setting: . Please set it to 'structurizr-cli' or 'docker'.",
     );
     expect(execSyncMock).not.toHaveBeenCalled();
   });
 
-  it('should log error if execSync throws an Error', () => {
-    fsExistsMock.mockReturnValue(true);
+  it('should log error if execSync throws an Error', async () => {
+    pathExistsMock.mockResolvedValue(true);
+    getStrConfigMock.mockImplementation((key: string) => {
+      switch (key) {
+        case 'dslCli':
+          return 'structurizr-cli';
+        case 'rootFolder':
+          return 'src';
+        case 'workspaceDsl':
+          return 'workspace.dsl';
+        default:
+          return undefined;
+      }
+    });
     execSyncMock.mockImplementation(() => {
       throw new Error('mock exec failure');
     });
 
-    cmdDsl();
+    await cmdDsl();
 
-    expect(logger.error).toHaveBeenCalledWith('Failed to execute DSL command.');
-    expect(logger.error).toHaveBeenCalledWith('mock exec failure');
+    expect(errorMock).toHaveBeenCalledWith('Failed to execute DSL command.');
+    expect(errorMock).toHaveBeenCalledWith('mock exec failure');
   });
 
-  it('should log error if execSync throws non-Error', () => {
-    fsExistsMock.mockReturnValue(true);
+  it('should log error if execSync throws non-Error', async () => {
+    pathExistsMock.mockResolvedValue(true);
+    getStrConfigMock.mockImplementation((key: string) => {
+      switch (key) {
+        case 'dslCli':
+          return 'structurizr-cli';
+        case 'rootFolder':
+          return 'src';
+        case 'workspaceDsl':
+          return 'workspace.dsl';
+        default:
+          return undefined;
+      }
+    });
     execSyncMock.mockImplementation(() => {
       throw new Error(String('non-error exception'));
     });
 
-    cmdDsl();
+    await cmdDsl();
 
-    expect(logger.error).toHaveBeenCalledWith('Failed to execute DSL command.');
+    expect(errorMock).toHaveBeenCalledWith('Failed to execute DSL command.');
   });
 
-  it('should log error if rootFolder is missing', () => {
-    cmdDsl();
+  it('should log error if rootFolder is missing', async () => {
+    await cmdDsl();
 
-    expect(logger.error).toHaveBeenCalledWith('Failed to execute DSL command.');
+    expect(errorMock).toHaveBeenCalledWith('Failed to execute DSL command.');
     expect(execSyncMock).toHaveBeenCalled();
   });
 
-  it('should log error if workspaceDsl is missing', () => {
-    cmdDsl();
+  it('should log error if workspaceDsl is missing', async () => {
+    await cmdDsl();
 
-    expect(logger.error).toHaveBeenCalledWith('Failed to execute DSL command.');
+    expect(errorMock).toHaveBeenCalledWith('Failed to execute DSL command.');
     expect(execSyncMock).toHaveBeenCalled();
   });
 
-  it('should treat whitespace-only dslCli as unknown', () => {
-    fsExistsMock.mockReturnValue(true);
+  it('should treat whitespace-only dslCli as unknown', async () => {
+    pathExistsMock.mockResolvedValue(true);
+    getStrConfigMock.mockImplementation((key: string) => {
+      switch (key) {
+        case 'dslCli':
+          return '';
+        case 'rootFolder':
+          return 'src';
+        case 'workspaceDsl':
+          return 'workspace.dsl';
+        default:
+          return undefined;
+      }
+    });
 
-    cmdDsl();
+    await cmdDsl();
 
-    expect(logger.error).toHaveBeenCalledWith(
+    expect(errorMock).toHaveBeenCalledWith(
       "Unknown dslCli config setting: . Please set it to 'structurizr-cli' or 'docker'.",
     );
     expect(execSyncMock).not.toHaveBeenCalled();

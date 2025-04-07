@@ -7,6 +7,7 @@ import { cmdConfig } from './commands/cmdConfig.js';
 import { LogLevel } from './types/logLevel.js';
 import { cmdListConfig } from './commands/cmdListConfig.js';
 import { cmdResetConfig } from './commands/cmdResetConfig.js';
+import { cmdDsl } from './commands/cmdDsl.js';
 
 export function registerCommands() {
   const program = new Command();

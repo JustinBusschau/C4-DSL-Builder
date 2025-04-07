@@ -3,11 +3,12 @@ import { jest } from '@jest/globals';
 // Mocks
 const logMock = jest.fn();
 const errorMock = jest.fn();
+const getIntroTextMock = jest.fn(() => 'Enhance your C4 Modelling');
 const cmdNewProjectMock = jest.fn();
 const cmdConfigMock = jest.fn();
 const cmdListConfigMock = jest.fn();
 const cmdResetConfigMock = jest.fn();
-const getIntroTextMock = jest.fn(() => 'Enhance your C4 Modelling');
+const cmdDslMock = jest.fn();
 
 // 👇 Use new logger API
 jest.unstable_mockModule('./utilities/logger.js', () => ({
@@ -40,6 +41,10 @@ jest.unstable_mockModule('./commands/cmdResetConfig.js', () => ({
   cmdResetConfig: cmdResetConfigMock,
 }));
 
+jest.unstable_mockModule('./commands/cmdDsl.js', () => ({
+  cmdDsl: cmdDslMock,
+}));
+
 // These will be assigned inside isolateModules
 let run: typeof import('./cli.js').run;
 let registerCommands: typeof import('./cli.js').registerCommands;
@@ -53,6 +58,7 @@ beforeEach(async () => {
   getIntroTextMock.mockReset();
   cmdListConfigMock.mockReset();
   cmdResetConfigMock.mockReset();
+  cmdDslMock.mockReset();
 
   // Reset CLI args
   process.argv = ['node', 'cli'];
@@ -98,9 +104,14 @@ describe('Register commands', () => {
     expect(cmdListConfigMock).toHaveBeenCalled();
   });
 
-  it("should call cmdReset when running 'reset'", () => {
+  it("should call cmdResetConfig when running 'reset'", () => {
     testCommand(['reset']);
     expect(cmdResetConfigMock).toHaveBeenCalled();
+  });
+
+  it("should call cmdDsl when running 'dsl'", () => {
+    testCommand(['dsl']);
+    expect(cmdDslMock).toHaveBeenCalled();
   });
 });
 
