@@ -2,7 +2,7 @@ import { getStrConfig } from '../utilities/config.js';
 import path from 'path';
 import { createLogger } from '../utilities/logger.js';
 import chalk from 'chalk';
-import { safeEmptySubFolder } from '../utilities/tree.js';
+import { safeEmptySubFolder, generateTree } from '../utilities/tree.js';
 
 export async function cmdMd() {
   const logger = createLogger();
@@ -19,6 +19,23 @@ export async function cmdMd() {
   }
 
   logger.log(chalk.green(`\nBuilding Markdown documentation in ./${targetFolder}`));
+
+  const tree = await generateTree(getStrConfig('rootFolder'));
+  if (tree) {
+    console.info(chalk.bgGray(JSON.stringify(tree, null, 2)));
+  }
+  logger.log(chalk.blue(`Parsed ${tree.length} folders.\nGenerating inline Mermaid diagrams`));
+
+  for (const item of tree) {
+    for (const mdFile of item.mdFiles) {
+      const content = mdFile.toString();
+      const mermaidBlocks = /```mermaid\n([\s\S]*?)```/g.exec(content);
+
+      if (mermaidBlocks) {
+        console.log(chalk.blue(`Found ${mermaidBlocks.length} Mermaid diagrams in ${item.dir}`));
+      }
+    }
+  }
 
   logger.log(chalk.green(`\nMarkdown documentation generated successfully!`));
 }

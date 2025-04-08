@@ -1,7 +1,9 @@
 import { jest } from '@jest/globals';
+import { TreeItem } from '../utilities/tree.js';
 
 const getStrConfigMock = jest.fn();
 const safeEmptySubFolderMock = jest.fn();
+const generateTreeMock = jest.fn();
 const logMock = jest.fn();
 const errorMock = jest.fn();
 
@@ -10,6 +12,7 @@ jest.unstable_mockModule('../utilities/config.js', () => ({
 }));
 
 jest.unstable_mockModule('../utilities/tree.js', () => ({
+  generateTree: generateTreeMock,
   safeEmptySubFolder: safeEmptySubFolderMock,
 }));
 
@@ -60,6 +63,82 @@ describe('cmdMd', () => {
   it('logs success message when everything works', async () => {
     getStrConfigMock.mockReturnValue('docs');
     safeEmptySubFolderMock.mockResolvedValue(true);
+    generateTreeMock.mockResolvedValue([
+      {
+        dir: 'src/Other Files/Nested Files',
+        name: 'Nested Files',
+        level: 2,
+        parent: 'src/Other Files',
+        mdFiles: [
+          {
+            type: 'Buffer',
+            data: [35, 32, 68, 101, 115],
+          },
+        ],
+        mmdFiles: [],
+        descendants: [],
+      },
+      {
+        dir: 'src/Other Files',
+        name: 'Other Files',
+        level: 1,
+        parent: 'src',
+        mdFiles: [
+          {
+            type: 'Buffer',
+            data: [42, 42, 76, 101, 118],
+          },
+        ],
+        mmdFiles: [
+          {
+            name: 'system.mmd',
+            content: '    C4Context\n      title System Context diagram\n',
+          },
+        ],
+        descendants: ['Nested Files'],
+      },
+      {
+        dir: 'src/diagrams',
+        name: 'diagrams',
+        level: 1,
+        parent: 'src',
+        mdFiles: [],
+        mmdFiles: [
+          {
+            name: 'structurizr-Components.mmd',
+            content: 'graph TB\n',
+          },
+          {
+            name: 'structurizr-Containers.mmd',
+            content: 'graph TB\n',
+          },
+        ],
+        descendants: [],
+      },
+      {
+        dir: 'src',
+        name: 'Overview',
+        level: 0,
+        parent: null,
+        mdFiles: [
+          {
+            type: 'Buffer',
+            data: [42, 42, 76, 101, 118],
+          },
+          {
+            type: 'Buffer',
+            data: [35, 35, 32, 73, 110],
+          },
+        ],
+        mmdFiles: [
+          {
+            name: 'context.mmd',
+            content: '    C4Context\n',
+          },
+        ],
+        descendants: ['Other Files', 'diagrams'],
+      },
+    ] as TreeItem[]);
 
     await cmdMd();
 
