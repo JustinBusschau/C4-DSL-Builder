@@ -43,13 +43,8 @@ export function cmdListConfig(): void {
   printConfigValue(logger, 'Repository Url', getPrintValue(getStrConfig('repoName')));
   printConfigValue(
     logger,
-    'Embed diagrams',
-    getPrintValue(boolValueToString(getBoolConfig('embedDiagram'))),
-  );
-  printConfigValue(
-    logger,
-    'Replace diagrams with a link',
-    getPrintValue(boolValueToString(getBoolConfig('includeLinkToDiagram'))),
+    'Embed Mermaid diagrams?',
+    getPrintValue(boolValueToString(getBoolConfig('embedMermaidDiagrams'))),
   );
   printConfigValue(
     logger,

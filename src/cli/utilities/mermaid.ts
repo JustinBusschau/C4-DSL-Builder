@@ -1,44 +1,48 @@
-import { execSync } from 'child_process';
+import { execFile } from 'child_process';
 import path from 'path';
-import __dirname from '../utilities/anchor.cjs';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import fsExtra from 'fs-extra';
 import chalk from 'chalk';
+import { getCurrentDir } from '../utilities/paths.js';
+import { promisify } from 'util';
 
-export async function generateMermaidDiagram(content: string, outputPath: string) {
+const __dirname = getCurrentDir(import.meta.url);
+const execFileAsync = promisify(execFile);
+
+export async function generateMermaidDiagram(
+  content: string,
+  outputPath: string,
+  options?: {
+    mmdcPathOverride?: string;
+  },
+): Promise<boolean> {
+  const logger = console;
+  const packageRoot = path.resolve(__dirname, '../../..');
+  const mmdcPath = options?.mmdcPathOverride || path.join(packageRoot, 'node_modules/.bin/mmdc');
+
   try {
-    const packageRoot = path.resolve(__dirname, '../../..');
+    const outputDir = path.dirname(outputPath);
+    await fsExtra.ensureDir(outputDir);
 
-    // Ensure output directory exists
-    await fsExtra.ensureDir(path.dirname(outputPath));
+    const tempFile = path.join(outputDir, `temp_${Date.now()}.mmd`);
+    await fs.writeFile(tempFile, content);
 
-    // Create a temporary .mmd file
-    const tempFile = path.join(path.dirname(outputPath), `temp_${Date.now()}.mmd`);
-    fs.writeFileSync(tempFile, content);
+    logger.log(chalk.blue(`Generating Mermaid diagram: ${outputPath}`));
 
-    console.log(chalk.blue(`Generating Mermaid diagram: ${outputPath}`));
+    await execFileAsync('node', [mmdcPath, '-i', tempFile, '-o', outputPath]);
 
-    // Escape paths with spaces
-    const escapedTempFile = `"${tempFile}"`;
-    const escapedOutputPath = `"${outputPath}"`;
-    execSync(
-      `node ${path.join(packageRoot, 'node_modules/.bin/mmdc')} -i ${escapedTempFile} -o ${escapedOutputPath}`,
-    );
+    await fs.unlink(tempFile);
 
-    // Clean up temp file
-    fs.unlinkSync(tempFile);
-
-    if (fs.existsSync(outputPath)) {
-      console.log(chalk.green(`Successfully generated diagram: ${outputPath}`));
+    try {
+      await fs.access(outputPath);
+      logger.log(chalk.green(`Successfully generated diagram: ${outputPath}`));
       return true;
-    } else {
-      console.error(chalk.red(`Failed to generate diagram: ${outputPath}`));
+    } catch (error) {
+      logger.error(`Failed to generate diagram: ${outputPath}`, error);
       return false;
     }
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error(chalk.red('Error generating Mermaid diagram:', error.message));
-    }
+  } catch (error) {
+    logger.error(chalk.red('Error generating Mermaid diagram:'), error);
     return false;
   }
 }

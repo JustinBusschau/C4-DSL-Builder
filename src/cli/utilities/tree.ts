@@ -173,7 +173,8 @@ export async function itemiseTreeFolder(
 }
 
 export async function generateTree(baseFolder: string): Promise<TreeItem[]> {
-  const tree = await itemiseTreeFolder(baseFolder, baseFolder, null, []);
+  const tree: TreeItem[] = [];
+  tree.push(await itemiseTreeFolder(baseFolder, baseFolder, null, tree));
 
-  return [tree];
+  return tree;
 }

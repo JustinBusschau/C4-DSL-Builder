@@ -42,12 +42,11 @@ beforeEach(async () => {
 
 describe('cmdListConfig', () => {
   it('prints all config keys with correctly formatted values', () => {
-    // 🎯 Setup config return values
     getStrConfig.mockImplementation((key: unknown) => {
       key = key as string;
       const map: Record<string, string> = {
         projectName: 'My Project',
-        homepageName: 'undefined', // should show as "Not set"
+        homepageName: 'undefined',
         rootFolder: '/src',
         distFolder: '/dist',
         webTheme: 'vue',
@@ -64,33 +63,26 @@ describe('cmdListConfig', () => {
     getBoolConfig.mockImplementation((key: unknown) => {
       const map: Record<string, boolean> = {
         generateWebsite: true,
-        embedDiagram: true,
-        includeLinkToDiagram: false,
+        embedMermaidDiagrams: true,
         diagramsOnTop: true,
         excludeOtherFiles: false,
       };
       return map[key as string] ?? false;
     });
 
-    // ✅ Run it
     cmdListConfig();
 
-    // ✅ Check top title
     expect(logSpy).toHaveBeenCalledWith(chalk.cyan('Current Configuration\n'));
 
-    // ✅ Check a few specific values
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Project name'.padEnd(40)));
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.green('My Project')));
 
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Homepage Name'.padEnd(40)));
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.red('Not set')));
 
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Embed diagrams'.padEnd(40)));
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.green('Yes')));
-
     expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Replace diagrams with a link'.padEnd(40)),
+      expect.stringContaining('Embed Mermaid diagrams?'.padEnd(40)),
     );
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.green('No')));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(chalk.green('Yes')));
   });
 });

@@ -2,18 +2,25 @@ import { jest } from '@jest/globals';
 import { TreeItem } from '../utilities/tree.js';
 
 const getStrConfigMock = jest.fn();
+const getBoolConfigMock = jest.fn();
 const safeEmptySubFolderMock = jest.fn();
 const generateTreeMock = jest.fn();
+const generateMermaidDiagramMock = jest.fn();
 const logMock = jest.fn();
 const errorMock = jest.fn();
 
 jest.unstable_mockModule('../utilities/config.js', () => ({
   getStrConfig: getStrConfigMock,
+  getBoolConfig: getBoolConfigMock,
 }));
 
 jest.unstable_mockModule('../utilities/tree.js', () => ({
   generateTree: generateTreeMock,
   safeEmptySubFolder: safeEmptySubFolderMock,
+}));
+
+jest.unstable_mockModule('../utilities/mermaid.js', () => ({
+  generateMermaidDiagram: generateMermaidDiagramMock,
 }));
 
 jest.unstable_mockModule('../utilities/logger.js', () => ({
@@ -23,7 +30,65 @@ jest.unstable_mockModule('../utilities/logger.js', () => ({
   }),
 }));
 
-const { cmdMd } = await import('./cmdMd.js');
+const { convertMermaidDiagrams, cmdMd } = await import('./cmdMd.js');
+
+describe('convertMermaidDiagrams', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('generates diagrams for each Mermaid block in markdown', async () => {
+    getStrConfigMock.mockImplementation((key) => {
+      if (key === 'distFolder') return '/dist';
+      if (key === 'rootFolder') return '/root';
+    });
+
+    const markdown = `
+# Title
+
+Some intro.
+
+\`\`\`mermaid
+graph TD;
+A-->B;
+\`\`\`
+
+Some more text...
+
+\`\`\`mermaid
+sequenceDiagram
+Alice->>Bob: Hello Bob!
+\`\`\`
+    `;
+
+    const fakeTree = [
+      {
+        dir: '/root/project/docs',
+        mdFiles: [Buffer.from(markdown)],
+      },
+    ] as TreeItem[];
+
+    await convertMermaidDiagrams(fakeTree);
+
+    expect(logMock).toHaveBeenCalledWith(
+      expect.stringContaining('Found 2 Mermaid diagrams in /root/project/docs'),
+    );
+
+    expect(generateMermaidDiagramMock).toHaveBeenCalledTimes(2);
+
+    expect(generateMermaidDiagramMock).toHaveBeenNthCalledWith(
+      1,
+      'graph TD;\nA-->B;\n',
+      '/dist/project/docs/docs_0.svg',
+    );
+
+    expect(generateMermaidDiagramMock).toHaveBeenNthCalledWith(
+      2,
+      'sequenceDiagram\nAlice->>Bob: Hello Bob!\n',
+      '/dist/project/docs/docs_1.svg',
+    );
+  });
+});
 
 describe('cmdMd', () => {
   beforeEach(() => {

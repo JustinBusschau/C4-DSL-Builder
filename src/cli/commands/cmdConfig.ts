@@ -12,8 +12,7 @@ type ConfigAnswers = {
   webTheme: string; // not used yet
   docsifyTemplate: string; // not used yet
   repoName: string; // not used yet
-  embedDiagram: boolean; // not used yet
-  includeLinkToDiagram: boolean; // not used yet
+  embedMermaidDiagrams: boolean;
   diagramsOnTop: boolean; // not used yet
   dslCli: 'structurizr-cli' | 'docker';
   workspaceDsl: string;
@@ -98,15 +97,10 @@ export async function cmdConfig(): Promise<void> {
     },
     {
       type: 'confirm',
-      name: 'embedDiagram',
-      message: 'Embed diagrams?',
-      default: getBoolConfig('embedDiagram') || false,
-    },
-    {
-      type: 'confirm',
-      name: 'includeLinkToDiagram',
-      message: 'Replace diagrams with a link?',
-      default: getBoolConfig('includeLinkToDiagram') || false,
+      name: 'embedMermaidDiagrams',
+      message:
+        'Embed Mermaid diagrams? (if set to false, they will be replaced with a link to an image)',
+      default: getBoolConfig('embedMermaidDiagrams') || false,
     },
     {
       type: 'confirm',

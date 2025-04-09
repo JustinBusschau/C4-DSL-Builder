@@ -1,14 +1,12 @@
 import { jest } from '@jest/globals';
 import type { Question } from 'inquirer';
 
-// ----------------- Mocks -----------------
 const getStrConfigMock = jest.fn();
 const getBoolConfigMock = jest.fn();
 const setConfigMock = jest.fn();
 const logMock = jest.fn();
 const promptMock = jest.fn();
 
-// Mock modules
 jest.unstable_mockModule('../utilities/config.js', () => ({
   getStrConfig: getStrConfigMock,
   getBoolConfig: getBoolConfigMock,
@@ -38,20 +36,17 @@ jest.unstable_mockModule('chalk', () => ({
   },
 }));
 
-// ----------------- Imports (after mocks) -----------------
 let cmdConfig: typeof import('./cmdConfig.js').cmdConfig;
 let isValidProjectName: typeof import('./cmdConfig.js').isValidProjectName;
 let isValidUrl: typeof import('./cmdConfig.js').isValidUrl;
 
 beforeEach(async () => {
-  // Reset all mocks
   getStrConfigMock.mockReset();
   getBoolConfigMock.mockReset();
   setConfigMock.mockReset();
   logMock.mockReset();
   promptMock.mockReset();
 
-  // Load the module under test in a clean context with mocks applied
   await jest.isolateModulesAsync(async () => {
     const configModule = await import('./cmdConfig.js');
     cmdConfig = configModule.cmdConfig;
@@ -60,11 +55,8 @@ beforeEach(async () => {
   });
 });
 
-// ----------------- Tests -----------------
-
 describe('cmdConfig', () => {
   it('should prompt for all config options, store them, and log success', async () => {
-    // Mock current config defaults
     getStrConfigMock.mockImplementation((key) => {
       return {
         projectName: 'Test Project',
@@ -84,8 +76,7 @@ describe('cmdConfig', () => {
     getBoolConfigMock.mockImplementation((key) => {
       return {
         generateWebsite: true,
-        embedDiagram: false,
-        includeLinkToDiagram: true,
+        embedMermaidDiagrams: false,
         diagramsOnTop: false,
         excludeOtherFiles: true,
       }[key];
@@ -100,8 +91,7 @@ describe('cmdConfig', () => {
       webTheme: 'https://new-theme.css',
       docsifyTemplate: '',
       repoName: 'https://example.com',
-      embedDiagram: true,
-      includeLinkToDiagram: false,
+      embedMermaidDiagrams: true,
       diagramsOnTop: true,
       dslCli: 'structurizr-cli',
       workspaceDsl: 'new.dsl',
@@ -114,7 +104,6 @@ describe('cmdConfig', () => {
 
     await cmdConfig();
 
-    // Ensure all values are saved
     Object.entries(mockAnswers).forEach(([key, value]) => {
       expect(setConfigMock).toHaveBeenCalledWith(key, String(value));
     });
@@ -150,8 +139,6 @@ describe('cmdConfig', () => {
     expect(repoNameField?.validate('not-a-url')).toBe('Please enter a valid URL.');
   });
 });
-
-// ----------------- Validators -----------------
 
 describe('isValidProjectName', () => {
   it('accepts valid project names', () => {

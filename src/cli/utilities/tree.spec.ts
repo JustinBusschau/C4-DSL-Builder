@@ -375,4 +375,47 @@ describe('generateTree', () => {
     expect(result[0].name).toBe('Homepage');
     expect(result[0].mdFiles).toEqual([]);
   });
+
+  it('recursively itemises subdirectories and ensures tree structure is preserved', async () => {
+    const baseFolder = '/docs';
+    const rootDir = '/docs';
+    const subDir = 'section';
+    const mdFile = 'readme.md';
+
+    jest.spyOn(fs, 'readdir').mockImplementation(async (dir) => {
+      if (dir === rootDir) return [subDir, mdFile];
+      if (dir === path.join(rootDir, subDir)) return [mdFile];
+      return [];
+    });
+
+    jest.spyOn(fs, 'stat').mockImplementation(async (filePath) => {
+      if (filePath === path.join(rootDir, subDir)) {
+        return {
+          isDirectory: () => true,
+        } as Stats;
+      }
+      return {
+        isDirectory: () => false,
+      } as Stats;
+    });
+
+    jest.spyOn(fs, 'readFile').mockResolvedValue(Buffer.from('# Markdown'));
+
+    configMock.getStrConfig.mockImplementation((key) => {
+      if (key === 'homepageName') return 'Home';
+      if (key === 'rootFolder') return '/docs';
+      if (key === 'distFolder') return '/dist';
+      return '';
+    });
+
+    configMock.getBoolConfig.mockReturnValue(true);
+
+    const tree: TreeItem[] = [];
+    const treeItem = await itemiseTreeFolder(rootDir, baseFolder, null, tree);
+    tree.push(treeItem);
+
+    expect(treeItem.descendants).toContain(subDir);
+    expect(tree.length).toBe(2);
+    expect(mockEnsureDir).toHaveBeenCalledWith('/docs/section');
+  });
 });

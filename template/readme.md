@@ -131,10 +131,7 @@ The output of the above command will show all available configuration items alon
     
         Repository Url: https://www.www.com/src
     Include breadcrumbs: true
-    Embed SVG diagram : true
-    Replace diagrams with a link: false
     Place diagrams before text: true
-    Diagram format: svg
     Charset: UTF-8
     Exclude other files: false
     PDF CSS: /Users/coder/Proj/config/pdf.css
