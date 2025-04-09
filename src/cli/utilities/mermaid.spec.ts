@@ -111,12 +111,4 @@ describe('generateMermaidDiagram', () => {
 
     expect(result).toBe(false);
   });
-
-  it('supports mmdcPathOverride', async () => {
-    const customPath = '/some/custom/mmdc';
-    await generateMermaidDiagram(content, outputPath, { mmdcPathOverride: customPath });
-
-    const execArgs = mockExecFile.mock.calls[0][1];
-    expect(execArgs).toContain(customPath);
-  });
 });

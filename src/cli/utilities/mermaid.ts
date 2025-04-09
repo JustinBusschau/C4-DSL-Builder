@@ -12,13 +12,10 @@ const execFileAsync = promisify(execFile);
 export async function generateMermaidDiagram(
   content: string,
   outputPath: string,
-  options?: {
-    mmdcPathOverride?: string;
-  },
 ): Promise<boolean> {
   const logger = console;
   const packageRoot = path.resolve(__dirname, '../../..');
-  const mmdcPath = options?.mmdcPathOverride || path.join(packageRoot, 'node_modules/.bin/mmdc');
+  const mmdcPath = path.join(packageRoot, 'node_modules/.bin/mmdc');
 
   try {
     const outputDir = path.dirname(outputPath);
