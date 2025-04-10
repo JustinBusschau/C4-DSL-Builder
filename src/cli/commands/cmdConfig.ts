@@ -21,113 +21,6 @@ type ConfigAnswers = {
   pdfCss: string; // not used yet
 };
 
-type TypedQuestion<T> = {
-  name: Extract<keyof T, string>;
-  message: string;
-  type: 'input' | 'confirm' | 'list';
-  default?: () => string | boolean;
-  choices?: string[];
-  validate?: (input: string) => string | boolean;
-};
-
-const promptConfigMap: TypedQuestion<ConfigAnswers>[] = [
-  {
-    type: 'input',
-    name: 'projectName',
-    message: 'Project name:',
-    default: () => getStrConfig('projectName'),
-    validate: isValidProjectName,
-  },
-  {
-    type: 'input',
-    name: 'homepageName',
-    message: 'Homepage name:',
-    default: () => getStrConfig('homepageName') || 'Overview',
-  },
-  {
-    type: 'input',
-    name: 'rootFolder',
-    message: 'Root folder:',
-    default: () => getStrConfig('rootFolder') || 'src',
-  },
-  {
-    type: 'input',
-    name: 'distFolder',
-    message: 'Destination folder:',
-    default: () => getStrConfig('distFolder') || 'docs',
-  },
-  {
-    type: 'confirm',
-    name: 'generateWebsite',
-    message: 'Generate website?',
-    default: () => getBoolConfig('generateWebsite') || false,
-  },
-  {
-    type: 'input',
-    name: 'webTheme',
-    message: 'Website Docsify theme (URL):',
-    default: () => getStrConfig('webTheme') || 'https://unpkg.com/docsify/lib/themes/vue.css',
-    validate: isValidUrl,
-  },
-  {
-    type: 'input',
-    name: 'docsifyTemplate',
-    message: 'Path to a specific Docsify template:',
-    default: () => getStrConfig('docsifyTemplate') || '',
-  },
-  {
-    type: 'input',
-    name: 'repoName',
-    message: 'Repository URL:',
-    default: () => getStrConfig('repoName') || '',
-    validate: isValidUrl,
-  },
-  {
-    type: 'confirm',
-    name: 'embedMermaidDiagrams',
-    message:
-      'Embed Mermaid diagrams? (if set to false, they will be replaced with a link to an image)',
-    default: () => getBoolConfig('embedMermaidDiagrams') || false,
-  },
-  {
-    type: 'confirm',
-    name: 'diagramsOnTop',
-    message: 'Place diagrams before text?',
-    default: () => getBoolConfig('diagramsOnTop') || false,
-  },
-  {
-    type: 'list',
-    name: 'dslCli',
-    message: 'Which Structurizr CLI would you prefer to use:',
-    choices: ['structurizr-cli', 'docker'],
-    default: () => getStrConfig('dslCli') || 'structurizr-cli',
-  },
-  {
-    type: 'input',
-    name: 'workspaceDsl',
-    message: 'Where should the Structurizr CLI start looking when exporting diagrams:',
-    default: () => getStrConfig('workspaceDsl') || 'workspace.dsl',
-  },
-  {
-    type: 'input',
-    name: 'charset',
-    message: 'Character set (e.g., utf-8):',
-    default: () => getStrConfig('charset') || 'utf-8',
-  },
-  {
-    type: 'confirm',
-    name: 'excludeOtherFiles',
-    message: 'Exclude other files?',
-    default: () => getBoolConfig('excludeOtherFiles') || false,
-  },
-  {
-    type: 'input',
-    name: 'pdfCss',
-    message: 'PDF CSS file path:',
-    default: () => getStrConfig('pdfCss') || '',
-  },
-];
-
 export function isValidProjectName(input: string): string | boolean {
   return (
     /^[\w\s-]{2,}$/.test(input) ||
@@ -150,15 +43,103 @@ export async function cmdConfig(): Promise<void> {
 
   logger.log(chalk.cyan('Configure your project settings:\n'));
 
-  const questions = promptConfigMap.map((q) => {
-    const { default: def, ...rest } = q;
-    return {
-      ...rest,
-      default: def?.(),
-    };
-  }) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-
-  const answers = await inquirer.prompt<ConfigAnswers>(questions);
+  const answers = await inquirer.prompt<ConfigAnswers>([
+    {
+      type: 'input',
+      name: 'projectName',
+      message: 'Project name:',
+      default: getStrConfig('projectName'),
+      validate: isValidProjectName,
+    },
+    {
+      type: 'input',
+      name: 'homepageName',
+      message: 'Homepage name:',
+      default: getStrConfig('homepageName') || 'Overview',
+    },
+    {
+      type: 'input',
+      name: 'rootFolder',
+      message: 'Root folder:',
+      default: getStrConfig('rootFolder') || 'src',
+    },
+    {
+      type: 'input',
+      name: 'distFolder',
+      message: 'Destination folder:',
+      default: getStrConfig('distFolder') || 'docs',
+    },
+    {
+      type: 'confirm',
+      name: 'generateWebsite',
+      message: 'Generate website?',
+      default: getBoolConfig('generateWebsite') || false,
+    },
+    {
+      type: 'input',
+      name: 'webTheme',
+      message: 'Website Docsify theme (URL):',
+      default: getStrConfig('webTheme') || 'https://unpkg.com/docsify/lib/themes/vue.css',
+      validate: isValidUrl,
+    },
+    {
+      type: 'input',
+      name: 'docsifyTemplate',
+      message: 'Path to a specific Docsify template:',
+      default: getStrConfig('docsifyTemplate') || '',
+    },
+    {
+      type: 'input',
+      name: 'repoName',
+      message: 'Repository URL:',
+      default: getStrConfig('repoName') || '',
+      validate: isValidUrl,
+    },
+    {
+      type: 'confirm',
+      name: 'embedMermaidDiagrams',
+      message:
+        'Embed Mermaid diagrams? (if set to false, they will be replaced with a link to an image)',
+      default: getBoolConfig('embedMermaidDiagrams') || false,
+    },
+    {
+      type: 'confirm',
+      name: 'diagramsOnTop',
+      message: 'Place diagrams before text?',
+      default: getBoolConfig('diagramsOnTop') || false,
+    },
+    {
+      type: 'list',
+      name: 'dslCli',
+      message: 'Which Structurizr CLI would you prefer to use:',
+      choices: ['structurizr-cli', 'docker'],
+      default: getStrConfig('dslCli') || 'structurizr-cli',
+    },
+    {
+      type: 'input',
+      name: 'workspaceDsl',
+      message: 'Where should the Structurizr CLI start looking when exporting diagrams:',
+      default: getStrConfig('workspaceDsl') || 'workspace.dsl',
+    },
+    {
+      type: 'input',
+      name: 'charset',
+      message: 'Character set (e.g., utf-8):',
+      default: getStrConfig('charset') || 'utf-8',
+    },
+    {
+      type: 'confirm',
+      name: 'excludeOtherFiles',
+      message: 'Exclude other files?',
+      default: getBoolConfig('excludeOtherFiles') || false,
+    },
+    {
+      type: 'input',
+      name: 'pdfCss',
+      message: 'PDF CSS file path:',
+      default: getStrConfig('pdfCss') || '',
+    },
+  ]);
 
   Object.entries(answers).forEach(([key, value]) => {
     setConfig(key, String(value));
