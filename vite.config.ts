@@ -6,7 +6,7 @@ export default defineConfig({
     isolate: true,
     environment: 'node',
     mockReset: true,
-    reporters: ['default'],
+    reporters: ['default', ['vitest-sonar-reporter', { outputFile: './coverage/sonar-report.xml' }]],
     resolveSnapshotPath: (testPath, snapExtension) =>
       testPath.replace(/\.ts$/, `.spec${snapExtension}`),
     include: ['src/**/*.spec.ts'],
@@ -14,7 +14,7 @@ export default defineConfig({
       { find: /(\.{1,2}\/.*)\.js$/, replacement: '$1' },
     ],
     coverage: {
-      reporter: ['text', 'html'],
+      reporter: ['lcov', 'text', 'html'],
       exclude: [
         'lib/**',
         '**/node_modules/**',
