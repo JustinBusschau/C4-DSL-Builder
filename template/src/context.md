@@ -1,3 +1,7 @@
+## Documentation by
+
+![C4-DSL-Builder](./c4dslbuilder.figlet.png)
+
 **Level 1: System Context diagram**
 
 A System Context diagram is a good starting point for diagramming and documenting a software system, allowing you to step back and see the big picture. Draw a diagram showing your system as a box in the centre, surrounded by its users and the other systems that it interacts with.

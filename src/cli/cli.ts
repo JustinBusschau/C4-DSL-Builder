@@ -1,23 +1,33 @@
-import { Command } from 'commander';
 import chalk from 'chalk';
-import { createLogger } from './utilities/logger.js';
-import { getIntroText } from './utilities/intro.js';
+import figlet from 'figlet';
 import pkg from '../../package.json' with { type: 'json' };
-import { setConfig, deleteConfig } from './utilities/config.js';
-import { cmdNewProject } from './commands/cmdNewProject.js';
-import { cmdConfig } from './commands/cmdConfig.js';
-import { cmdListConfig } from './commands/cmdListConfig.js';
-import { cmdResetConfig } from './commands/cmdResetConfig.js';
-import { cmdDsl } from './commands/cmdDsl.js';
-import { cmdMd } from './commands/cmdMd.js';
+import { Command } from 'commander';
+import { ProjectCreator } from '../utilities/project-creator.js';
+import { Structurizr } from '../utilities/structurizr.js';
+import { MarkdownProcessor } from '../utilities/markdown-processor.js';
+import { SafeFiles } from '../utilities/safe-files.js';
+import { ConfigManager } from '../utilities/config-manager.js';
+import { CliLogger } from '../utilities/cli-logger.js';
+import type { BuildConfig } from '../types/build-config.js';
 
-interface RenderOptions {
-  split?: boolean;
+interface ConfigOptions {
+  list?: boolean;
+  reset?: boolean;
 }
 
-export function registerCommands() {
+function getIntroText(version: string): string {
+  return (
+    chalk.green(figlet.textSync('C4-DSL-Builder')) +
+    '\n' +
+    chalk.grey(`Version ${version}`) +
+    '\n\n' +
+    chalk.blue('Enhance your C4 Modelling') +
+    '\n\n'
+  );
+}
+
+export function registerCommands(logger: CliLogger = new CliLogger('CLI.registerCommands')) {
   const program = new Command();
-  const logger = createLogger();
 
   program.name(pkg.name).version(pkg.version);
 
@@ -26,74 +36,67 @@ export function registerCommands() {
     .description('create a new project from the template')
     .action(async () => {
       logger.log(getIntroText(pkg.version));
-      await cmdNewProject();
+      const safeFiles = new SafeFiles();
+      const creator = new ProjectCreator(safeFiles);
+      await creator.createNewProject();
     });
 
   program
     .command('config')
     .description('change configuration for the current directory')
-    .action(async () => {
-      await cmdConfig();
-    });
-
-  program
-    .command('list')
-    .description('display the current configuration')
-    .action(() => {
-      cmdListConfig();
-    });
-
-  program
-    .command('reset')
-    .description('clear all configuration')
-    .action(() => {
-      cmdResetConfig();
+    .option('-l, --list', 'display the current configuration')
+    .option('-r, --reset', 'clear all configuration')
+    .action(async function () {
+      const options = this.opts<ConfigOptions>();
+      const config = new ConfigManager();
+      if (options.list) {
+        logger.log(chalk.green('Listing current configuration ...'));
+        return config.listConfig();
+      }
+      if (options.reset) {
+        logger.log(chalk.green('Resetting current configuration ...'));
+        return config.resetConfig();
+      }
+      logger.log(chalk.green('Generating new configuration ...'));
+      await config.setConfig();
     });
 
   program
     .command('dsl')
     .description('extract mermaid diagrams from the dsl')
-    .action(() => {
-      cmdDsl();
+    .action(async () => {
+      logger.log(chalk.green('Extracting Mermaid diagrams from DSL ...'));
+      const structurizr = new Structurizr();
+      const config = new ConfigManager();
+      await structurizr.extractMermaidDiagramsFromDsl(
+        config.getStrConfigValue('dslCli'),
+        config.getStrConfigValue('rootFolder'),
+        config.getStrConfigValue('workspaceDsl'),
+      );
     });
 
   program
     .command('md')
     .description('generate markdown documentation')
-    .option('-s, --split', 'generate separate markdown documents for each folder')
     .action(async function () {
-      const options = this.opts<RenderOptions>();
-      if (options.split) {
-        logger.log(chalk.green('Generating split Markdown ...'));
-        setConfig('generateCompleteMdFile', false);
-      } else {
-        logger.log(chalk.green('Generating Markdown ...'));
-        setConfig('generateCompleteMdFile', true);
-      }
-      await cmdMd();
-      deleteConfig('generateCompleteMdFile');
-    });
+      logger.log(chalk.green('Generating Markdown ...'));
+      const config = new ConfigManager();
+      const safeFiles = new SafeFiles();
+      const md = new MarkdownProcessor(safeFiles);
+      const buildConfig: BuildConfig = {
+        projectName: config.getStrConfigValue('projectName'),
+        homepageName: config.getStrConfigValue('homepageName'),
+        rootFolder: config.getStrConfigValue('rootFolder'),
+        distFolder: config.getStrConfigValue('distFolder'),
+        embedMermaidDiagrams: config.getBoolConfigValue('embedMermaidDiagrams'),
+      };
 
-  program
-    .command('pdf')
-    .description('generate PDF documentation')
-    .option('-s, --split', 'generate separate PDF files for each folder')
-    .action(() => {
-      logger.log('PDF command executed');
-    });
-
-  program
-    .command('site')
-    .description('serve the generated site')
-    .option('-w, --watch', 'watch for changes and rebuild')
-    .option('-p, --port <n>', 'port used for serving the generated site')
-    .action(() => {
-      logger.log('Site command executed');
+      await md.prepareMarkdown(buildConfig);
     });
 
   return program;
 }
 
-export function run() {
-  registerCommands().parse(process.argv);
+export function run(logger: CliLogger = new CliLogger('CLI.run')) {
+  registerCommands(logger).parse(process.argv);
 }

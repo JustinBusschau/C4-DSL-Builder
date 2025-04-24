@@ -132,7 +132,6 @@ The output of the above command will show all available configuration items alon
         Repository Url: https://www.www.com/src
     Include breadcrumbs: true
     Place diagrams before text: true
-    Charset: UTF-8
     Exclude other files: false
     PDF CSS: /Users/coder/Proj/config/pdf.css
 

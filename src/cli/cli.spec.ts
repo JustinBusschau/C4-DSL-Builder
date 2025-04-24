@@ -1,142 +1,154 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ProjectCreator } from '../utilities/project-creator.js';
+import { ConfigManager } from '../utilities/config-manager.js';
+import { Structurizr } from '../utilities/structurizr.js';
+import { MarkdownProcessor } from '../utilities/markdown-processor.js';
+import { CliLogger } from '../utilities/cli-logger.js';
 
-// Mocks
-const logMock = jest.fn();
-const errorMock = jest.fn();
-const getIntroTextMock = jest.fn(() => 'Enhance your C4 Modelling');
-const cmdNewProjectMock = jest.fn();
-const cmdConfigMock = jest.fn();
-const cmdListConfigMock = jest.fn();
-const cmdResetConfigMock = jest.fn();
-const cmdDslMock = jest.fn();
-const cmdMdMock = jest.fn();
-
-// 👇 Use new logger API
-jest.unstable_mockModule('./utilities/logger.js', () => ({
-  createLogger: () => ({
-    log: logMock,
-    error: errorMock,
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  }),
+vi.mock('chalk', () => ({
+  default: {
+    green: (txt: string) => txt,
+    grey: (txt: string) => txt,
+    blue: (txt: string) => txt,
+  },
 }));
 
-jest.unstable_mockModule('./commands/cmdNewProject.js', () => ({
-  cmdNewProject: cmdNewProjectMock,
+vi.mock('figlet', () => ({
+  default: {
+    textSync: (text: string) => text,
+  },
 }));
 
-jest.unstable_mockModule('./utilities/intro.js', () => ({
-  getIntroText: getIntroTextMock,
+const mockLogger = {
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  log: vi.fn(),
+};
+
+vi.mock('../utilities/cli-logger.js', () => ({
+  CliLogger: vi.fn(() => mockLogger),
 }));
 
-jest.unstable_mockModule('./commands/cmdConfig.js', () => ({
-  cmdConfig: cmdConfigMock,
-}));
+const { run } = await import('./cli.js');
 
-jest.unstable_mockModule('./commands/cmdListConfig.js', () => ({
-  cmdListConfig: cmdListConfigMock,
-}));
-
-jest.unstable_mockModule('./commands/cmdResetConfig.js', () => ({
-  cmdResetConfig: cmdResetConfigMock,
-}));
-
-jest.unstable_mockModule('./commands/cmdDsl.js', () => ({
-  cmdDsl: cmdDslMock,
-}));
-
-jest.unstable_mockModule('./commands/cmdMd.js', () => ({
-  cmdMd: cmdMdMock,
-}));
-
-// These will be assigned inside isolateModules
-let run: typeof import('./cli.js').run;
-let registerCommands: typeof import('./cli.js').registerCommands;
-
-beforeEach(async () => {
-  // Reset mocks
-  logMock.mockReset();
-  errorMock.mockReset();
-  cmdNewProjectMock.mockReset();
-  cmdConfigMock.mockReset();
-  getIntroTextMock.mockReset();
-  cmdListConfigMock.mockReset();
-  cmdResetConfigMock.mockReset();
-  cmdDslMock.mockReset();
-  cmdMdMock.mockReset();
-
-  // Reset CLI args
-  process.argv = ['node', 'cli'];
-
-  await jest.isolateModulesAsync(async () => {
-    const cli = await import('./cli.js');
-    run = cli.run;
-    registerCommands = cli.registerCommands;
-  });
-});
-
-describe('Register commands', () => {
-  const testCommand = (cmd: string[], expectedOutput = '', expectError = '') => {
-    process.argv = ['node', 'cli', ...cmd];
-    const program = registerCommands();
-    program.parse(process.argv);
-
-    if (expectedOutput !== '') {
-      expect(logMock).toHaveBeenCalledWith(expect.stringContaining(expectedOutput));
-    }
-
-    if (expectError !== '') {
-      expect(errorMock).toHaveBeenCalledWith(expectError);
-    } else {
-      expect(errorMock).not.toHaveBeenCalled();
-    }
-  };
-
-  it("should call getIntroText and cmdNewProject when running 'new'", () => {
-    testCommand(['new']);
-
-    expect(getIntroTextMock).toHaveBeenCalled();
-    expect(cmdNewProjectMock).toHaveBeenCalled();
+describe('CLI integration tests', () => {
+  const logSpy = new CliLogger('CLI.test', 'debug');
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.clearAllMocks();
+    process.argv = ['node', 'cli'];
   });
 
-  it("should call cmdConfig when running 'config'", () => {
-    testCommand(['config']);
-    expect(cmdConfigMock).toHaveBeenCalled();
-  });
+  it('runs "new" and triggers project creation', async () => {
+    const createMock = vi.fn();
+    ProjectCreator.prototype.createNewProject = createMock;
 
-  it("should call cmdListConfig when running 'list'", () => {
-    testCommand(['list']);
-    expect(cmdListConfigMock).toHaveBeenCalled();
-  });
-
-  it("should call cmdResetConfig when running 'reset'", () => {
-    testCommand(['reset']);
-    expect(cmdResetConfigMock).toHaveBeenCalled();
-  });
-
-  it("should call cmdDsl when running 'dsl'", () => {
-    testCommand(['dsl']);
-    expect(cmdDslMock).toHaveBeenCalled();
-  });
-
-  it("should call cmdMd when running 'md' without options", () => {
-    testCommand(['md'], 'Generating Markdown');
-    expect(cmdMdMock).toHaveBeenCalled();
-  });
-
-  it("should call cmdMd when running 'md' with --split option", () => {
-    testCommand(['md', '--split'], 'Generating split Markdown');
-    expect(cmdMdMock).toHaveBeenCalled();
-  });
-});
-
-describe('Run', () => {
-  it('should run the CLI entry point and parse arguments', async () => {
     process.argv = ['node', 'cli', 'new'];
-    await run();
+    run(logSpy);
 
-    expect(getIntroTextMock).toHaveBeenCalled();
-    expect(cmdNewProjectMock).toHaveBeenCalled();
+    expect(createMock).toHaveBeenCalled();
+    expect(mockLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('Enhance your C4 Modelling'),
+    );
+  });
+
+  it('runs "config --list" and lists config', async () => {
+    const listMock = vi.fn();
+    ConfigManager.prototype.listConfig = listMock;
+
+    process.argv = ['node', 'cli', 'config', '--list'];
+    run(logSpy);
+
+    expect(listMock).toHaveBeenCalled();
+    expect(mockLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('Listing current configuration ...'),
+    );
+  });
+
+  it('runs "config --reset" and resets config', async () => {
+    const resetMock = vi.fn();
+    ConfigManager.prototype.resetConfig = resetMock;
+
+    process.argv = ['node', 'cli', 'config', '--reset'];
+    run(logSpy);
+
+    expect(resetMock).toHaveBeenCalled();
+    expect(mockLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('Resetting current configuration ...'),
+    );
+  });
+
+  it('runs "config" with no options and sets config', async () => {
+    const setMock = vi.fn();
+    ConfigManager.prototype.setConfig = setMock;
+
+    process.argv = ['node', 'cli', 'config'];
+    run(logSpy);
+
+    expect(setMock).toHaveBeenCalled();
+    expect(mockLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('Generating new configuration ...'),
+    );
+  });
+
+  it('runs "dsl" and extracts Mermaid diagrams', async () => {
+    const extractMock = vi.fn();
+    Structurizr.prototype.extractMermaidDiagramsFromDsl = extractMock;
+
+    ConfigManager.prototype.getStrConfigValue = (key: string): string => `mock-${key}`;
+
+    process.argv = ['node', 'cli', 'dsl'];
+    run(logSpy);
+
+    expect(extractMock).toHaveBeenCalledWith('mock-dslCli', 'mock-rootFolder', 'mock-workspaceDsl');
+    expect(mockLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('Extracting Mermaid diagrams from DSL'),
+    );
+  });
+
+  it('runs "md" and generates markdown documentation', async () => {
+    const prepareMock = vi.fn();
+    MarkdownProcessor.prototype.prepareMarkdown = prepareMock;
+
+    ConfigManager.prototype.getStrConfigValue = (key: string): string => `mock-${key}`;
+    ConfigManager.prototype.getBoolConfigValue = (): boolean => true;
+
+    process.argv = ['node', 'cli', 'md'];
+    run(logSpy);
+
+    expect(prepareMock).toHaveBeenCalledWith({
+      projectName: 'mock-projectName',
+      homepageName: 'mock-homepageName',
+      rootFolder: 'mock-rootFolder',
+      distFolder: 'mock-distFolder',
+      embedMermaidDiagrams: true,
+    });
+    expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Generating Markdown'));
+  });
+
+  it('handles unknown command gracefully (help text shown)', async () => {
+    let errorOutput = '';
+    const originalStderrWrite = process.stderr.write;
+    const originalExit = process.exit;
+
+    process.stderr.write = ((chunk: string | Uint8Array): boolean => {
+      errorOutput += chunk.toString();
+      return true;
+    }) as typeof process.stderr.write;
+
+    const exitMock = vi.fn();
+    // @ts-expect-error: we're mocking process.exit for testing
+    process.exit = exitMock;
+
+    process.argv = ['node', 'cli', 'unknown'];
+    run(logSpy);
+
+    process.stderr.write = originalStderrWrite;
+    process.exit = originalExit;
+
+    expect(errorOutput).toMatch(/Usage|help|unknown command/i);
+    expect(exitMock).toHaveBeenCalledWith(1);
   });
 });
