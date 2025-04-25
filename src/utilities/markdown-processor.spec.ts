@@ -17,7 +17,7 @@ vi.mock('./mermaid-processor.js', () => ({
   MermaidProcessor: vi.fn(() => mockMermaidProcessor),
 }));
 
-vi.mock('../utilities/cli-logger.js', () => ({
+vi.mock('./cli-logger.js', () => ({
   CliLogger: vi.fn(() => mockLogger),
 }));
 
