@@ -45,9 +45,35 @@ describe('PdfProcessor', () => {
   });
 
   describe('preparePdf', () => {
-    it('logs some info', async () => {
+    it('validates target folder and initializes PDF generation', async () => {
       await processor.preparePdf(buildConfig);
-      expect(logSpy.log).toHaveBeenCalledWith(expect.stringContaining('We have a PDF processor'));
+      expect(safeFiles.generateTree).toHaveBeenCalled();
+      expect(logSpy.log).toHaveBeenCalledTimes(3);
+      expect(logSpy.log).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('Building PDF documentation'),
+      );
+      expect(logSpy.log).toHaveBeenNthCalledWith(2, expect.stringContaining('Parsed 0 folders.'));
+      expect(logSpy.log).toHaveBeenNthCalledWith(
+        3,
+        expect.stringContaining('PDF documentation generated successfully'),
+      );
+      expect(logSpy.info).toHaveBeenCalledWith(expect.stringContaining('Wrote Project.pdf'));
+    });
+
+    it('logs error if dist folder is missing or invalid', async () => {
+      buildConfig.distFolder = '';
+      await processor.preparePdf(buildConfig);
+      expect(logSpy.error).toHaveBeenCalledWith(expect.stringContaining('Please run `config`'));
+    });
+
+    it('logs error if dist folder cannot be prepared', async () => {
+      vi.spyOn(safeFiles, 'emptySubFolder').mockResolvedValueOnce(false);
+      buildConfig.distFolder = 'dest';
+      await processor.preparePdf(buildConfig);
+      expect(logSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to empty the target folder'),
+      );
     });
   });
 });
