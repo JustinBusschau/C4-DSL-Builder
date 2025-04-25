@@ -4,6 +4,7 @@ import { ConfigManager } from '../utilities/config-manager.js';
 import { Structurizr } from '../utilities/structurizr.js';
 import { MarkdownProcessor } from '../utilities/markdown-processor.js';
 import { CliLogger } from '../utilities/cli-logger.js';
+import { PdfProcessor } from '../utilities/pdf-processor.js';
 
 vi.mock('chalk', () => ({
   default: {
@@ -126,6 +127,26 @@ describe('CLI integration tests', () => {
       embedMermaidDiagrams: true,
     });
     expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Generating Markdown'));
+  });
+
+  it('runs "pdf" and generates PDF documentation', async () => {
+    const prepareMock = vi.fn();
+    PdfProcessor.prototype.preparePdf = prepareMock;
+
+    ConfigManager.prototype.getStrConfigValue = (key: string): string => `mock-${key}`;
+    ConfigManager.prototype.getBoolConfigValue = (): boolean => true;
+
+    process.argv = ['node', 'cli', 'pdf'];
+    run(logSpy);
+
+    expect(prepareMock).toHaveBeenCalledWith({
+      projectName: 'mock-projectName',
+      homepageName: 'mock-homepageName',
+      rootFolder: 'mock-rootFolder',
+      distFolder: 'mock-distFolder',
+      embedMermaidDiagrams: true,
+    });
+    expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Generating PDF'));
   });
 
   it('handles unknown command gracefully (help text shown)', async () => {

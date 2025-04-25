@@ -8,6 +8,7 @@ import { MarkdownProcessor } from '../utilities/markdown-processor.js';
 import { ConfigManager } from '../utilities/config-manager.js';
 import { CliLogger } from '../utilities/cli-logger.js';
 import type { BuildConfig } from '../types/build-config.js';
+import { PdfProcessor } from '../utilities/pdf-processor.js';
 
 interface ConfigOptions {
   list?: boolean;
@@ -89,6 +90,24 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       };
 
       await md.prepareMarkdown(buildConfig);
+    });
+
+  program
+    .command('pdf')
+    .description('generate pdf documentation')
+    .action(async function () {
+      logger.log(chalk.green('Generating PDF ...'));
+      const config = new ConfigManager();
+      const pdf = new PdfProcessor();
+      const buildConfig: BuildConfig = {
+        projectName: config.getStrConfigValue('projectName'),
+        homepageName: config.getStrConfigValue('homepageName'),
+        rootFolder: config.getStrConfigValue('rootFolder'),
+        distFolder: config.getStrConfigValue('distFolder'),
+        embedMermaidDiagrams: config.getBoolConfigValue('embedMermaidDiagrams'),
+      };
+
+      await pdf.preparePdf(buildConfig);
     });
 
   return program;
