@@ -5,7 +5,6 @@ import { Command } from 'commander';
 import { ProjectCreator } from '../utilities/project-creator.js';
 import { Structurizr } from '../utilities/structurizr.js';
 import { MarkdownProcessor } from '../utilities/markdown-processor.js';
-import { SafeFiles } from '../utilities/safe-files.js';
 import { ConfigManager } from '../utilities/config-manager.js';
 import { CliLogger } from '../utilities/cli-logger.js';
 import type { BuildConfig } from '../types/build-config.js';
@@ -36,8 +35,7 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
     .description('create a new project from the template')
     .action(async () => {
       logger.log(getIntroText(pkg.version));
-      const safeFiles = new SafeFiles();
-      const creator = new ProjectCreator(safeFiles);
+      const creator = new ProjectCreator();
       await creator.createNewProject();
     });
 
@@ -81,8 +79,7 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
     .action(async function () {
       logger.log(chalk.green('Generating Markdown ...'));
       const config = new ConfigManager();
-      const safeFiles = new SafeFiles();
-      const md = new MarkdownProcessor(safeFiles);
+      const md = new MarkdownProcessor();
       const buildConfig: BuildConfig = {
         projectName: config.getStrConfigValue('projectName'),
         homepageName: config.getStrConfigValue('homepageName'),
