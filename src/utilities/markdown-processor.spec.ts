@@ -372,7 +372,7 @@ describe('MarkdownProcessor', () => {
       expect(logSpy.log).toHaveBeenCalledTimes(3);
       expect(logSpy.log).toHaveBeenNthCalledWith(
         1,
-        expect.stringContaining('Building Markdown documentation'),
+        expect.stringContaining('Building MD documentation'),
       );
       expect(logSpy.log).toHaveBeenNthCalledWith(2, expect.stringContaining('Parsed 0 folders.'));
       expect(logSpy.log).toHaveBeenNthCalledWith(
