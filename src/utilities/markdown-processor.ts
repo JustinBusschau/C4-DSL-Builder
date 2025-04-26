@@ -31,8 +31,6 @@ export class MarkdownProcessor extends ProcessorBase {
   }
 
   async prepareMarkdown(buildConfig: BuildConfig): Promise<void> {
-    console.log('7');
-    console.log(buildConfig);
     if (!(await this.prepareOutputFolder(OutputType.md, buildConfig))) {
       this.logger.warn('Output folder preparation failed.');
       return;

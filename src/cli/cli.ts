@@ -80,9 +80,7 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       logger.log(chalk.green('Generating Markdown ...'));
       const config = new ConfigManager();
       const md = new MarkdownProcessor();
-      console.log('BEFORE GETALL - MD');
       const buildConfig = await config.getAllStoredConfig();
-      console.log('AFTER GETALL - MD');
       await md.prepareMarkdown(buildConfig);
     });
 
@@ -93,9 +91,7 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       logger.log(chalk.green('Generating PDF ...'));
       const config = new ConfigManager();
       const pdf = new PdfProcessor();
-      console.log('BEFORE GETALL - PDF');
       const buildConfig = await config.getAllStoredConfig();
-      console.log('AFTER GETALL - PDF');
       await pdf.preparePdf(buildConfig);
     });
 

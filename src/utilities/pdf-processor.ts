@@ -34,9 +34,6 @@ export class PdfProcessor extends ProcessorBase {
     }
 
     try {
-      console.log('About to call mdToPdf...');
-      console.log(`tmpPath: ${path.resolve(tmpPath)}`);
-      console.log(`outPath: ${path.resolve(outPath)}`);
       await mdToPdf(
         {
           path: tmpPath,
@@ -64,7 +61,6 @@ export class PdfProcessor extends ProcessorBase {
       );
       this.logger.info(`Wrote ${buildConfig.projectName}.pdf to ${outPath}`);
     } catch (error) {
-      console.error(`Error creating PDF output file: ${outPath}`, error);
       this.logger.error(`Error creating PDF output file: ${outPath}`, error);
       return;
     }
