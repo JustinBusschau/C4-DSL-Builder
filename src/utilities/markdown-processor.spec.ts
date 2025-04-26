@@ -48,6 +48,9 @@ describe('MarkdownProcessor', () => {
     embedMermaidDiagrams: true,
     homepageName: 'Home',
     projectName: 'Project',
+    dslCli: 'docker',
+    workspaceDsl: '',
+    pdfCss: '',
   };
 
   beforeEach(() => {

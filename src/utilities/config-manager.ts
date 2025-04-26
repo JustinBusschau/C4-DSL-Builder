@@ -266,7 +266,7 @@ export class ConfigManager {
         type: 'input',
         name: 'pdfCss',
         message: 'PDF CSS file path:',
-        default: this.getStrConfigValue('pdfCss') || '',
+        default: this.getStrConfigValue('pdfCss') || 'resources/pdf.css',
       },
     ]);
 
@@ -275,5 +275,18 @@ export class ConfigManager {
     });
 
     this.logger.log(chalk.green('\n✅ Configuration updated successfully.'));
+  }
+
+  async getAllStoredConfig(): Promise<BuildConfig> {
+    return {
+      projectName: this.getStrConfigValue('projectName'),
+      homepageName: this.getStrConfigValue('homepageName'),
+      rootFolder: this.getStrConfigValue('rootFolder'),
+      distFolder: this.getStrConfigValue('distFolder'),
+      dslCli: this.getStrConfigValue('dslCli') === 'docker' ? 'docker' : 'structurizr-cli',
+      workspaceDsl: this.getStrConfigValue('workspaceDsl'),
+      embedMermaidDiagrams: this.getBoolConfigValue('embedMermaidDiagrams'),
+      pdfCss: this.getStrConfigValue('pdfCss'),
+    };
   }
 }

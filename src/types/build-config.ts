@@ -3,11 +3,10 @@ export type BuildConfig = {
   homepageName: string;
   rootFolder: string;
   distFolder: string;
-  dslCli?: 'structurizr-cli' | 'docker';
-  workspaceDsl?: string;
-  embedMermaidDiagrams?: boolean;
-
-  pdfCss?: string; // not used yet
+  dslCli: 'structurizr-cli' | 'docker';
+  workspaceDsl: string;
+  embedMermaidDiagrams: boolean;
+  pdfCss: string;
 
   generateWebsite?: boolean; // not used yet
   webTheme?: string; // not used yet

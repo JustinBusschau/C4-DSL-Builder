@@ -7,7 +7,6 @@ import { Structurizr } from '../utilities/structurizr.js';
 import { MarkdownProcessor } from '../utilities/markdown-processor.js';
 import { ConfigManager } from '../utilities/config-manager.js';
 import { CliLogger } from '../utilities/cli-logger.js';
-import type { BuildConfig } from '../types/build-config.js';
 import { PdfProcessor } from '../utilities/pdf-processor.js';
 
 interface ConfigOptions {
@@ -81,14 +80,9 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       logger.log(chalk.green('Generating Markdown ...'));
       const config = new ConfigManager();
       const md = new MarkdownProcessor();
-      const buildConfig: BuildConfig = {
-        projectName: config.getStrConfigValue('projectName'),
-        homepageName: config.getStrConfigValue('homepageName'),
-        rootFolder: config.getStrConfigValue('rootFolder'),
-        distFolder: config.getStrConfigValue('distFolder'),
-        embedMermaidDiagrams: config.getBoolConfigValue('embedMermaidDiagrams'),
-      };
-
+      console.log('BEFORE GETALL - MD');
+      const buildConfig = await config.getAllStoredConfig();
+      console.log('AFTER GETALL - MD');
       await md.prepareMarkdown(buildConfig);
     });
 
@@ -99,20 +93,15 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       logger.log(chalk.green('Generating PDF ...'));
       const config = new ConfigManager();
       const pdf = new PdfProcessor();
-      const buildConfig: BuildConfig = {
-        projectName: config.getStrConfigValue('projectName'),
-        homepageName: config.getStrConfigValue('homepageName'),
-        rootFolder: config.getStrConfigValue('rootFolder'),
-        distFolder: config.getStrConfigValue('distFolder'),
-        embedMermaidDiagrams: config.getBoolConfigValue('embedMermaidDiagrams'),
-      };
-
+      console.log('BEFORE GETALL - PDF');
+      const buildConfig = await config.getAllStoredConfig();
+      console.log('AFTER GETALL - PDF');
       await pdf.preparePdf(buildConfig);
     });
 
   return program;
 }
 
-export function run(logger: CliLogger = new CliLogger('CLI.run')) {
-  registerCommands(logger).parse(process.argv);
+export async function run(logger: CliLogger = new CliLogger('CLI.run')): Promise<void> {
+  registerCommands(logger).parseAsync(process.argv);
 }

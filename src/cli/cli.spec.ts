@@ -5,6 +5,7 @@ import { Structurizr } from '../utilities/structurizr.js';
 import { MarkdownProcessor } from '../utilities/markdown-processor.js';
 import { CliLogger } from '../utilities/cli-logger.js';
 import { PdfProcessor } from '../utilities/pdf-processor.js';
+import { BuildConfig } from '../types/build-config.js';
 
 vi.mock('chalk', () => ({
   default: {
@@ -47,7 +48,7 @@ describe('CLI integration tests', () => {
     ProjectCreator.prototype.createNewProject = createMock;
 
     process.argv = ['node', 'cli', 'new'];
-    run(logSpy);
+    await run(logSpy);
 
     expect(createMock).toHaveBeenCalled();
     expect(mockLogger.log).toHaveBeenCalledWith(
@@ -60,7 +61,7 @@ describe('CLI integration tests', () => {
     ConfigManager.prototype.listConfig = listMock;
 
     process.argv = ['node', 'cli', 'config', '--list'];
-    run(logSpy);
+    await run(logSpy);
 
     expect(listMock).toHaveBeenCalled();
     expect(mockLogger.log).toHaveBeenCalledWith(
@@ -73,7 +74,7 @@ describe('CLI integration tests', () => {
     ConfigManager.prototype.resetConfig = resetMock;
 
     process.argv = ['node', 'cli', 'config', '--reset'];
-    run(logSpy);
+    await run(logSpy);
 
     expect(resetMock).toHaveBeenCalled();
     expect(mockLogger.log).toHaveBeenCalledWith(
@@ -86,7 +87,7 @@ describe('CLI integration tests', () => {
     ConfigManager.prototype.setConfig = setMock;
 
     process.argv = ['node', 'cli', 'config'];
-    run(logSpy);
+    await run(logSpy);
 
     expect(setMock).toHaveBeenCalled();
     expect(mockLogger.log).toHaveBeenCalledWith(
@@ -101,7 +102,7 @@ describe('CLI integration tests', () => {
     ConfigManager.prototype.getStrConfigValue = (key: string): string => `mock-${key}`;
 
     process.argv = ['node', 'cli', 'dsl'];
-    run(logSpy);
+    await run(logSpy);
 
     expect(extractMock).toHaveBeenCalledWith('mock-dslCli', 'mock-rootFolder', 'mock-workspaceDsl');
     expect(mockLogger.log).toHaveBeenCalledWith(
@@ -113,19 +114,24 @@ describe('CLI integration tests', () => {
     const prepareMock = vi.fn();
     MarkdownProcessor.prototype.prepareMarkdown = prepareMock;
 
-    ConfigManager.prototype.getStrConfigValue = (key: string): string => `mock-${key}`;
-    ConfigManager.prototype.getBoolConfigValue = (): boolean => true;
-
-    process.argv = ['node', 'cli', 'md'];
-    run(logSpy);
-
-    expect(prepareMock).toHaveBeenCalledWith({
+    const buildConfig: BuildConfig = {
       projectName: 'mock-projectName',
       homepageName: 'mock-homepageName',
       rootFolder: 'mock-rootFolder',
       distFolder: 'mock-distFolder',
-      embedMermaidDiagrams: true,
-    });
+      dslCli: 'structurizr-cli',
+      embedMermaidDiagrams: false,
+      pdfCss: 'mock-pdfCss',
+      workspaceDsl: 'mock-workspaceDsl',
+    };
+    const getAllMock = vi.fn().mockResolvedValue(buildConfig);
+    ConfigManager.prototype.getAllStoredConfig = getAllMock;
+
+    process.argv = ['node', 'cli', 'md'];
+    await run(logSpy);
+
+    expect(prepareMock).toHaveBeenCalled();
+    expect(prepareMock).toHaveBeenCalledWith(buildConfig);
     expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Generating Markdown'));
   });
 
@@ -133,19 +139,23 @@ describe('CLI integration tests', () => {
     const prepareMock = vi.fn();
     PdfProcessor.prototype.preparePdf = prepareMock;
 
-    ConfigManager.prototype.getStrConfigValue = (key: string): string => `mock-${key}`;
-    ConfigManager.prototype.getBoolConfigValue = (): boolean => true;
-
-    process.argv = ['node', 'cli', 'pdf'];
-    run(logSpy);
-
-    expect(prepareMock).toHaveBeenCalledWith({
+    const buildConfig: BuildConfig = {
       projectName: 'mock-projectName',
       homepageName: 'mock-homepageName',
       rootFolder: 'mock-rootFolder',
       distFolder: 'mock-distFolder',
-      embedMermaidDiagrams: true,
-    });
+      dslCli: 'structurizr-cli',
+      embedMermaidDiagrams: false,
+      pdfCss: 'mock-pdfCss',
+      workspaceDsl: 'mock-workspaceDsl',
+    };
+    const getAllMock = vi.fn().mockResolvedValue(buildConfig);
+    ConfigManager.prototype.getAllStoredConfig = getAllMock;
+
+    process.argv = ['node', 'cli', 'pdf'];
+    await run(logSpy);
+
+    expect(prepareMock).toHaveBeenCalledWith(buildConfig);
     expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Generating PDF'));
   });
 
@@ -164,7 +174,7 @@ describe('CLI integration tests', () => {
     process.exit = exitMock;
 
     process.argv = ['node', 'cli', 'unknown'];
-    run(logSpy);
+    await run(logSpy);
 
     process.stderr.write = originalStderrWrite;
     process.exit = originalExit;

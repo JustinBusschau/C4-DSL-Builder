@@ -48,7 +48,7 @@ const answers: BuildConfig = {
   embedMermaidDiagrams: false,
   dslCli: 'docker',
   workspaceDsl: 'workspace.dsl',
-  pdfCss: '',
+  pdfCss: 'resources/pdf.css',
 };
 
 describe('ConfigManager', () => {
@@ -255,7 +255,7 @@ describe('ConfigManager', () => {
       12,
       `${'Where Structurizr starts looking for diagrams to extract'.padEnd(40)} : ${answers.workspaceDsl}`,
     );
-    expect(logSpy.log).toHaveBeenNthCalledWith(13, `${'PDF CSS'.padEnd(40)} : Not set`);
+    expect(logSpy.log).toHaveBeenNthCalledWith(13, `${'PDF CSS'.padEnd(40)} : ${answers.pdfCss}`);
   });
 
   it('prints "Not set" when config value is empty or invalid in listConfig', () => {
@@ -280,5 +280,46 @@ describe('ConfigManager', () => {
     const result = manager.getStrConfigValue('someKey');
     expect(result).toBe('');
     expect(logSpy.error).toHaveBeenCalledWith('Error retrieving config value for someKey.', err);
+  });
+
+  it('gets all stored config values correctly', async () => {
+    configStoreInstance.get
+      .mockReturnValueOnce('DemoProject')
+      .mockReturnValueOnce('Home')
+      .mockReturnValueOnce('./src')
+      .mockReturnValueOnce('./dist')
+      .mockReturnValueOnce('docker')
+      .mockReturnValueOnce('workspace.dsl')
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce('resources/pdf.css');
+
+    const config = await manager.getAllStoredConfig();
+
+    expect(config).toEqual<BuildConfig>({
+      projectName: 'DemoProject',
+      homepageName: 'Home',
+      rootFolder: './src',
+      distFolder: './dist',
+      dslCli: 'docker',
+      workspaceDsl: 'workspace.dsl',
+      embedMermaidDiagrams: true,
+      pdfCss: 'resources/pdf.css',
+    });
+  });
+
+  it('defaults dslCli to structurizr-cli when not docker', async () => {
+    configStoreInstance.get
+      .mockReturnValueOnce('DemoProject')
+      .mockReturnValueOnce('Home')
+      .mockReturnValueOnce('./src')
+      .mockReturnValueOnce('./dist')
+      .mockReturnValueOnce('something-else')
+      .mockReturnValueOnce('workspace.dsl')
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce('resources/pdf.css');
+
+    const config = await manager.getAllStoredConfig();
+
+    expect(config.dslCli).toBe('structurizr-cli');
   });
 });
