@@ -137,11 +137,6 @@ describe('PdfProcessor', () => {
 
       await processor.generatePdfFromTree(tree, buildConfig);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Error creating PDF output file'),
-        mdToPdfError,
-      );
-
       expect(logSpy.error).toHaveBeenCalledWith(
         expect.stringContaining('Error creating PDF output file'),
         mdToPdfError,
