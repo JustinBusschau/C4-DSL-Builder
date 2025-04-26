@@ -266,7 +266,7 @@ export class ConfigManager {
         type: 'input',
         name: 'pdfCss',
         message: 'PDF CSS file path:',
-        default: this.getStrConfigValue('pdfCss') || 'resources/pdf.css',
+        default: this.getStrConfigValue('pdfCss') || '_resources/pdf.css',
       },
     ]);
 

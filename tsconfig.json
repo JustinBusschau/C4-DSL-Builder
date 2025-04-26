@@ -4,6 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "lib",
+    "rootDir": "src",
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
@@ -13,5 +14,5 @@
     "types": ["vitest/globals"]
   },
   "include": ["src", "vite.config.ts"],
-  "exclude": ["node_modules", "lib"]
+  "exclude": ["vite.config.ts", "node_modules", "lib"]
 }

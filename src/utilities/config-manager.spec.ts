@@ -48,7 +48,7 @@ const answers: BuildConfig = {
   embedMermaidDiagrams: false,
   dslCli: 'docker',
   workspaceDsl: 'workspace.dsl',
-  pdfCss: 'resources/pdf.css',
+  pdfCss: '_resources/pdf.css',
 };
 
 describe('ConfigManager', () => {
@@ -291,7 +291,7 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('docker')
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(true)
-      .mockReturnValueOnce('resources/pdf.css');
+      .mockReturnValueOnce('_resources/pdf.css');
 
     const config = await manager.getAllStoredConfig();
 
@@ -303,7 +303,7 @@ describe('ConfigManager', () => {
       dslCli: 'docker',
       workspaceDsl: 'workspace.dsl',
       embedMermaidDiagrams: true,
-      pdfCss: 'resources/pdf.css',
+      pdfCss: '_resources/pdf.css',
     });
   });
 
@@ -316,7 +316,7 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('something-else')
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(true)
-      .mockReturnValueOnce('resources/pdf.css');
+      .mockReturnValueOnce('_resources/pdf.css');
 
     const config = await manager.getAllStoredConfig();
 

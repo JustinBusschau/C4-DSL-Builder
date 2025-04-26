@@ -39,7 +39,7 @@ export class PdfProcessor extends ProcessorBase {
           path: tmpPath,
         },
         {
-          stylesheet: [buildConfig.pdfCss],
+          stylesheet: [path.join(buildConfig.rootFolder, buildConfig.pdfCss)],
           pdf_options: {
             scale: 1,
             displayHeaderFooter: false,
