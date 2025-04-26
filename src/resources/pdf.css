@@ -1,14 +1,15 @@
-/**
-	CSS file bundled from https://github.com/yzane/vscode-markdown-pdf.git
-*/
-
 /*
  * Markdown PDF CSS
+ * CSS file bundled from: https://github.com/yzane/vscode-markdown-pdf.git and optimised
  */
 
- body {
+body {
   font-family: 'Meiryo', 'Segoe WPC', 'Segoe UI', 'SFUIText-Light', 'HelveticaNeue-Light', sans-serif,
       'Droid Sans Fallback';
+  font-size: 14px;
+  padding: 0 12px;
+  line-height: 22px;
+  word-wrap: break-word;
 }
 
 pre {
@@ -28,6 +29,9 @@ pre:not(.hljs) {
 blockquote {
   background: rgba(127, 127, 127, 0.1);
   border-color: rgba(0, 122, 204, 0.5);
+  border-left: 5px solid;
+  margin: 0 7px 0 5px;
+  padding: 0 16px 0 10px;
 }
 
 .emoji {
@@ -44,20 +48,6 @@ blockquote {
 -------------------------------------------------------- */
 .page {
   page-break-after: always;
-}
-
-/*---------------------------------------------------------------------------------------------
-*  Copyright (c) Microsoft Corporation. All rights reserved.
-*  Licensed under the MIT License. See License.txt in the project root for license information.
-*--------------------------------------------------------------------------------------------*/
-
-body {
-  font-family: 'Segoe WPC', 'Segoe UI', 'SFUIText-Light', 'HelveticaNeue-Light', sans-serif,
-      'Droid Sans Fallback';
-  font-size: 14px;
-  padding: 0 12px;
-  line-height: 22px;
-  word-wrap: break-word;
 }
 
 #code-csp-warning {
@@ -200,12 +190,6 @@ table > tbody > tr + tr > td {
   border-top: 1px solid;
 }
 
-blockquote {
-  margin: 0 7px 0 5px;
-  padding: 0 16px 0 10px;
-  border-left: 5px solid;
-}
-
 code {
   font-family: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace, 'Droid Sans Fallback';
   font-size: 14px;
@@ -227,8 +211,6 @@ pre.hljs code > div {
   border-radius: 3px;
   overflow: auto;
 }
-
-/** Theming */
 
 .vscode-light,
 .vscode-light pre code {
