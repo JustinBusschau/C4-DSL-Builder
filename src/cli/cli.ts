@@ -108,14 +108,20 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
     .option('-n, --no-serve', 'do not serve the site - only generate files')
     .option('-p, --port <n>', 'port to serve the generated site on')
     .action(async function () {
-      const options = this.opts<SiteOptions>();
-      console.log(options);
       logger.log(chalk.green('Generating docsify site ...'));
+
+      const options = this.opts<SiteOptions>();
+      const config = new ConfigManager();
+      const buildConfig = await config.getAllStoredConfig();
       if (options.port) {
         logger.log(chalk.bgGreen(`Serving on port ${options.port}`));
+        buildConfig.servePort = options.port;
       }
       if (options.serve) {
         logger.log(chalk.grey('Serving docsify site'));
+      } else {
+        logger.log(chalk.grey('Building docsify site [no serve]'));
+        buildConfig.serve = false;
       }
       if (options.watch) {
         logger.log('Watching for changes');

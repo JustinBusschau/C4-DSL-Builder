@@ -49,6 +49,8 @@ const answers: BuildConfig = {
   dslCli: 'docker',
   workspaceDsl: 'workspace.dsl',
   pdfCss: '_resources/pdf.css',
+  serve: false,
+  servePort: 4000,
 };
 
 describe('ConfigManager', () => {
@@ -173,6 +175,18 @@ describe('ConfigManager', () => {
     expect(logSpy.info).toHaveBeenCalledWith(expect.stringContaining('Expected boolean'));
   });
 
+  it('gets number config value when valid', () => {
+    configStoreInstance.get.mockReturnValue(12345);
+    expect(manager.getNumConfigValue('myKey')).toBe(12345);
+  });
+
+  it('logs and returns empty string for non-string config value', () => {
+    configStoreInstance.get.mockReturnValue('someValue');
+    const result = manager.getNumConfigValue('someKey');
+    expect(result).toBe(0);
+    expect(logSpy.error).toHaveBeenCalledWith(expect.stringContaining('Expected number'));
+  });
+
   it('calls setConfigValue correctly', () => {
     manager.setConfigValue('someKey', 'someValue');
     expect(configStoreInstance.set).toHaveBeenCalledWith('someKey', 'someValue');
@@ -200,16 +214,15 @@ describe('ConfigManager', () => {
     configStoreInstance.get.mockReturnValueOnce(answers.rootFolder);
     configStoreInstance.get.mockReturnValueOnce(answers.distFolder);
     configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
-    configStoreInstance.get.mockReturnValueOnce(answers.webTheme);
-    configStoreInstance.get.mockReturnValueOnce(answers.docsifyTemplate);
-    configStoreInstance.get.mockReturnValueOnce(answers.repoName);
-    configStoreInstance.get.mockReturnValueOnce(answers.embedMermaidDiagrams);
     configStoreInstance.get.mockReturnValueOnce(answers.dslCli);
     configStoreInstance.get.mockReturnValueOnce(answers.workspaceDsl);
+    configStoreInstance.get.mockReturnValueOnce(answers.embedMermaidDiagrams);
     configStoreInstance.get.mockReturnValueOnce(answers.pdfCss);
+    configStoreInstance.get.mockReturnValueOnce(answers.serve);
+    configStoreInstance.get.mockReturnValueOnce(answers.servePort);
     manager.listConfig();
 
-    expect(logSpy.log).toHaveBeenCalledTimes(13); // 12 for the config values, 1 for the header
+    expect(logSpy.log).toHaveBeenCalledTimes(12); // 11 for the config values, 1 for the header
     expect(logSpy.log).toHaveBeenNthCalledWith(1, expect.stringContaining('Current Configuration'));
     expect(logSpy.log).toHaveBeenNthCalledWith(
       2,
@@ -233,29 +246,25 @@ describe('ConfigManager', () => {
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
       7,
-      `${'Website docsify theme'.padEnd(40)} : ${answers.webTheme}`,
-    );
-    expect(logSpy.log).toHaveBeenNthCalledWith(
-      8,
-      `${'Path to a Docsify template'.padEnd(40)} : Not set`,
-    );
-    expect(logSpy.log).toHaveBeenNthCalledWith(
-      9,
-      `${'Repository Url'.padEnd(40)} : ${answers.repoName}`,
-    );
-    expect(logSpy.log).toHaveBeenNthCalledWith(
-      10,
-      `${'Embed Mermaid diagrams?'.padEnd(40)} : ${answers.embedMermaidDiagrams ? 'Yes' : 'No'}`,
-    );
-    expect(logSpy.log).toHaveBeenNthCalledWith(
-      11,
       `${'Structurizr DSL CLI to use'.padEnd(40)} : ${answers.dslCli}`,
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      12,
+      8,
       `${'Where Structurizr starts looking for diagrams to extract'.padEnd(40)} : ${answers.workspaceDsl}`,
     );
-    expect(logSpy.log).toHaveBeenNthCalledWith(13, `${'PDF CSS'.padEnd(40)} : ${answers.pdfCss}`);
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      9,
+      `${'Embed Mermaid diagrams?'.padEnd(40)} : ${answers.embedMermaidDiagrams ? 'Yes' : 'No'}`,
+    );
+    expect(logSpy.log).toHaveBeenNthCalledWith(10, `${'PDF CSS'.padEnd(40)} : ${answers.pdfCss}`);
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      11,
+      `${'Serve Docsify Website?'.padEnd(40)} : ${answers.serve ? 'Yes' : 'No'}`,
+    );
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      12,
+      `${'Port Number'.padEnd(40)} : ${answers.servePort}`,
+    );
   });
 
   it('prints "Not set" when config value is empty or invalid in listConfig', () => {
@@ -291,7 +300,9 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('docker')
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(true)
-      .mockReturnValueOnce('_resources/pdf.css');
+      .mockReturnValueOnce('_resources/pdf.css')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(8000);
 
     const config = await manager.getAllStoredConfig();
 
@@ -304,6 +315,8 @@ describe('ConfigManager', () => {
       workspaceDsl: 'workspace.dsl',
       embedMermaidDiagrams: true,
       pdfCss: '_resources/pdf.css',
+      serve: false,
+      servePort: 8000,
     });
   });
 
@@ -316,10 +329,96 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('something-else')
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(true)
-      .mockReturnValueOnce('_resources/pdf.css');
+      .mockReturnValueOnce('_resources/pdf.css')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(8000);
 
     const config = await manager.getAllStoredConfig();
 
     expect(config.dslCli).toBe('structurizr-cli');
+  });
+  it('should print valid number when a `number` config value is a number', () => {
+    configStoreInstance.get
+      .mockReturnValueOnce('DemoProject')
+      .mockReturnValueOnce('Home')
+      .mockReturnValueOnce('./src')
+      .mockReturnValueOnce('./dist')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('structurizr-cli')
+      .mockReturnValueOnce('workspace.dsl')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('_resources/pdf.css')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(4000);
+
+    manager.listConfig();
+
+    expect(logSpy.log).toHaveBeenCalledWith(
+      expect.stringContaining('Port Number'.padEnd(40) + ' : 4000'),
+    );
+  });
+
+  it('should print valid number when a `number` config value is a numeric string', () => {
+    configStoreInstance.get
+      .mockReturnValueOnce('DemoProject')
+      .mockReturnValueOnce('Home')
+      .mockReturnValueOnce('./src')
+      .mockReturnValueOnce('./dist')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('structurizr-cli')
+      .mockReturnValueOnce('workspace.dsl')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('_resources/pdf.css')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('4000');
+
+    manager.listConfig();
+
+    expect(logSpy.log).toHaveBeenCalledWith(
+      expect.stringContaining('Port Number'.padEnd(40) + ' : 4000'),
+    );
+  });
+
+  it('should print empty when a `number` config value is non-numeric and log an error', () => {
+    configStoreInstance.get
+      .mockReturnValueOnce('DemoProject')
+      .mockReturnValueOnce('Home')
+      .mockReturnValueOnce('./src')
+      .mockReturnValueOnce('./dist')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('structurizr-cli')
+      .mockReturnValueOnce('workspace.dsl')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('_resources/pdf.css')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('not-a-number');
+
+    manager.listConfig();
+
+    expect(logSpy.log).toHaveBeenCalledWith(
+      expect.stringContaining('Port Number'.padEnd(40) + ' : '),
+    );
+    expect(logSpy.error).toHaveBeenCalledWith('Expected number for servePort, but got string');
+  });
+
+  it('should print empty when a `number` config value is empty string and log an error', () => {
+    configStoreInstance.get
+      .mockReturnValueOnce('DemoProject')
+      .mockReturnValueOnce('Home')
+      .mockReturnValueOnce('./src')
+      .mockReturnValueOnce('./dist')
+      .mockReturnValueOnce('structurizr-cli')
+      .mockReturnValueOnce('workspace.dsl')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('_resources/pdf.css')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('');
+
+    manager.listConfig();
+
+    expect(logSpy.log).toHaveBeenCalledWith(
+      expect.stringContaining('Port Number'.padEnd(40) + ' : '),
+    );
+    expect(logSpy.error).toHaveBeenCalledWith('Expected number for servePort, but got undefined');
   });
 });

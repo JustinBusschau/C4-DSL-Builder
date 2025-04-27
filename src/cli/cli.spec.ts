@@ -38,9 +38,27 @@ const { run } = await import('./cli.js');
 
 describe('CLI integration tests', () => {
   const logSpy = new CliLogger('CLI.test', 'debug');
+  let buildConfig: BuildConfig;
+
   beforeEach(() => {
     vi.resetAllMocks();
     vi.clearAllMocks();
+
+    buildConfig = {
+      projectName: 'mock-projectName',
+      homepageName: 'mock-homepageName',
+      rootFolder: 'mock-rootFolder',
+      distFolder: 'mock-distFolder',
+      dslCli: 'structurizr-cli',
+      embedMermaidDiagrams: false,
+      pdfCss: 'mock-pdfCss',
+      workspaceDsl: 'mock-workspaceDsl',
+      serve: true,
+      servePort: 3000,
+    };
+    const getAllMock = vi.fn().mockResolvedValue(buildConfig);
+    ConfigManager.prototype.getAllStoredConfig = getAllMock;
+
     process.argv = ['node', 'cli'];
   });
 
@@ -115,19 +133,6 @@ describe('CLI integration tests', () => {
     const prepareMock = vi.fn();
     MarkdownProcessor.prototype.prepareMarkdown = prepareMock;
 
-    const buildConfig: BuildConfig = {
-      projectName: 'mock-projectName',
-      homepageName: 'mock-homepageName',
-      rootFolder: 'mock-rootFolder',
-      distFolder: 'mock-distFolder',
-      dslCli: 'structurizr-cli',
-      embedMermaidDiagrams: false,
-      pdfCss: 'mock-pdfCss',
-      workspaceDsl: 'mock-workspaceDsl',
-    };
-    const getAllMock = vi.fn().mockResolvedValue(buildConfig);
-    ConfigManager.prototype.getAllStoredConfig = getAllMock;
-
     process.argv = ['node', 'cli', 'md'];
     await run(logSpy);
 
@@ -139,19 +144,6 @@ describe('CLI integration tests', () => {
   it('runs "pdf" and generates PDF documentation', async () => {
     const prepareMock = vi.fn();
     PdfProcessor.prototype.preparePdf = prepareMock;
-
-    const buildConfig: BuildConfig = {
-      projectName: 'mock-projectName',
-      homepageName: 'mock-homepageName',
-      rootFolder: 'mock-rootFolder',
-      distFolder: 'mock-distFolder',
-      dslCli: 'structurizr-cli',
-      embedMermaidDiagrams: false,
-      pdfCss: 'mock-pdfCss',
-      workspaceDsl: 'mock-workspaceDsl',
-    };
-    const getAllMock = vi.fn().mockResolvedValue(buildConfig);
-    ConfigManager.prototype.getAllStoredConfig = getAllMock;
 
     process.argv = ['node', 'cli', 'pdf'];
     await run(logSpy);
@@ -222,8 +214,15 @@ describe('CLI integration tests', () => {
     process.argv = ['node', 'cli', 'site', '--no-serve'];
     await run(logSpy);
 
-    expect(mockLogger.log).toHaveBeenCalledTimes(1);
-    expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Generating docsify'));
+    expect(mockLogger.log).toHaveBeenCalledTimes(2);
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('Generating docsify'),
+    );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('Building docsify site [no serve]'),
+    );
   });
 
   it('runs "site" and serves docsify site on requested port', async () => {

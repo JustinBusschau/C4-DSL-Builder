@@ -7,6 +7,8 @@ export type BuildConfig = {
   workspaceDsl: string;
   embedMermaidDiagrams: boolean;
   pdfCss: string;
+  serve: boolean;
+  servePort: number;
 
   generateWebsite?: boolean; // not used yet
   webTheme?: string; // not used yet

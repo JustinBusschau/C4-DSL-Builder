@@ -58,6 +58,10 @@ export class ConfigManager {
     return 'No';
   }
 
+  private numValueToString(value: number | string): string {
+    return value.toString();
+  }
+
   private getPrintValue(value: string): string {
     return value?.trim?.() && value !== 'undefined' ? chalk.green(value) : chalk.red('Not set');
   }
@@ -108,6 +112,16 @@ export class ConfigManager {
     return false;
   }
 
+  getNumConfigValue(key: string): number {
+    const configValue = this.getStoredValue(key);
+    const num = typeof configValue === 'number' ? configValue : Number(configValue);
+    if (Number.isNaN(num)) {
+      this.logger.error(`Expected number for ${key}, but got ${typeof configValue}`);
+      return 0;
+    }
+    return num;
+  }
+
   setConfigValue(key: string, value: string | boolean): void {
     const config = this.openConfigStore();
     if (!config) {
@@ -144,7 +158,6 @@ export class ConfigManager {
 
   listConfig(): void {
     this.logger.log(chalk.cyan('Current Configuration\n'));
-
     this.printConfigValue(
       'Project name',
       this.getPrintValue(this.getStrConfigValue('projectName')),
@@ -163,19 +176,6 @@ export class ConfigManager {
       this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('generateWebsite'))),
     );
     this.printConfigValue(
-      'Website docsify theme',
-      this.getPrintValue(this.getStrConfigValue('webTheme')),
-    );
-    this.printConfigValue(
-      'Path to a Docsify template',
-      this.getPrintValue(this.getStrConfigValue('docsifyTemplate')),
-    );
-    this.printConfigValue('Repository Url', this.getPrintValue(this.getStrConfigValue('repoName')));
-    this.printConfigValue(
-      'Embed Mermaid diagrams?',
-      this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('embedMermaidDiagrams'))),
-    );
-    this.printConfigValue(
       'Structurizr DSL CLI to use',
       this.getPrintValue(this.getStrConfigValue('dslCli')),
     );
@@ -183,7 +183,19 @@ export class ConfigManager {
       'Where Structurizr starts looking for diagrams to extract',
       this.getPrintValue(this.getStrConfigValue('workspaceDsl')),
     );
+    this.printConfigValue(
+      'Embed Mermaid diagrams?',
+      this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('embedMermaidDiagrams'))),
+    );
     this.printConfigValue('PDF CSS', this.getPrintValue(this.getStrConfigValue('pdfCss')));
+    this.printConfigValue(
+      'Serve Docsify Website?',
+      this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('serve'))),
+    );
+    this.printConfigValue(
+      'Port Number',
+      this.getPrintValue(this.numValueToString(this.getNumConfigValue('servePort'))),
+    );
   }
 
   async setConfig(): Promise<void> {
@@ -268,6 +280,18 @@ export class ConfigManager {
         message: 'PDF CSS file path:',
         default: this.getStrConfigValue('pdfCss') || '_resources/pdf.css',
       },
+      {
+        type: 'confirm',
+        name: 'serve',
+        message: 'Serve Docsify Website:',
+        default: this.getBoolConfigValue('serve') || false,
+      },
+      {
+        type: 'number',
+        name: 'servePort',
+        message: 'Port number:',
+        default: this.getNumConfigValue('servePort') || 3000,
+      },
     ]);
 
     Object.entries(answers).forEach(([key, value]) => {
@@ -287,6 +311,8 @@ export class ConfigManager {
       workspaceDsl: this.getStrConfigValue('workspaceDsl'),
       embedMermaidDiagrams: this.getBoolConfigValue('embedMermaidDiagrams'),
       pdfCss: this.getStrConfigValue('pdfCss'),
+      serve: this.getBoolConfigValue('serve'),
+      servePort: this.getNumConfigValue('servePort'),
     };
   }
 }
