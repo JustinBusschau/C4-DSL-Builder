@@ -14,5 +14,5 @@
     "types": ["vitest/globals"]
   },
   "include": ["src", "vite.config.ts"],
-  "exclude": ["vite.config.ts", "node_modules", "lib"]
+  "exclude": ["vite.config.ts", "node_modules", "lib", "**/*.spec.ts"]
 }
