@@ -14,6 +14,12 @@ interface ConfigOptions {
   reset?: boolean;
 }
 
+interface SiteOptions {
+  watch?: boolean;
+  port?: number;
+  serve?: boolean;
+}
+
 function getIntroText(version: string): string {
   return (
     chalk.green(figlet.textSync('C4-DSL-Builder')) +
@@ -93,6 +99,27 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       const pdf = new PdfProcessor();
       const buildConfig = await config.getAllStoredConfig();
       await pdf.preparePdf(buildConfig);
+    });
+
+  program
+    .command('site')
+    .description('generate a docsify site')
+    .option('-w, --watch', 'watch for changes and regenerate')
+    .option('-n, --no-serve', 'do not serve the site - only generate files')
+    .option('-p, --port <n>', 'port to serve the generated site on')
+    .action(async function () {
+      const options = this.opts<SiteOptions>();
+      console.log(options);
+      logger.log(chalk.green('Generating docsify site ...'));
+      if (options.port) {
+        logger.log(chalk.bgGreen(`Serving on port ${options.port}`));
+      }
+      if (options.serve) {
+        logger.log(chalk.grey('Serving docsify site'));
+      }
+      if (options.watch) {
+        logger.log('Watching for changes');
+      }
     });
 
   return program;

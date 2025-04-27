@@ -12,6 +12,7 @@ vi.mock('chalk', () => ({
     green: (txt: string) => txt,
     grey: (txt: string) => txt,
     blue: (txt: string) => txt,
+    bgGreen: (txt: string) => txt,
   },
 }));
 
@@ -181,5 +182,67 @@ describe('CLI integration tests', () => {
 
     expect(errorOutput).toMatch(/Usage|help|unknown command/i);
     expect(exitMock).toHaveBeenCalledWith(1);
+  });
+
+  it('runs "site" and generates docsify site files', async () => {
+    process.argv = ['node', 'cli', 'site'];
+    await run(logSpy);
+
+    expect(mockLogger.log).toHaveBeenCalledTimes(2);
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('Generating docsify'),
+    );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('Generating docsify site'),
+    );
+  });
+
+  it('runs "site" and watches for changes', async () => {
+    process.argv = ['node', 'cli', 'site', '--watch'];
+    await run(logSpy);
+
+    expect(mockLogger.log).toHaveBeenCalledTimes(3);
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('Generating docsify'),
+    );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('Serving docsify site'),
+    );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('Watching for changes'),
+    );
+  });
+
+  it('runs "site" and generates docsify site files', async () => {
+    process.argv = ['node', 'cli', 'site', '--no-serve'];
+    await run(logSpy);
+
+    expect(mockLogger.log).toHaveBeenCalledTimes(1);
+    expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Generating docsify'));
+  });
+
+  it('runs "site" and serves docsify site on requested port', async () => {
+    const port = '8383';
+    process.argv = ['node', 'cli', 'site', '--port', port];
+    await run(logSpy);
+
+    expect(mockLogger.log).toHaveBeenCalledTimes(3);
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('Generating docsify'),
+    );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining(`Serving on port ${port}`),
+    );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining(`Serving docsify site`),
+    );
   });
 });
