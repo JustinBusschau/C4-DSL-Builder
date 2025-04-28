@@ -184,7 +184,7 @@ describe('ConfigManager', () => {
     configStoreInstance.get.mockReturnValue('someValue');
     const result = manager.getNumConfigValue('someKey');
     expect(result).toBe(0);
-    expect(logSpy.error).toHaveBeenCalledWith(expect.stringContaining('Expected number'));
+    expect(logSpy.info).toHaveBeenCalledWith(expect.stringContaining('Expected number'));
   });
 
   it('calls setConfigValue correctly', () => {
@@ -398,7 +398,7 @@ describe('ConfigManager', () => {
     expect(logSpy.log).toHaveBeenCalledWith(
       expect.stringContaining('Port Number'.padEnd(40) + ' : '),
     );
-    expect(logSpy.error).toHaveBeenCalledWith('Expected number for servePort, but got string');
+    expect(logSpy.info).toHaveBeenCalledWith('Expected number for servePort, but got string');
   });
 
   it('should print empty when a `number` config value is empty string and log an error', () => {
@@ -419,6 +419,6 @@ describe('ConfigManager', () => {
     expect(logSpy.log).toHaveBeenCalledWith(
       expect.stringContaining('Port Number'.padEnd(40) + ' : '),
     );
-    expect(logSpy.error).toHaveBeenCalledWith('Expected number for servePort, but got undefined');
+    expect(logSpy.info).toHaveBeenCalledWith('Expected number for servePort, but got undefined');
   });
 });

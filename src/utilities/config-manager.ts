@@ -116,7 +116,7 @@ export class ConfigManager {
     const configValue = this.getStoredValue(key);
     const num = typeof configValue === 'number' ? configValue : Number(configValue);
     if (Number.isNaN(num)) {
-      this.logger.error(`Expected number for ${key}, but got ${typeof configValue}`);
+      this.logger.info(`Expected number for ${key}, but got ${typeof configValue}`);
       return 0;
     }
     return num;
