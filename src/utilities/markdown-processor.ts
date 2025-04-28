@@ -21,12 +21,12 @@ export class MarkdownProcessor extends ProcessorBase {
     let MD = this.generateDocumentHeader(tree, buildConfig);
     MD += await this.buildDocumentBody(tree, buildConfig);
 
-    const outPath = path.join(buildConfig.distFolder, 'README.md');
+    const outPath = path.join(buildConfig.distFolder, `${buildConfig.projectName}.md`);
     try {
       await this.safeFiles.writeFile(outPath, MD);
-      this.logger.info(`Wrote README.md to ${outPath}`);
+      this.logger.info(`Wrote ${buildConfig.projectName}.md to ${outPath}`);
     } catch (err) {
-      this.logger.error(`Failed to write README.md`, err);
+      this.logger.error(`Failed to write ${buildConfig.projectName}.md`, err);
     }
   }
 

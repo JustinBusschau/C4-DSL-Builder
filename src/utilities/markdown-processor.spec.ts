@@ -351,11 +351,11 @@ describe('MarkdownProcessor', () => {
       ];
       await processor.generateMarkdownFromTree(tree, buildConfig);
       expect(safeFiles.writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('README.md'),
+        expect.stringContaining('Project.md'),
         expect.stringContaining('[Home](#Home)'),
       );
       expect(safeFiles.writeFile).toHaveBeenCalledWith(
-        expect.stringContaining('README.md'),
+        expect.stringContaining('Project.md'),
         expect.stringContaining('# Welcome'),
       );
     });
@@ -364,7 +364,7 @@ describe('MarkdownProcessor', () => {
       const err = new Error('Write failed');
       vi.spyOn(safeFiles, 'writeFile').mockRejectedValue(err);
       await processor.generateMarkdownFromTree([], buildConfig);
-      expect(logSpy.error).toHaveBeenCalledWith('Failed to write README.md', err);
+      expect(logSpy.error).toHaveBeenCalledWith('Failed to write Project.md', err);
     });
   });
 
@@ -382,7 +382,7 @@ describe('MarkdownProcessor', () => {
         3,
         expect.stringContaining('Markdown documentation generated successfully'),
       );
-      expect(logSpy.info).toHaveBeenCalledWith(expect.stringContaining('Wrote README.md'));
+      expect(logSpy.info).toHaveBeenCalledWith(expect.stringContaining('Wrote Project.md'));
     });
 
     it('logs error if dist folder is missing or invalid', async () => {
