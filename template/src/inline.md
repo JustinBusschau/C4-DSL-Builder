@@ -1,6 +1,6 @@
 ## Inline diagrams
 
-You can also include your mermaid diagrams in code blocks (wit appropriate language identifier) and these will render as expected.
+You can also include your mermaid diagrams in code blocks (with appropriate language identifier) and these will render as expected.
 
 ```mermaid
 flowchart TD
