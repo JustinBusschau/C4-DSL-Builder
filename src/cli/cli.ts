@@ -114,6 +114,21 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       logger.log(chalk.green('Generating docsify site ...'));
       const site = new SiteProcessor();
 
+      const dslWatchOptions = {
+        persistent: true,
+        ignoreInitial: false,
+        awaitWriteFinish: {
+          stabilityThreshold: 200,
+          pollInterval: 100,
+        },
+      };
+      const sourceWatchOptions = {
+        ignored: (path: string) => {
+          return /(^|[/\\])\.[^/\\]/.test(path) || /[/\\]_[^/\\]*/.test(path);
+        },
+        ...dslWatchOptions,
+      };
+
       const config = new ConfigManager();
       const buildConfig = await config.getAllStoredConfig();
 
@@ -130,43 +145,18 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       }
       if (options.watch) {
         logger.log(`Watching for changes in ${buildConfig.rootFolder} ...`);
-        const sourceWatcher: FSWatcher = chokidar.watch(buildConfig.rootFolder, {
-          ignored: (path: string) => {
-            return /(^|[/\\])\.[^/\\]/.test(path) || /[/\\]_[^/\\]*/.test(path);
-          },
-          persistent: true,
-          ignoreInitial: false,
-          awaitWriteFinish: {
-            stabilityThreshold: 200,
-            pollInterval: 100,
-          },
-        });
+        const sourceWatcher: FSWatcher = chokidar.watch(buildConfig.rootFolder, sourceWatchOptions);
         sourceWatcher
           .on('ready', () => logger.log('... ready'))
-          .on('add', (path: string | string[]) => {
-            logger.log(`\n${path} added. Rebuilding ...`);
-          })
-          .on('change', (path: string | string[]) => {
-            logger.log(`\n${path} changed. Rebuilding ...`);
-          })
-          .on('unlink', (path: string | string[]) => {
-            logger.log(`\n${path} removed. Rebuilding ...`);
-          })
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .on('all', async (_event: any, _path: string) => {
+          .on('all', async (_event: any, path: string) => {
+            logger.log(`\n${path} touched (added, changed or removed). Rebuilding ...`);
             await site.prepareSite(buildConfig);
           });
 
         const dslWatcher: FSWatcher = chokidar.watch(
           path.join(buildConfig.rootFolder, '_dsl', buildConfig.workspaceDsl),
-          {
-            persistent: true,
-            ignoreInitial: false,
-            awaitWriteFinish: {
-              stabilityThreshold: 200,
-              pollInterval: 100,
-            },
-          },
+          dslWatchOptions,
         );
         dslWatcher.on('change', async (path: string) => {
           logger.log(`\n${path} changed. Extracting Mermaid diagrams from DSL ...`);

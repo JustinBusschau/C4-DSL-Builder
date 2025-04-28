@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { ProjectCreator } from '../utilities/project-creator.js';
 import { ConfigManager } from '../utilities/config-manager.js';
 import { Structurizr } from '../utilities/structurizr.js';
@@ -7,6 +7,20 @@ import { CliLogger } from '../utilities/cli-logger.js';
 import { PdfProcessor } from '../utilities/pdf-processor.js';
 import { BuildConfig } from '../types/build-config.js';
 import { SiteProcessor } from '../utilities/site-processor.js';
+import { EventEmitter } from 'events';
+
+vi.mock('chokidar', () => {
+  const watchMock = new EventEmitter();
+  // watchMock.close = vi.fn();
+  return {
+    default: {
+      watch: vi.fn(() => watchMock),
+    },
+    FSWatcher: class extends EventEmitter {
+      close = vi.fn();
+    },
+  };
+});
 
 vi.mock('chalk', () => ({
   default: {
@@ -248,5 +262,74 @@ describe('CLI integration tests', () => {
       3,
       expect.stringContaining(`Serving docsify site`),
     );
+  });
+
+  it('runs "site --watch" and rebuilds on file changes', async () => {
+    const prepareMock = vi.fn();
+    SiteProcessor.prototype.prepareSite = prepareMock;
+
+    const { default: chokidar } = await import('chokidar');
+    const watchMock = chokidar.watch as unknown as Mock;
+
+    process.argv = ['node', 'cli', 'site', '--watch'];
+
+    await run(logSpy);
+
+    const watcher = watchMock.mock.results[0].value as EventEmitter;
+
+    watcher.emit('all', 'somefile.md');
+
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(prepareMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('rebuilds diagrams when _dsl/ws.d changes', async () => {
+    const extractMock = vi.fn();
+    Structurizr.prototype.extractMermaidDiagramsFromDsl = extractMock;
+
+    const { default: chokidar } = await import('chokidar');
+    const watchMock = chokidar.watch as unknown as Mock;
+
+    process.argv = ['node', 'cli', 'site', '--watch'];
+
+    await run(logSpy);
+
+    const dslWatcher = watchMock.mock.results[1].value as EventEmitter;
+
+    dslWatcher.emit('change', '_dsl/ws.d');
+
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(mockLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('changed. Extracting Mermaid diagrams from DSL'),
+    );
+    expect(extractMock).toHaveBeenCalledTimes(3);
+    expect(extractMock).toHaveBeenCalledWith(
+      buildConfig.dslCli,
+      buildConfig.rootFolder,
+      buildConfig.workspaceDsl,
+    );
+  });
+
+  it('sourceWatcher ignores dotfiles and underscore folders', async () => {
+    const prepareMock = vi.fn();
+    SiteProcessor.prototype.prepareSite = prepareMock;
+
+    const { default: chokidar } = await import('chokidar');
+    const watchMock = chokidar.watch as unknown as Mock;
+
+    process.argv = ['node', 'cli', 'site', '--watch'];
+
+    await run(logSpy);
+
+    const watchCallArgs = watchMock.mock.calls[0][1];
+    const ignoredFn = watchCallArgs.ignored as (path: string) => boolean;
+
+    expect(ignoredFn('/some/path/.git')).toBe(true);
+    expect(ignoredFn('/some/path/_build')).toBe(true);
+    expect(ignoredFn('/some/path/normal-folder')).toBe(false);
+    expect(ignoredFn('/some/path/normal-folder/file.md')).toBe(false);
+    expect(ignoredFn('/some/path/_private/notes.md')).toBe(true);
   });
 });
