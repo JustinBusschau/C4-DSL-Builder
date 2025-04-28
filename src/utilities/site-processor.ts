@@ -4,6 +4,7 @@ import { CliLogger } from './cli-logger.js';
 import { MermaidProcessor } from './mermaid-processor.js';
 import { BuildConfig } from '../types/build-config.js';
 import chalk from 'chalk';
+import { TreeItem } from '../types/tree-item.js';
 
 export class SiteProcessor extends ProcessorBase {
   constructor(
@@ -14,6 +15,13 @@ export class SiteProcessor extends ProcessorBase {
     super(safeFiles, logger, mermaid);
   }
 
+  async generateSiteFromTree(tree: TreeItem[], buildConfig: BuildConfig): Promise<void> {
+    buildConfig.embedMermaidDiagrams = false;
+
+    const SITE = this.generateDocumentHeader(tree, buildConfig);
+    console.log(SITE);
+  }
+
   async prepareSite(buildConfig: BuildConfig): Promise<void> {
     if (!(await this.prepareOutputFolder(OutputType.site, buildConfig))) {
       this.logger.warn('Output folder preparation failed.');
@@ -21,7 +29,7 @@ export class SiteProcessor extends ProcessorBase {
     }
 
     const tree = await this.generateSourceTree(buildConfig);
-    console.log(tree.length);
+    await this.generateSiteFromTree(tree, buildConfig);
 
     this.logger.log(chalk.green(`\nSITE documentation generated successfully!`));
   }
