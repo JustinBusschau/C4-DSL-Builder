@@ -8,6 +8,7 @@ import { MarkdownProcessor } from '../utilities/markdown-processor.js';
 import { ConfigManager } from '../utilities/config-manager.js';
 import { CliLogger } from '../utilities/cli-logger.js';
 import { PdfProcessor } from '../utilities/pdf-processor.js';
+import { SiteProcessor } from '../utilities/site-processor.js';
 
 interface ConfigOptions {
   list?: boolean;
@@ -110,9 +111,10 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
     .action(async function () {
       logger.log(chalk.green('Generating docsify site ...'));
 
-      const options = this.opts<SiteOptions>();
       const config = new ConfigManager();
       const buildConfig = await config.getAllStoredConfig();
+
+      const options = this.opts<SiteOptions>();
       if (options.port) {
         logger.log(chalk.bgGreen(`Serving on port ${options.port}`));
         buildConfig.servePort = options.port;
@@ -126,6 +128,9 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       if (options.watch) {
         logger.log('Watching for changes');
       }
+
+      const site = new SiteProcessor();
+      await site.prepareSite(buildConfig);
     });
 
   return program;

@@ -43,6 +43,8 @@ describe('PdfProcessor', () => {
     dslCli: 'docker',
     workspaceDsl: '',
     pdfCss: '',
+    serve: false,
+    servePort: 4000,
   };
 
   beforeEach(() => {

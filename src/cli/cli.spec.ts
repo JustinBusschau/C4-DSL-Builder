@@ -6,6 +6,7 @@ import { MarkdownProcessor } from '../utilities/markdown-processor.js';
 import { CliLogger } from '../utilities/cli-logger.js';
 import { PdfProcessor } from '../utilities/pdf-processor.js';
 import { BuildConfig } from '../types/build-config.js';
+import { SiteProcessor } from '../utilities/site-processor.js';
 
 vi.mock('chalk', () => ({
   default: {
@@ -177,17 +178,21 @@ describe('CLI integration tests', () => {
   });
 
   it('runs "site" and generates docsify site files', async () => {
+    const prepareMock = vi.fn();
+    SiteProcessor.prototype.prepareSite = prepareMock;
+
     process.argv = ['node', 'cli', 'site'];
     await run(logSpy);
 
+    expect(prepareMock).toHaveBeenCalledWith(buildConfig);
     expect(mockLogger.log).toHaveBeenCalledTimes(2);
     expect(mockLogger.log).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining('Generating docsify'),
+      expect.stringContaining('Generating docsify site'),
     );
     expect(mockLogger.log).toHaveBeenNthCalledWith(
-      1,
-      expect.stringContaining('Generating docsify site'),
+      2,
+      expect.stringContaining('Serving docsify site'),
     );
   });
 

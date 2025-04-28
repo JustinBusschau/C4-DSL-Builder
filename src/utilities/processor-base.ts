@@ -14,6 +14,7 @@ import type { Root, Code, Image, Link, Parent } from 'mdast';
 export enum OutputType {
   md = 'md',
   pdf = 'pdf',
+  site = 'site',
 }
 
 export class ProcessorBase {
