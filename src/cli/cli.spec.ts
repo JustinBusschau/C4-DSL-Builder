@@ -11,7 +11,6 @@ import { EventEmitter } from 'events';
 
 vi.mock('chokidar', () => {
   const watchMock = new EventEmitter();
-  // watchMock.close = vi.fn();
   return {
     default: {
       watch: vi.fn(() => watchMock),
