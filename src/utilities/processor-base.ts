@@ -26,11 +26,11 @@ export class ProcessorBase {
     protected readonly mermaid: MermaidProcessor,
   ) {}
 
-  async convertMermaidToImages(
+  private collectMermaidLinks(
     markdownContent: Root,
     contentLocation: string,
     buildConfig: BuildConfig,
-  ): Promise<void> {
+  ): typeof mmdFiles {
     const mmdFiles: Array<{
       node: Link | Code;
       absolutePath: string;
@@ -44,7 +44,6 @@ export class ProcessorBase {
     visit(markdownContent, 'link', (node, index, parent) => {
       const itemPath = node.url;
       if (
-        node.type === 'link' &&
         !itemPath.startsWith('http') &&
         itemPath.endsWith('.mmd') &&
         typeof index === 'number' &&
@@ -68,18 +67,31 @@ export class ProcessorBase {
       }
     });
 
+    return mmdFiles;
+  }
+
+  private collectMermaidCodeBlocks(
+    markdownContent: Root,
+    contentLocation: string,
+    buildConfig: BuildConfig,
+  ): typeof mmdFiles {
+    const mmdFiles: Array<{
+      node: Link | Code;
+      absolutePath: string;
+      destPath: string;
+      relativePath: string;
+      index: number;
+      parent: Parent;
+      content?: string;
+    }> = [];
+
     visit(markdownContent, 'code', (node, index, parent) => {
-      if (
-        node.type === 'code' &&
-        node.value &&
-        node.lang === 'mermaid' &&
-        typeof index === 'number' &&
-        parent
-      ) {
+      if (node.lang === 'mermaid' && typeof index === 'number' && parent) {
         const absolutePath = path.resolve(contentLocation);
-        const destPath = absolutePath.replace(buildConfig.rootFolder, buildConfig.distFolder);
+        const destPath = path.resolve(
+          absolutePath.replace(buildConfig.rootFolder, buildConfig.distFolder),
+        );
         const relativePath = path.relative(path.resolve(buildConfig.distFolder), destPath);
-        const content = node.value;
 
         mmdFiles.push({
           node,
@@ -88,59 +100,94 @@ export class ProcessorBase {
           relativePath,
           index,
           parent,
-          content,
+          content: node.value,
         });
       }
     });
 
-    for (const mmdFile of mmdFiles) {
-      try {
-        let mmdContent = mmdFile.content;
-        if (mmdContent === 'loadFromFile') {
-          if (!(await this.safeFiles.pathExists(mmdFile.absolutePath))) {
-            this.logger.warn(`Linked mermaid file not found: ${mmdFile.absolutePath}`);
-            continue;
-          }
+    return mmdFiles;
+  }
 
-          mmdContent = (await this.safeFiles.readFileAsString(mmdFile.absolutePath)) ?? undefined;
-          if (!mmdContent) {
-            this.logger.warn(`Linked mermaid file appears to be empty: ${mmdFile.absolutePath}`);
-            continue;
-          }
-        } else {
-          const uniqueName = await this.mermaid.generateUniqueMmdFilename(mmdFile.destPath);
-          mmdFile.destPath = path.join(mmdFile.destPath, uniqueName);
+  private async processMermaidFile(
+    file: {
+      node: Link | Code;
+      absolutePath: string;
+      destPath: string;
+      relativePath: string;
+      index: number;
+      parent: Parent;
+      content: string;
+    },
+    buildConfig: BuildConfig,
+    contentLocation: string,
+  ): Promise<void> {
+    try {
+      let content = file.content;
+      if (content === 'loadFromFile') {
+        if (!(await this.safeFiles.pathExists(file.absolutePath))) {
+          this.logger.warn(`Linked mermaid file not found: ${file.absolutePath}`);
+          return;
         }
-
-        if (!mmdContent?.trim()) {
-          this.logger.warn(
-            `Unable to load mermaid content from ${mmdFile.absolutePath} for output to ${mmdFile.destPath}`,
-          );
-          continue;
-        }
-        await this.mermaid.diagramFromMermaidString(mmdContent, mmdFile.destPath);
-
-        // update the link
-        let imgUrl = path.relative(path.resolve(buildConfig.distFolder), mmdFile.destPath);
-        if (buildConfig.generateWebsite) {
-          imgUrl = path.relative(
-            path.resolve(contentLocation.replace(buildConfig.rootFolder, buildConfig.distFolder)),
-            mmdFile.destPath,
-          );
-        }
-        mmdFile.parent.children.splice(mmdFile.index, 1, {
-          type: 'paragraph',
-          children: [
-            {
-              type: 'image',
-              alt: path.basename(mmdFile.destPath),
-              url: imgUrl,
-            },
-          ],
-        });
-      } catch (error) {
-        this.logger.error(`Failed to process linked Mermaid file: ${mmdFile.absolutePath}`, error);
+        content = (await this.safeFiles.readFileAsString(file.absolutePath)) ?? '';
+      } else {
+        const uniqueName = await this.mermaid.generateUniqueMmdFilename(file.destPath);
+        file.destPath = path.join(file.destPath, uniqueName);
       }
+
+      if (!content.trim()) {
+        this.logger.warn(`Mermaid content empty at ${file.absolutePath}`);
+        return;
+      }
+
+      await this.mermaid.diagramFromMermaidString(content, file.destPath);
+
+      let imgUrl = path.relative(path.resolve(buildConfig.distFolder), file.destPath);
+      if (buildConfig.generateWebsite) {
+        imgUrl = path.relative(
+          path.resolve(contentLocation.replace(buildConfig.rootFolder, buildConfig.distFolder)),
+          file.destPath,
+        );
+      }
+
+      file.parent.children.splice(file.index, 1, {
+        type: 'paragraph',
+        children: [
+          {
+            type: 'image',
+            alt: path.basename(file.destPath),
+            url: imgUrl,
+          },
+        ],
+      });
+    } catch (error) {
+      this.logger.error(`Failed to process Mermaid file: ${file.absolutePath}`, error);
+    }
+  }
+
+  async convertMermaidToImages(
+    markdownContent: Root,
+    contentLocation: string,
+    buildConfig: BuildConfig,
+  ): Promise<void> {
+    const mmdFiles = [
+      ...this.collectMermaidLinks(markdownContent, contentLocation, buildConfig),
+      ...this.collectMermaidCodeBlocks(markdownContent, contentLocation, buildConfig),
+    ];
+
+    for (const file of mmdFiles) {
+      await this.processMermaidFile(
+        file as {
+          node: Link | Code;
+          absolutePath: string;
+          destPath: string;
+          relativePath: string;
+          index: number;
+          parent: Parent;
+          content: string;
+        },
+        buildConfig,
+        contentLocation,
+      );
     }
   }
 
@@ -291,7 +338,7 @@ export class ProcessorBase {
     buildConfig: BuildConfig,
   ): Promise<string> {
     const markdownContent = unified().use(remarkParse).parse(content);
-    const linkHandler: Handle = (node, parent, _context) => {
+    const linkHandler: Handle = (node, _parent, _context) => {
       const linkText = toString(node);
       const url = (node as Link).url;
       return `[${linkText}](${url})`;

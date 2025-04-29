@@ -48,7 +48,6 @@
     "figlet": "^1.8.1",
     "finalhandler": "^2.1.0",
     "fs-extra": "^11.3.0",
-    "joi": "^17.13.3",
     "inquirer": "^12.6.0",
     "md-to-pdf": "^5.2.4",
     "mdast-util-to-markdown": "^2.1.2",

@@ -215,9 +215,7 @@ describe('MarkdownProcessor', () => {
         ...buildConfig,
         embedMermaidDiagrams: false,
       });
-      expect(logSpy.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Linked mermaid file appears to be empty'),
-      );
+      expect(logSpy.warn).toHaveBeenCalledWith(expect.stringContaining('Mermaid content empty'));
     });
 
     it('handles missing files gracefully', async () => {
@@ -243,9 +241,7 @@ describe('MarkdownProcessor', () => {
         embedMermaidDiagrams: false,
       });
       expect(parent.children[0].type).toBe('code'); // unchanged
-      expect(logSpy.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Unable to load mermaid content'),
-      );
+      expect(logSpy.warn).toHaveBeenCalledWith(expect.stringContaining('Mermaid content empty'));
     });
 
     it('handles errors gracefully', async () => {
@@ -259,7 +255,7 @@ describe('MarkdownProcessor', () => {
         embedMermaidDiagrams: false,
       });
       expect(logSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to process linked Mermaid file'),
+        expect.stringContaining('Failed to process Mermaid file'),
         err,
       );
     });
