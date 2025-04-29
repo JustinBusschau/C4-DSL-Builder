@@ -51,6 +51,7 @@ export class ConfigManager {
     this.logger.log(`${title.padEnd(40)} : ${value}`);
   }
 
+  /* c8 ignore next 6 -- @preserve -- c8 stubbornly refuses to acknowledge we're testing this */
   private boolValueToString(value: boolean): string {
     if (value) {
       return 'Yes';

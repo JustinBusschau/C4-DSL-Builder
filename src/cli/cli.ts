@@ -46,6 +46,7 @@ export async function serveStaticSite(
 ): Promise<void> {
   const serve = serveStatic(path.resolve(directory));
 
+  /* c8 ignore next 3 -- @preserve -- not explicitly testing the createServerInternals */
   const server = createServer((request, response) => {
     serve(request, response, finalhandler(request, response));
   });

@@ -438,4 +438,17 @@ describe('ConfigManager', () => {
     );
     expect(logSpy.info).toHaveBeenCalledWith('Expected number for servePort, but got undefined');
   });
+
+  it('listConfig correctly prints "No" when a boolean value is false', () => {
+    configStoreInstance.get.mockImplementation((key: string) => {
+      if (key === 'embedMermaidDiagrams') return false;
+      return 'dummy';
+    });
+
+    manager.listConfig();
+
+    expect(logSpy.log).toHaveBeenCalledWith(
+      expect.stringContaining('Embed Mermaid diagrams?'.padEnd(40) + ' : No'),
+    );
+  });
 });

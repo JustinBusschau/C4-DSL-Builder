@@ -63,6 +63,16 @@ vi.mock('../utilities/cli-logger.js', () => ({
   CliLogger: vi.fn(() => mockLogger),
 }));
 
+vi.mock('../utilities/port-utils.js', async () => {
+  const actual = await vi.importActual<typeof import('../utilities/port-utils.js')>(
+    '../utilities/port-utils.js',
+  );
+  return {
+    ...actual,
+    findAvailablePort: vi.fn(actual.findAvailablePort),
+  };
+});
+
 vi.stubGlobal('import', async (specifier: string) => {
   if (specifier === 'http') {
     return {
@@ -104,6 +114,7 @@ describe('CLI integration tests', () => {
   });
 
   afterEach(() => {
+    vi.resetAllMocks();
     createServerMock.mockReset();
   });
 
@@ -403,6 +414,20 @@ describe('CLI integration tests', () => {
       expect.stringContaining(
         `Serving ${buildConfig.distFolder} at http://localhost:${buildConfig.servePort}`,
       ),
+    );
+  });
+
+  it('falls back to another port if the requested one is busy', async () => {
+    const { findAvailablePort } = await import('../utilities/port-utils.js');
+
+    (findAvailablePort as unknown as Mock).mockResolvedValueOnce(4040);
+
+    process.argv = ['node', 'cli', 'site', '--port', '3030'];
+    const { run } = await import('./cli.js');
+    await run(logSpy);
+
+    expect(mockLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('Port 3030 is busy. Using available port 4040 instead.'),
     );
   });
 });
