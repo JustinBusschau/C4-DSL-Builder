@@ -172,10 +172,6 @@ export class ConfigManager {
       this.getPrintValue(this.getStrConfigValue('distFolder')),
     );
     this.printConfigValue(
-      'Generate website',
-      this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('generateWebsite'))),
-    );
-    this.printConfigValue(
       'Structurizr DSL CLI to use',
       this.getPrintValue(this.getStrConfigValue('dslCli')),
     );
@@ -195,6 +191,18 @@ export class ConfigManager {
     this.printConfigValue(
       'Port Number',
       this.getPrintValue(this.numValueToString(this.getNumConfigValue('servePort'))),
+    );
+    this.printConfigValue(
+      'Repo URL',
+      this.getPrintValue(this.numValueToString(this.getStrConfigValue('repoName'))),
+    );
+    this.printConfigValue(
+      'Docsify stylesheet',
+      this.getPrintValue(this.numValueToString(this.getStrConfigValue('webTheme'))),
+    );
+    this.printConfigValue(
+      'Generate website',
+      this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('generateWebsite'))),
     );
   }
 
@@ -228,31 +236,10 @@ export class ConfigManager {
         default: this.getStrConfigValue('distFolder') || Constants.DEFAULT_DIST,
       },
       {
-        type: 'confirm',
-        name: 'generateWebsite',
-        message: 'Generate website?',
-        default: this.getBoolConfigValue('generateWebsite') || false,
-      },
-      {
-        type: 'input',
-        name: 'webTheme',
-        message: 'Website Docsify theme (URL):',
-        default:
-          this.getStrConfigValue('webTheme') || 'https://unpkg.com/docsify/lib/themes/vue.css',
-        validate: this.isValidUrl.bind(this),
-      },
-      {
         type: 'input',
         name: 'docsifyTemplate',
         message: 'Path to a specific Docsify template:',
         default: this.getStrConfigValue('docsifyTemplate') || '',
-      },
-      {
-        type: 'input',
-        name: 'repoName',
-        message: 'Repository URL:',
-        default: this.getStrConfigValue('repoName') || '',
-        validate: this.isValidUrl.bind(this),
       },
       {
         type: 'confirm',
@@ -290,7 +277,28 @@ export class ConfigManager {
         type: 'number',
         name: 'servePort',
         message: 'Port number:',
-        default: this.getNumConfigValue('servePort') || 3000,
+        default: this.getNumConfigValue('servePort') || 3030,
+      },
+      {
+        type: 'input',
+        name: 'repoName',
+        message: 'Repository URL:',
+        default: this.getStrConfigValue('repoName') || '',
+        validate: this.isValidUrl.bind(this),
+      },
+      {
+        type: 'input',
+        name: 'webTheme',
+        message: 'Website Docsify theme (URL):',
+        default:
+          this.getStrConfigValue('webTheme') || 'https://unpkg.com/docsify/lib/themes/vue.css',
+        validate: this.isValidUrl.bind(this),
+      },
+      {
+        type: 'confirm',
+        name: 'generateWebsite',
+        message: 'Generate website?',
+        default: this.getBoolConfigValue('generateWebsite') || false,
       },
     ]);
 
@@ -313,6 +321,9 @@ export class ConfigManager {
       pdfCss: this.getStrConfigValue('pdfCss'),
       serve: this.getBoolConfigValue('serve'),
       servePort: this.getNumConfigValue('servePort'),
+      repoName: this.getStrConfigValue('repoName'),
+      webTheme: this.getStrConfigValue('webTheme'),
+      generateWebsite: this.getBoolConfigValue('generateWebsite'),
     };
   }
 }

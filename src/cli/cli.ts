@@ -1,6 +1,13 @@
 import chalk from 'chalk';
 import figlet from 'figlet';
 import pkg from '../../package.json' with { type: 'json' };
+import chokidar, { FSWatcher } from 'chokidar';
+import path from 'path';
+import serveStatic from 'serve-static';
+import finalhandler from 'finalhandler';
+import debounce from 'debounce';
+import { createServer } from 'http';
+import { findAvailablePort } from '../utilities/port-utils.js';
 import { Command } from 'commander';
 import { ProjectCreator } from '../utilities/project-creator.js';
 import { Structurizr } from '../utilities/structurizr.js';
@@ -9,8 +16,6 @@ import { ConfigManager } from '../utilities/config-manager.js';
 import { CliLogger } from '../utilities/cli-logger.js';
 import { PdfProcessor } from '../utilities/pdf-processor.js';
 import { SiteProcessor } from '../utilities/site-processor.js';
-import chokidar, { FSWatcher } from 'chokidar';
-import path from 'path';
 
 interface ConfigOptions {
   list?: boolean;
@@ -32,6 +37,25 @@ function getIntroText(version: string): string {
     chalk.blue('Enhance your C4 Modelling') +
     '\n\n'
   );
+}
+
+export async function serveStaticSite(
+  directory: string,
+  port: number,
+  logger: CliLogger,
+): Promise<void> {
+  const serve = serveStatic(path.resolve(directory));
+
+  const server = createServer((request, response) => {
+    serve(request, response, finalhandler(request, response));
+  });
+
+  return new Promise((resolve) => {
+    server.listen(port, () => {
+      logger.log(`Serving ${directory} at http://localhost:${port}`);
+      resolve();
+    });
+  });
 }
 
 export function registerCommands(logger: CliLogger = new CliLogger('CLI.registerCommands')) {
@@ -131,50 +155,74 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
 
       const config = new ConfigManager();
       const buildConfig = await config.getAllStoredConfig();
+      buildConfig.generateWebsite = true;
 
       const options = this.opts<SiteOptions>();
       if (options.port) {
         logger.log(chalk.bgGreen(`Serving on port ${options.port}`));
         buildConfig.servePort = options.port;
       }
-      if (options.serve) {
-        logger.log(chalk.grey('Serving docsify site'));
-      } else {
+      if (options.serve === false) {
         logger.log(chalk.grey('Building docsify site [no serve]'));
         buildConfig.serve = false;
+      } else {
+        logger.log(chalk.grey('Serving docsify site'));
+        buildConfig.serve = true;
       }
       if (options.watch) {
         logger.log(`Watching for changes in ${buildConfig.rootFolder} ...`);
         const sourceWatcher: FSWatcher = chokidar.watch(buildConfig.rootFolder, sourceWatchOptions);
+        const debouncedSiteBuild = debounce(async () => {
+          logger.log('Rebuilding (debounced) ...');
+          await site.prepareSite(buildConfig);
+        }, 300);
         sourceWatcher
           .on('ready', () => logger.log('... ready'))
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .on('all', async (_event: any, path: string) => {
             logger.log(`\n${path} touched (added, changed or removed). Rebuilding ...`);
-            await site.prepareSite(buildConfig);
+            debouncedSiteBuild();
           });
 
         const dslWatcher: FSWatcher = chokidar.watch(
           path.join(buildConfig.rootFolder, '_dsl', buildConfig.workspaceDsl),
           dslWatchOptions,
         );
-        dslWatcher.on('change', async (path: string) => {
-          logger.log(`\n${path} changed. Extracting Mermaid diagrams from DSL ...`);
+        const debouncedDslBuild = debounce(async () => {
+          logger.log('Regenerating Structurizr diagrams (debounced) ...');
           const structurizr = new Structurizr();
           await structurizr.extractMermaidDiagramsFromDsl(
             buildConfig.dslCli,
             buildConfig.rootFolder,
             buildConfig.workspaceDsl,
           );
+        }, 300);
+        dslWatcher.on('change', async (path: string) => {
+          logger.log(`\n${path} changed. Extracting Mermaid diagrams from DSL ...`);
+          debouncedDslBuild();
         });
       }
 
       await site.prepareSite(buildConfig);
+
+      if (buildConfig.serve) {
+        const availablePort = await findAvailablePort(buildConfig.servePort);
+        if (availablePort !== buildConfig.servePort) {
+          logger.log(
+            chalk.yellow(
+              `Port ${buildConfig.servePort} is busy. Using available port ${availablePort} instead.`,
+            ),
+          );
+          buildConfig.servePort = availablePort;
+        }
+
+        await serveStaticSite(buildConfig.distFolder, buildConfig.servePort, logger);
+      }
     });
 
   return program;
 }
 
 export async function run(logger: CliLogger = new CliLogger('CLI.run')): Promise<void> {
-  registerCommands(logger).parseAsync(process.argv);
+  await registerCommands(logger).parseAsync(process.argv);
 }

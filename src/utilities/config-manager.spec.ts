@@ -41,16 +41,16 @@ const answers: BuildConfig = {
   homepageName: 'Home',
   rootFolder: './src',
   distFolder: './dist',
-  generateWebsite: true,
-  webTheme: 'https://theme.css',
   docsifyTemplate: '',
-  repoName: 'https://github.com/user/repo',
   embedMermaidDiagrams: false,
   dslCli: 'docker',
   workspaceDsl: 'workspace.dsl',
   pdfCss: '_resources/pdf.css',
   serve: false,
   servePort: 4000,
+  repoName: 'https://github.com/user/repo',
+  webTheme: 'https://theme.css',
+  generateWebsite: false,
 };
 
 describe('ConfigManager', () => {
@@ -213,16 +213,18 @@ describe('ConfigManager', () => {
     configStoreInstance.get.mockReturnValueOnce(answers.homepageName);
     configStoreInstance.get.mockReturnValueOnce(answers.rootFolder);
     configStoreInstance.get.mockReturnValueOnce(answers.distFolder);
-    configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
     configStoreInstance.get.mockReturnValueOnce(answers.dslCli);
     configStoreInstance.get.mockReturnValueOnce(answers.workspaceDsl);
     configStoreInstance.get.mockReturnValueOnce(answers.embedMermaidDiagrams);
     configStoreInstance.get.mockReturnValueOnce(answers.pdfCss);
     configStoreInstance.get.mockReturnValueOnce(answers.serve);
     configStoreInstance.get.mockReturnValueOnce(answers.servePort);
+    configStoreInstance.get.mockReturnValueOnce(answers.repoName);
+    configStoreInstance.get.mockReturnValueOnce(answers.webTheme);
+    configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
     manager.listConfig();
 
-    expect(logSpy.log).toHaveBeenCalledTimes(12); // 11 for the config values, 1 for the header
+    expect(logSpy.log).toHaveBeenCalledTimes(14); // 13 for the config values, 1 for the header
     expect(logSpy.log).toHaveBeenNthCalledWith(1, expect.stringContaining('Current Configuration'));
     expect(logSpy.log).toHaveBeenNthCalledWith(
       2,
@@ -242,28 +244,36 @@ describe('ConfigManager', () => {
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
       6,
-      `${'Generate website'.padEnd(40)} : ${answers.generateWebsite ? 'Yes' : 'No'}`,
-    );
-    expect(logSpy.log).toHaveBeenNthCalledWith(
-      7,
       `${'Structurizr DSL CLI to use'.padEnd(40)} : ${answers.dslCli}`,
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      8,
+      7,
       `${'Where Structurizr starts looking for diagrams to extract'.padEnd(40)} : ${answers.workspaceDsl}`,
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      9,
+      8,
       `${'Embed Mermaid diagrams?'.padEnd(40)} : ${answers.embedMermaidDiagrams ? 'Yes' : 'No'}`,
     );
-    expect(logSpy.log).toHaveBeenNthCalledWith(10, `${'PDF CSS'.padEnd(40)} : ${answers.pdfCss}`);
+    expect(logSpy.log).toHaveBeenNthCalledWith(9, `${'PDF CSS'.padEnd(40)} : ${answers.pdfCss}`);
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      11,
+      10,
       `${'Serve Docsify Website?'.padEnd(40)} : ${answers.serve ? 'Yes' : 'No'}`,
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      12,
+      11,
       `${'Port Number'.padEnd(40)} : ${answers.servePort}`,
+    );
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      12,
+      `${'Repo URL'.padEnd(40)} : ${answers.repoName}`,
+    );
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      13,
+      `${'Docsify stylesheet'.padEnd(40)} : ${answers.webTheme}`,
+    );
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      14,
+      `${'Generate website'.padEnd(40)} : ${answers.generateWebsite ? 'Yes' : 'No'}`,
     );
   });
 
@@ -302,7 +312,9 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(true)
       .mockReturnValueOnce('_resources/pdf.css')
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce(8000);
+      .mockReturnValueOnce(8000)
+      .mockReturnValueOnce('https://github.com/user/repo')
+      .mockReturnValueOnce('https://theme.css');
 
     const config = await manager.getAllStoredConfig();
 
@@ -317,6 +329,9 @@ describe('ConfigManager', () => {
       pdfCss: '_resources/pdf.css',
       serve: false,
       servePort: 8000,
+      repoName: 'https://github.com/user/repo',
+      webTheme: 'https://theme.css',
+      generateWebsite: false,
     });
   });
 
@@ -343,13 +358,15 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('Home')
       .mockReturnValueOnce('./src')
       .mockReturnValueOnce('./dist')
-      .mockReturnValueOnce(false)
       .mockReturnValueOnce('structurizr-cli')
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce(4000);
+      .mockReturnValueOnce(4000)
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce(false);
 
     manager.listConfig();
 
@@ -364,13 +381,13 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('Home')
       .mockReturnValueOnce('./src')
       .mockReturnValueOnce('./dist')
-      .mockReturnValueOnce(false)
       .mockReturnValueOnce('structurizr-cli')
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce('4000');
+      .mockReturnValueOnce('4000')
+      .mockReturnValueOnce(false);
 
     manager.listConfig();
 
@@ -385,13 +402,13 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('Home')
       .mockReturnValueOnce('./src')
       .mockReturnValueOnce('./dist')
-      .mockReturnValueOnce(false)
       .mockReturnValueOnce('structurizr-cli')
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce('not-a-number');
+      .mockReturnValueOnce('not-a-number')
+      .mockReturnValueOnce(false);
 
     manager.listConfig();
 
@@ -412,7 +429,7 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce('');
+      .mockReturnValueOnce(undefined);
 
     manager.listConfig();
 

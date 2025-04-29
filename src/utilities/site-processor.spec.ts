@@ -32,6 +32,9 @@ describe('PdfProcessor', () => {
     pdfCss: '',
     serve: false,
     servePort: 4000,
+    repoName: 'https://github.com/user/repo',
+    webTheme: 'https://theme.css',
+    generateWebsite: false,
   };
 
   beforeEach(() => {
@@ -43,6 +46,7 @@ describe('PdfProcessor', () => {
       readFileAsString: vi.fn().mockResolvedValue('graph TD; A-->B'),
       writeFile: vi.fn(),
       removeFile: vi.fn(),
+      ensureDir: vi.fn(),
       emptySubFolder: vi.fn().mockResolvedValue(true),
       generateTree: vi.fn().mockResolvedValue([]),
       getFolderName: vi.fn().mockReturnValue('Folder'),

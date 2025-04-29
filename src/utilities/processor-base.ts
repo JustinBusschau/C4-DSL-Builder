@@ -9,6 +9,8 @@ import { CliLogger } from './cli-logger.js';
 import { SafeFiles } from './safe-files.js';
 import { TreeItem } from '../types/tree-item.js';
 import { MermaidProcessor } from './mermaid-processor.js';
+import type { Handle } from 'mdast-util-to-markdown';
+import { toString } from 'mdast-util-to-string';
 import type { Root, Code, Image, Link, Parent } from 'mdast';
 
 export enum OutputType {
@@ -119,13 +121,20 @@ export class ProcessorBase {
         await this.mermaid.diagramFromMermaidString(mmdContent, mmdFile.destPath);
 
         // update the link
+        let imgUrl = path.relative(path.resolve(buildConfig.distFolder), mmdFile.destPath);
+        if (buildConfig.generateWebsite) {
+          imgUrl = path.relative(
+            path.resolve(contentLocation.replace(buildConfig.rootFolder, buildConfig.distFolder)),
+            mmdFile.destPath,
+          );
+        }
         mmdFile.parent.children.splice(mmdFile.index, 1, {
           type: 'paragraph',
           children: [
             {
               type: 'image',
               alt: path.basename(mmdFile.destPath),
-              url: path.relative(path.resolve(buildConfig.distFolder), mmdFile.destPath),
+              url: imgUrl,
             },
           ],
         });
@@ -264,6 +273,9 @@ export class ProcessorBase {
           linkedItem.node.alt =
             linkedItem.node.alt ??
             path.basename(linkedItem.absolutePath, path.extname(linkedItem.absolutePath));
+        } else {
+          // links shouldnot be compiled (https://docsify.js.org/#/helpers?id=ignore-to-compile-link)
+          linkedItem.node.url = `${linkedItem.node.url.replace(/\s/g, '%20')} ':ignore'`;
         }
         this.logger.info(`Copied file to ${linkedItem.relativePath}`);
       } catch (err) {
@@ -279,6 +291,11 @@ export class ProcessorBase {
     buildConfig: BuildConfig,
   ): Promise<string> {
     const markdownContent = unified().use(remarkParse).parse(content);
+    const linkHandler: Handle = (node, parent, _context) => {
+      const linkText = toString(node);
+      const url = (node as Link).url;
+      return `[${linkText}](${url})`;
+    };
 
     this.logger.info(`Copying linked files in ${contentLocation} ...`);
     await this.copyLinkedFiles(markdownContent, contentLocation, buildConfig);
@@ -292,7 +309,9 @@ export class ProcessorBase {
     }
     this.logger.info('... Done!');
 
-    return unified().use(remarkStringify).stringify(markdownContent);
+    return unified()
+      .use(remarkStringify, { handlers: { link: linkHandler } })
+      .stringify(markdownContent);
   }
 
   async processMarkdownDocument(item: TreeItem, buildConfig: BuildConfig): Promise<string> {

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { ProjectCreator } from '../utilities/project-creator.js';
 import { ConfigManager } from '../utilities/config-manager.js';
 import { Structurizr } from '../utilities/structurizr.js';
@@ -8,6 +8,20 @@ import { PdfProcessor } from '../utilities/pdf-processor.js';
 import { BuildConfig } from '../types/build-config.js';
 import { SiteProcessor } from '../utilities/site-processor.js';
 import { EventEmitter } from 'events';
+
+const createServerMock = vi.fn(() => ({
+  listen: vi.fn((_port: number, callback: () => void) => {
+    callback();
+  }),
+}));
+
+vi.mock('http', async () => {
+  const actual = await vi.importActual<typeof import('http')>('http');
+  return {
+    ...actual,
+    createServer: createServerMock,
+  };
+});
 
 vi.mock('chokidar', () => {
   const watchMock = new EventEmitter();
@@ -26,6 +40,7 @@ vi.mock('chalk', () => ({
     green: (txt: string) => txt,
     grey: (txt: string) => txt,
     blue: (txt: string) => txt,
+    yellow: (txt: string) => txt,
     bgGreen: (txt: string) => txt,
   },
 }));
@@ -48,13 +63,22 @@ vi.mock('../utilities/cli-logger.js', () => ({
   CliLogger: vi.fn(() => mockLogger),
 }));
 
-const { run } = await import('./cli.js');
+vi.stubGlobal('import', async (specifier: string) => {
+  if (specifier === 'http') {
+    return {
+      default: {
+        createServer: createServerMock,
+      },
+    };
+  }
+  return (await import(specifier)) as unknown;
+});
 
 describe('CLI integration tests', () => {
   const logSpy = new CliLogger('CLI.test', 'debug');
   let buildConfig: BuildConfig;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetAllMocks();
     vi.clearAllMocks();
 
@@ -68,7 +92,10 @@ describe('CLI integration tests', () => {
       pdfCss: 'mock-pdfCss',
       workspaceDsl: 'mock-workspaceDsl',
       serve: true,
-      servePort: 3000,
+      servePort: 3030,
+      repoName: 'https://github.com/user/repo',
+      webTheme: 'https://theme.css',
+      generateWebsite: false,
     };
     const getAllMock = vi.fn().mockResolvedValue(buildConfig);
     ConfigManager.prototype.getAllStoredConfig = getAllMock;
@@ -76,11 +103,16 @@ describe('CLI integration tests', () => {
     process.argv = ['node', 'cli'];
   });
 
+  afterEach(() => {
+    createServerMock.mockReset();
+  });
+
   it('runs "new" and triggers project creation', async () => {
     const createMock = vi.fn();
     ProjectCreator.prototype.createNewProject = createMock;
 
     process.argv = ['node', 'cli', 'new'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     expect(createMock).toHaveBeenCalled();
@@ -94,6 +126,7 @@ describe('CLI integration tests', () => {
     ConfigManager.prototype.listConfig = listMock;
 
     process.argv = ['node', 'cli', 'config', '--list'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     expect(listMock).toHaveBeenCalled();
@@ -107,6 +140,7 @@ describe('CLI integration tests', () => {
     ConfigManager.prototype.resetConfig = resetMock;
 
     process.argv = ['node', 'cli', 'config', '--reset'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     expect(resetMock).toHaveBeenCalled();
@@ -120,6 +154,7 @@ describe('CLI integration tests', () => {
     ConfigManager.prototype.setConfig = setMock;
 
     process.argv = ['node', 'cli', 'config'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     expect(setMock).toHaveBeenCalled();
@@ -135,6 +170,7 @@ describe('CLI integration tests', () => {
     ConfigManager.prototype.getStrConfigValue = (key: string): string => `mock-${key}`;
 
     process.argv = ['node', 'cli', 'dsl'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     expect(extractMock).toHaveBeenCalledWith('mock-dslCli', 'mock-rootFolder', 'mock-workspaceDsl');
@@ -148,6 +184,7 @@ describe('CLI integration tests', () => {
     MarkdownProcessor.prototype.prepareMarkdown = prepareMock;
 
     process.argv = ['node', 'cli', 'md'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     expect(prepareMock).toHaveBeenCalled();
@@ -160,6 +197,7 @@ describe('CLI integration tests', () => {
     PdfProcessor.prototype.preparePdf = prepareMock;
 
     process.argv = ['node', 'cli', 'pdf'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     expect(prepareMock).toHaveBeenCalledWith(buildConfig);
@@ -181,6 +219,7 @@ describe('CLI integration tests', () => {
     process.exit = exitMock;
 
     process.argv = ['node', 'cli', 'unknown'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     process.stderr.write = originalStderrWrite;
@@ -195,10 +234,11 @@ describe('CLI integration tests', () => {
     SiteProcessor.prototype.prepareSite = prepareMock;
 
     process.argv = ['node', 'cli', 'site'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     expect(prepareMock).toHaveBeenCalledWith(buildConfig);
-    expect(mockLogger.log).toHaveBeenCalledTimes(2);
+    expect(mockLogger.log).toHaveBeenCalledTimes(3);
     expect(mockLogger.log).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining('Generating docsify site'),
@@ -207,13 +247,18 @@ describe('CLI integration tests', () => {
       2,
       expect.stringContaining('Serving docsify site'),
     );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('Serving mock-distFolder at http://localhost:3030'),
+    );
   });
 
   it('runs "site" and watches for changes', async () => {
     process.argv = ['node', 'cli', 'site', '--watch'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
-    expect(mockLogger.log).toHaveBeenCalledTimes(3);
+    expect(mockLogger.log).toHaveBeenCalledTimes(4);
     expect(mockLogger.log).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining('Generating docsify'),
@@ -226,10 +271,15 @@ describe('CLI integration tests', () => {
       3,
       expect.stringContaining('Watching for changes'),
     );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      4,
+      expect.stringContaining('Serving mock-distFolder at http://localhost:3030'),
+    );
   });
 
   it('runs "site" and generates docsify site files', async () => {
     process.argv = ['node', 'cli', 'site', '--no-serve'];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     expect(mockLogger.log).toHaveBeenCalledTimes(2);
@@ -246,9 +296,10 @@ describe('CLI integration tests', () => {
   it('runs "site" and serves docsify site on requested port', async () => {
     const port = '8383';
     process.argv = ['node', 'cli', 'site', '--port', port];
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
-    expect(mockLogger.log).toHaveBeenCalledTimes(3);
+    expect(mockLogger.log).toHaveBeenCalledTimes(4);
     expect(mockLogger.log).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining('Generating docsify'),
@@ -261,6 +312,10 @@ describe('CLI integration tests', () => {
       3,
       expect.stringContaining(`Serving docsify site`),
     );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      4,
+      expect.stringContaining(`Serving mock-distFolder at http://localhost:8383`),
+    );
   });
 
   it('runs "site --watch" and rebuilds on file changes', async () => {
@@ -271,14 +326,14 @@ describe('CLI integration tests', () => {
     const watchMock = chokidar.watch as unknown as Mock;
 
     process.argv = ['node', 'cli', 'site', '--watch'];
-
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     const watcher = watchMock.mock.results[0].value as EventEmitter;
 
     watcher.emit('all', 'somefile.md');
 
-    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
     expect(prepareMock).toHaveBeenCalledTimes(3);
   });
@@ -291,14 +346,14 @@ describe('CLI integration tests', () => {
     const watchMock = chokidar.watch as unknown as Mock;
 
     process.argv = ['node', 'cli', 'site', '--watch'];
-
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     const dslWatcher = watchMock.mock.results[1].value as EventEmitter;
 
     dslWatcher.emit('change', '_dsl/ws.d');
 
-    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
     expect(mockLogger.log).toHaveBeenCalledWith(
       expect.stringContaining('changed. Extracting Mermaid diagrams from DSL'),
@@ -319,7 +374,7 @@ describe('CLI integration tests', () => {
     const watchMock = chokidar.watch as unknown as Mock;
 
     process.argv = ['node', 'cli', 'site', '--watch'];
-
+    const { run } = await import('./cli.js');
     await run(logSpy);
 
     const watchCallArgs = watchMock.mock.calls[0][1];
@@ -330,5 +385,24 @@ describe('CLI integration tests', () => {
     expect(ignoredFn('/some/path/normal-folder')).toBe(false);
     expect(ignoredFn('/some/path/normal-folder/file.md')).toBe(false);
     expect(ignoredFn('/some/path/_private/notes.md')).toBe(true);
+  });
+
+  it('starts a static server to serve generated files', async () => {
+    process.argv = ['node', 'cli', 'site'];
+    const { run } = await import('./cli.js');
+    await run(logSpy);
+
+    expect(createServerMock).toHaveBeenCalledTimes(1);
+
+    const server = createServerMock.mock.results[0].value;
+
+    expect(server.listen).toHaveBeenCalledTimes(1);
+    expect(server.listen).toHaveBeenCalledWith(buildConfig.servePort, expect.any(Function));
+
+    expect(mockLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `Serving ${buildConfig.distFolder} at http://localhost:${buildConfig.servePort}`,
+      ),
+    );
   });
 });

@@ -67,13 +67,7 @@ For a single markdown file that includes all documentation and diagrams:
 c4dslbuilder md
 ```
 
-If you prefer a separate markdown file for each of the folders in your documentation source:
-
-```bash
-c4dslbuilder md -s # or --split
-```
-
-The above commands will prepare all relevant mermaid diagrams, as specified in your `workspace.dsl`, then combine them along with any text in `.md` files to create a single shareable document in markdown format.
+The above command will prepare all relevant mermaid diagrams, as specified in your `workspace.dsl`, then combine them along with any text in `.md` files to create a single shareable document in markdown format.
 
 ## 2. PDF
 
@@ -83,13 +77,7 @@ If you prefer a PDF, rather than a markdown document:
 c4dslbuilder pdf
 ```
 
-If you prefer a separate markdown file for each of the folders in your documentation source:
-
-```bash
-c4dslbuilder pdf -s # or --split
-```
-
-The above commands will prepare all relevant mermaid diagrams, as specified in your `workspace.dsl`, then combine them along with any text in `.md` files to create a single shareable PDF document.
+The above command will prepare all relevant mermaid diagrams, as specified in your `workspace.dsl`, then combine them along with any text in `.md` files to create a single shareable PDF document.
 
 ## 3. Website
 
@@ -105,7 +93,7 @@ To see live updates to the website as you edit the source:
 c4dslbuilder site -w # or --watch
 ```
 
-The site will then be available on `localhost:3000`. You can change the port by either adding the `-p <port>` (or `--port <port>`) option to your `site` command, or by setting the port number in config (see below).
+The site will then be available on `localhost:3030`. You can change the port by either adding the `-p <port>` (or `--port <port>`) option to your `site` command, or by setting the port number in config (see below).
 
 
 # Configuring C4-DSL-Builder

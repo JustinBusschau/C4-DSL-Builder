@@ -114,7 +114,7 @@ describe('MarkdownProcessor', () => {
       const markdown: Root = { type: 'root', children: [node] };
       await processor.copyLinkedFiles(markdown, '/root/docs', buildConfig);
       expect(safeFiles.copyFile).toHaveBeenCalled();
-      expect(node.url).toBe('docs/doc.pdf');
+      expect(node.url).toBe(`docs/doc.pdf ':ignore'`);
       expect(logSpy.info).toHaveBeenCalledWith(expect.stringContaining('Copied file to'));
     });
 

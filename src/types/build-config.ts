@@ -9,9 +9,9 @@ export type BuildConfig = {
   pdfCss: string;
   serve: boolean;
   servePort: number;
+  repoName: string;
+  webTheme: string;
+  generateWebsite: boolean;
 
-  generateWebsite?: boolean; // not used yet
-  webTheme?: string; // not used yet
   docsifyTemplate?: string; // not used yet
-  repoName?: string; // not used yet
 };

@@ -12,3 +12,5 @@ Supporting elements: People and software systems directly connected to the conta
 **Intended audience**: Technical people inside and outside of the software development team; including software architects, developers and operations/support staff.
 
 **Notes**: This diagram says nothing about deployment scenarios, clustering, replication, failover, etc.
+
+[System](system.mmd)
