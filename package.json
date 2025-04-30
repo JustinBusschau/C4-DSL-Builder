@@ -35,7 +35,7 @@
     "build": "npm run clean && tsc",
     "test": "vitest",
     "test:cov": "vitest run --coverage",
-    "local": "npm run clean && npm run format && npm run lint && npm run build && npm run test:cov && npm uninstall -g c4dslbuilder && npm i -g && c4dslbuilder",
+    "local": "npm uninstall -g c4dslbuilder && npm i -g && c4dslbuilder",
     "cli": "node ./lib/index.js"
   },
   "dependencies": {
