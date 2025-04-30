@@ -50,6 +50,7 @@ const answers: BuildConfig = {
   servePort: 4000,
   repoName: 'https://github.com/user/repo',
   webTheme: 'https://theme.css',
+  webSearch: true,
   generateWebsite: false,
 };
 
@@ -221,10 +222,11 @@ describe('ConfigManager', () => {
     configStoreInstance.get.mockReturnValueOnce(answers.servePort);
     configStoreInstance.get.mockReturnValueOnce(answers.repoName);
     configStoreInstance.get.mockReturnValueOnce(answers.webTheme);
+    configStoreInstance.get.mockReturnValueOnce(answers.webSearch);
     configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
     manager.listConfig();
 
-    expect(logSpy.log).toHaveBeenCalledTimes(14); // 13 for the config values, 1 for the header
+    expect(logSpy.log).toHaveBeenCalledTimes(15); // 14 for the config values, 1 for the header
     expect(logSpy.log).toHaveBeenNthCalledWith(1, expect.stringContaining('Current Configuration'));
     expect(logSpy.log).toHaveBeenNthCalledWith(
       2,
@@ -273,6 +275,10 @@ describe('ConfigManager', () => {
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
       14,
+      `${'Enable website search'.padEnd(40)} : ${answers.webSearch ? 'Yes' : 'No'}`,
+    );
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      15,
       `${'Generate website'.padEnd(40)} : ${answers.generateWebsite ? 'Yes' : 'No'}`,
     );
   });
@@ -314,7 +320,9 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(8000)
       .mockReturnValueOnce('https://github.com/user/repo')
-      .mockReturnValueOnce('https://theme.css');
+      .mockReturnValueOnce('https://theme.css')
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(false);
 
     const config = await manager.getAllStoredConfig();
 
@@ -331,6 +339,7 @@ describe('ConfigManager', () => {
       servePort: 8000,
       repoName: 'https://github.com/user/repo',
       webTheme: 'https://theme.css',
+      webSearch: true,
       generateWebsite: false,
     });
   });

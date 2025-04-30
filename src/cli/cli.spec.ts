@@ -105,6 +105,7 @@ describe('CLI integration tests', () => {
       servePort: 3030,
       repoName: 'https://github.com/user/repo',
       webTheme: 'https://theme.css',
+      webSearch: true,
       generateWebsite: false,
     };
     const getAllMock = vi.fn().mockResolvedValue(buildConfig);

@@ -73,7 +73,7 @@ export class SiteProcessor extends ProcessorBase {
       auto2top: true,
       homepage: `${buildConfig.homepageName}.md`,
       stylesheet: buildConfig.webTheme,
-      supportSearch: true,
+      supportSearch: buildConfig.webSearch,
     };
 
     await this.safeFiles.ensureDir(path.resolve(buildConfig.distFolder));

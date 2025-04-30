@@ -202,6 +202,10 @@ export class ConfigManager {
       this.getPrintValue(this.numValueToString(this.getStrConfigValue('webTheme'))),
     );
     this.printConfigValue(
+      'Enable website search',
+      this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('webSearch'))),
+    );
+    this.printConfigValue(
       'Generate website',
       this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('generateWebsite'))),
     );
@@ -297,6 +301,12 @@ export class ConfigManager {
       },
       {
         type: 'confirm',
+        name: 'webSearch',
+        message: 'Enable website search?',
+        default: this.getBoolConfigValue('webSearch') || true,
+      },
+      {
+        type: 'confirm',
         name: 'generateWebsite',
         message: 'Generate website?',
         default: this.getBoolConfigValue('generateWebsite') || false,
@@ -324,6 +334,7 @@ export class ConfigManager {
       servePort: this.getNumConfigValue('servePort'),
       repoName: this.getStrConfigValue('repoName'),
       webTheme: this.getStrConfigValue('webTheme'),
+      webSearch: this.getBoolConfigValue('webSearch'),
       generateWebsite: this.getBoolConfigValue('generateWebsite'),
     };
   }

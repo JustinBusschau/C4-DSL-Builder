@@ -11,6 +11,7 @@ export type BuildConfig = {
   servePort: number;
   repoName: string;
   webTheme: string;
+  webSearch: boolean;
   generateWebsite: boolean;
 
   docsifyTemplate?: string; // not used yet
