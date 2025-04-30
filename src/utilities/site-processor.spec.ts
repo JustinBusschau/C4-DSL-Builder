@@ -41,13 +41,13 @@ describe('PdfProcessor', () => {
     dslCli: 'docker',
     workspaceDsl: '',
     pdfCss: '',
-    serve: false,
     servePort: 4000,
     repoName: 'https://github.com/user/repo',
     webTheme: 'https://theme.css',
     webSearch: true,
     generateWebsite: false,
     docsifyTemplate: '',
+    serve: false,
   };
 
   beforeEach(() => {

@@ -186,10 +186,6 @@ export class ConfigManager {
     );
     this.printConfigValue('PDF CSS', this.getPrintValue(this.getStrConfigValue('pdfCss')));
     this.printConfigValue(
-      'Serve Docsify Website?',
-      this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('serve'))),
-    );
-    this.printConfigValue(
       'Port Number',
       this.getPrintValue(this.numValueToString(this.getNumConfigValue('servePort'))),
     );
@@ -268,12 +264,6 @@ export class ConfigManager {
         default: this.getStrConfigValue('pdfCss') || '_resources/pdf.css',
       },
       {
-        type: 'confirm',
-        name: 'serve',
-        message: 'Serve Docsify Website:',
-        default: this.getBoolConfigValue('serve') || false,
-      },
-      {
         type: 'number',
         name: 'servePort',
         message: 'Port number:',
@@ -331,13 +321,13 @@ export class ConfigManager {
       workspaceDsl: this.getStrConfigValue('workspaceDsl'),
       embedMermaidDiagrams: this.getBoolConfigValue('embedMermaidDiagrams'),
       pdfCss: this.getStrConfigValue('pdfCss'),
-      serve: this.getBoolConfigValue('serve'),
       servePort: this.getNumConfigValue('servePort'),
       repoName: this.getStrConfigValue('repoName'),
       webTheme: this.getStrConfigValue('webTheme'),
       webSearch: this.getBoolConfigValue('webSearch'),
       generateWebsite: this.getBoolConfigValue('generateWebsite'),
       docsifyTemplate: this.getStrConfigValue('docsifyTemplate'),
+      serve: this.getBoolConfigValue('serve'),
     };
   }
 }

@@ -45,13 +45,13 @@ const answers: BuildConfig = {
   dslCli: 'docker',
   workspaceDsl: 'workspace.dsl',
   pdfCss: '_resources/pdf.css',
-  serve: false,
   servePort: 4000,
   repoName: 'https://github.com/user/repo',
   webTheme: 'https://theme.css',
   webSearch: true,
   generateWebsite: false,
   docsifyTemplate: 'src/doc.template.js',
+  serve: false,
 };
 
 describe('ConfigManager', () => {
@@ -218,16 +218,16 @@ describe('ConfigManager', () => {
     configStoreInstance.get.mockReturnValueOnce(answers.workspaceDsl);
     configStoreInstance.get.mockReturnValueOnce(answers.embedMermaidDiagrams);
     configStoreInstance.get.mockReturnValueOnce(answers.pdfCss);
-    configStoreInstance.get.mockReturnValueOnce(answers.serve);
     configStoreInstance.get.mockReturnValueOnce(answers.servePort);
     configStoreInstance.get.mockReturnValueOnce(answers.repoName);
     configStoreInstance.get.mockReturnValueOnce(answers.webTheme);
     configStoreInstance.get.mockReturnValueOnce(answers.webSearch);
     configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
     configStoreInstance.get.mockReturnValueOnce(answers.docsifyTemplate);
+    configStoreInstance.get.mockReturnValueOnce(answers.serve);
     manager.listConfig();
 
-    expect(logSpy.log).toHaveBeenCalledTimes(16); // 15 for the config values, 1 for the header
+    expect(logSpy.log).toHaveBeenCalledTimes(15); // 14 for the settable config values, 1 for the header
     expect(logSpy.log).toHaveBeenNthCalledWith(1, expect.stringContaining('Current Configuration'));
     expect(logSpy.log).toHaveBeenNthCalledWith(
       2,
@@ -260,30 +260,26 @@ describe('ConfigManager', () => {
     expect(logSpy.log).toHaveBeenNthCalledWith(9, `${'PDF CSS'.padEnd(40)} : ${answers.pdfCss}`);
     expect(logSpy.log).toHaveBeenNthCalledWith(
       10,
-      `${'Serve Docsify Website?'.padEnd(40)} : ${answers.serve ? 'Yes' : 'No'}`,
-    );
-    expect(logSpy.log).toHaveBeenNthCalledWith(
-      11,
       `${'Port Number'.padEnd(40)} : ${answers.servePort}`,
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      12,
+      11,
       `${'Repo URL'.padEnd(40)} : ${answers.repoName}`,
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      13,
+      12,
       `${'Docsify stylesheet'.padEnd(40)} : ${answers.webTheme}`,
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      14,
+      13,
       `${'Enable website search'.padEnd(40)} : ${answers.webSearch ? 'Yes' : 'No'}`,
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      15,
+      14,
       `${'Generate website'.padEnd(40)} : ${answers.generateWebsite ? 'Yes' : 'No'}`,
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
-      16,
+      15,
       `${'Docsify template'.padEnd(40)} : ${answers.docsifyTemplate}`,
     );
   });
@@ -322,11 +318,11 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(true)
       .mockReturnValueOnce('_resources/pdf.css')
-      .mockReturnValueOnce(false)
       .mockReturnValueOnce(8000)
       .mockReturnValueOnce('https://github.com/user/repo')
       .mockReturnValueOnce('https://theme.css')
       .mockReturnValueOnce(true)
+      .mockReturnValueOnce('')
       .mockReturnValueOnce(false);
 
     const config = await manager.getAllStoredConfig();
@@ -340,13 +336,13 @@ describe('ConfigManager', () => {
       workspaceDsl: 'workspace.dsl',
       embedMermaidDiagrams: true,
       pdfCss: '_resources/pdf.css',
-      serve: false,
       servePort: 8000,
       repoName: 'https://github.com/user/repo',
       webTheme: 'https://theme.css',
       webSearch: true,
       generateWebsite: false,
       docsifyTemplate: '',
+      serve: false,
     });
   });
 
@@ -377,10 +373,10 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
-      .mockReturnValueOnce(false)
       .mockReturnValueOnce(4000)
       .mockReturnValueOnce('')
       .mockReturnValueOnce('')
+      .mockReturnValueOnce(false)
       .mockReturnValueOnce(false);
 
     manager.listConfig();
@@ -400,8 +396,8 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
-      .mockReturnValueOnce(false)
       .mockReturnValueOnce('4000')
+      .mockReturnValueOnce(false)
       .mockReturnValueOnce(false);
 
     manager.listConfig();
@@ -421,7 +417,6 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
-      .mockReturnValueOnce(false)
       .mockReturnValueOnce('not-a-number')
       .mockReturnValueOnce(false);
 
@@ -443,7 +438,6 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
-      .mockReturnValueOnce(false)
       .mockReturnValueOnce(undefined);
 
     manager.listConfig();

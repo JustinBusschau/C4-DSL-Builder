@@ -101,13 +101,13 @@ describe('CLI integration tests', () => {
       embedMermaidDiagrams: false,
       pdfCss: 'mock-pdfCss',
       workspaceDsl: 'mock-workspaceDsl',
-      serve: true,
       servePort: 3030,
       repoName: 'https://github.com/user/repo',
       webTheme: 'https://theme.css',
       webSearch: true,
       generateWebsite: false,
       docsifyTemplate: '',
+      serve: true,
     };
     const getAllMock = vi.fn().mockResolvedValue(buildConfig);
     ConfigManager.prototype.getAllStoredConfig = getAllMock;
