@@ -29,7 +29,7 @@
     "url": "https://github.com/JustinBusschau/C4-DSL-Builder.git"
   },
   "scripts": {
-    "clean": "rimraf lib coverage Example docs .c4dslbuilder",
+    "clean": "rimraf lib coverage Example .c4dslbuilder",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint --fix",
     "build": "npm run clean && tsc",
