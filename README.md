@@ -412,3 +412,11 @@ You can set it to any of the following (from most to least verbose):
 - `warn`
 - `error`
 - `log`
+
+
+---
+
+# Changelog
+
+- **v0.0.1**
+  - Initial build
