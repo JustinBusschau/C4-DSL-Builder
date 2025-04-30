@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterAll, type Mock } from 'vitest';
 
 const mockLogger = {
   debug: vi.fn(),
@@ -19,11 +19,13 @@ vi.mock('./mermaid-processor.js', () => ({
   })),
 }));
 
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { SafeFiles } from './safe-files.js';
 import { BuildConfig } from '../types/build-config.js';
 import { CliLogger } from './cli-logger.js';
 import { SiteProcessor } from './site-processor.js';
-import { MermaidProcessor } from './mermaid-processor.js'; // after vi.mock
+import { MermaidProcessor } from './mermaid-processor.js';
 
 describe('PdfProcessor', () => {
   const logSpy = new CliLogger('PdfProcessor.test', 'debug');
@@ -45,6 +47,7 @@ describe('PdfProcessor', () => {
     webTheme: 'https://theme.css',
     webSearch: true,
     generateWebsite: false,
+    docsifyTemplate: '',
   };
 
   beforeEach(() => {
@@ -63,6 +66,14 @@ describe('PdfProcessor', () => {
     } as unknown as SafeFiles;
     mermaid = new MermaidProcessor();
     processor = new SiteProcessor(safeFiles, logSpy, mermaid);
+  });
+
+  afterAll(async () => {
+    try {
+      await fs.rm('./__temp__', { recursive: true, force: true });
+    } catch {
+      // Ignore errors - directory might not exist
+    }
   });
 
   describe('prepareSite', () => {
@@ -153,5 +164,67 @@ describe('PdfProcessor', () => {
       // Check that it copied a linked file (triggering copyLinkedFiles), showing link processed
       expect(logSpy.info).toHaveBeenCalledWith(expect.stringContaining('Copied file to'));
     });
+  });
+
+  it('uses a custom docsify template if provided and valid', async () => {
+    // Create a temporary custom template module
+    const customTemplatePath = path.resolve('./__temp__/custom-template.js');
+    await fs.mkdir(path.dirname(customTemplatePath), { recursive: true });
+    const customHtml = '<html><body><h1>Custom Template</h1></body></html>';
+    const templateSource = `
+      export function docsifyTemplate(options) {
+        return \`${customHtml}\`;
+      }
+    `;
+    await fs.writeFile(customTemplatePath, templateSource, 'utf-8');
+
+    // Update config to use the dynamic template
+    buildConfig.docsifyTemplate = customTemplatePath;
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+
+    const writeFileSpy = vi.spyOn(safeFiles, 'writeFile').mockResolvedValue();
+
+    await processor.prepareSite(buildConfig);
+
+    const indexWrite = writeFileSpy.mock.calls.find((call) => call[0].endsWith('index.html'));
+
+    expect(indexWrite?.[1]).toContain('Custom Template');
+    expect(logSpy.error).not.toHaveBeenCalled();
+  });
+
+  it('falls back to default template and logs error if custom template import fails', async () => {
+    buildConfig.docsifyTemplate = './nonexistent-template.js';
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+
+    const writeFileSpy = vi.spyOn(safeFiles, 'writeFile').mockResolvedValue();
+
+    await processor.prepareSite(buildConfig);
+
+    const indexWrite = writeFileSpy.mock.calls.find((call) => call[0].endsWith('index.html'));
+
+    expect(indexWrite?.[1]).toContain('<!DOCTYPE html>');
+    expect(logSpy.error).toHaveBeenCalledWith(
+      expect.stringContaining('Error loading custom docsify template'),
+      expect.anything(),
+    );
+  });
+
+  it('falls back to default template and logs warning if custom template is missing export', async () => {
+    // Create invalid module without expected export
+    const invalidTemplatePath = path.resolve('./__temp__/invalid-template.js');
+    await fs.mkdir(path.dirname(invalidTemplatePath), { recursive: true });
+    await fs.writeFile(invalidTemplatePath, 'export const notTemplate = 123;', 'utf-8');
+
+    buildConfig.docsifyTemplate = invalidTemplatePath;
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+
+    const writeFileSpy = vi.spyOn(safeFiles, 'writeFile').mockResolvedValue();
+
+    await processor.prepareSite(buildConfig);
+
+    const indexWrite = writeFileSpy.mock.calls.find((call) => call[0].endsWith('index.html'));
+
+    expect(indexWrite?.[1]).toContain('<!DOCTYPE html>');
+    expect(logSpy.warn).toHaveBeenCalledWith(expect.stringContaining('does not export a valid'));
   });
 });

@@ -49,6 +49,7 @@ describe('PdfProcessor', () => {
     webTheme: 'https://theme.css',
     webSearch: true,
     generateWebsite: false,
+    docsifyTemplate: '',
   };
 
   beforeEach(() => {

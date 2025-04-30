@@ -41,7 +41,6 @@ const answers: BuildConfig = {
   homepageName: 'Home',
   rootFolder: './src',
   distFolder: './dist',
-  docsifyTemplate: '',
   embedMermaidDiagrams: false,
   dslCli: 'docker',
   workspaceDsl: 'workspace.dsl',
@@ -52,6 +51,7 @@ const answers: BuildConfig = {
   webTheme: 'https://theme.css',
   webSearch: true,
   generateWebsite: false,
+  docsifyTemplate: 'src/doc.template.js',
 };
 
 describe('ConfigManager', () => {
@@ -224,9 +224,10 @@ describe('ConfigManager', () => {
     configStoreInstance.get.mockReturnValueOnce(answers.webTheme);
     configStoreInstance.get.mockReturnValueOnce(answers.webSearch);
     configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
+    configStoreInstance.get.mockReturnValueOnce(answers.docsifyTemplate);
     manager.listConfig();
 
-    expect(logSpy.log).toHaveBeenCalledTimes(15); // 14 for the config values, 1 for the header
+    expect(logSpy.log).toHaveBeenCalledTimes(16); // 15 for the config values, 1 for the header
     expect(logSpy.log).toHaveBeenNthCalledWith(1, expect.stringContaining('Current Configuration'));
     expect(logSpy.log).toHaveBeenNthCalledWith(
       2,
@@ -280,6 +281,10 @@ describe('ConfigManager', () => {
     expect(logSpy.log).toHaveBeenNthCalledWith(
       15,
       `${'Generate website'.padEnd(40)} : ${answers.generateWebsite ? 'Yes' : 'No'}`,
+    );
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      16,
+      `${'Docsify template'.padEnd(40)} : ${answers.docsifyTemplate}`,
     );
   });
 
@@ -341,6 +346,7 @@ describe('ConfigManager', () => {
       webTheme: 'https://theme.css',
       webSearch: true,
       generateWebsite: false,
+      docsifyTemplate: '',
     });
   });
 

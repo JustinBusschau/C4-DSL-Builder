@@ -76,11 +76,33 @@ export class SiteProcessor extends ProcessorBase {
       supportSearch: buildConfig.webSearch,
     };
 
+    let docTemplate = '';
+    if (buildConfig.docsifyTemplate === '') {
+      docTemplate = docsifyTemplate(docOptions);
+    } else {
+      try {
+        const templateModulePath = path.resolve(buildConfig.docsifyTemplate);
+        const templateModule = await import(templateModulePath);
+
+        if (typeof templateModule.docsifyTemplate === 'function') {
+          docTemplate = templateModule.docsifyTemplate(docOptions);
+        } else {
+          this.logger.warn(
+            `Custom docsify template module at ${buildConfig.docsifyTemplate} does not export a valid 'docsifyTemplate' function. Using default.`,
+          );
+          docTemplate = docsifyTemplate(docOptions);
+        }
+      } catch (error) {
+        this.logger.error(
+          `Error loading custom docsify template at ${buildConfig.docsifyTemplate}. Using default.`,
+          error,
+        );
+        docTemplate = docsifyTemplate(docOptions);
+      }
+    }
+
     await this.safeFiles.ensureDir(path.resolve(buildConfig.distFolder));
-    await this.safeFiles.writeFile(
-      path.join(buildConfig.distFolder, 'index.html'),
-      docsifyTemplate(docOptions),
-    );
+    await this.safeFiles.writeFile(path.join(buildConfig.distFolder, 'index.html'), docTemplate);
     await this.safeFiles.writeFile(path.join(buildConfig.distFolder, '.nojekyll'), '');
   }
 

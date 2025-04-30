@@ -13,6 +13,5 @@ export type BuildConfig = {
   webTheme: string;
   webSearch: boolean;
   generateWebsite: boolean;
-
-  docsifyTemplate?: string; // not used yet
+  docsifyTemplate: string;
 };

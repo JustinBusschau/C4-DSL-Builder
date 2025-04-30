@@ -23,6 +23,7 @@ lerna-debug.log*
 # Tests
 /coverage
 /junit.xml
+__temp__/
 
 # IDEs and editors
 /.idea

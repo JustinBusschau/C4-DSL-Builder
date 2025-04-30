@@ -193,13 +193,10 @@ export class ConfigManager {
       'Port Number',
       this.getPrintValue(this.numValueToString(this.getNumConfigValue('servePort'))),
     );
-    this.printConfigValue(
-      'Repo URL',
-      this.getPrintValue(this.numValueToString(this.getStrConfigValue('repoName'))),
-    );
+    this.printConfigValue('Repo URL', this.getPrintValue(this.getStrConfigValue('repoName')));
     this.printConfigValue(
       'Docsify stylesheet',
-      this.getPrintValue(this.numValueToString(this.getStrConfigValue('webTheme'))),
+      this.getPrintValue(this.getStrConfigValue('webTheme')),
     );
     this.printConfigValue(
       'Enable website search',
@@ -208,6 +205,10 @@ export class ConfigManager {
     this.printConfigValue(
       'Generate website',
       this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('generateWebsite'))),
+    );
+    this.printConfigValue(
+      'Docsify template',
+      this.getPrintValue(this.getStrConfigValue('docsifyTemplate')),
     );
   }
 
@@ -239,12 +240,6 @@ export class ConfigManager {
         name: 'distFolder',
         message: 'Destination folder:',
         default: this.getStrConfigValue('distFolder') || Constants.DEFAULT_DIST,
-      },
-      {
-        type: 'input',
-        name: 'docsifyTemplate',
-        message: 'Path to a specific Docsify template:',
-        default: this.getStrConfigValue('docsifyTemplate') || '',
       },
       {
         type: 'confirm',
@@ -311,6 +306,12 @@ export class ConfigManager {
         message: 'Generate website?',
         default: this.getBoolConfigValue('generateWebsite') || false,
       },
+      {
+        type: 'input',
+        name: 'docsifyTemplate',
+        message: 'Local path to a custom Docsify template:',
+        default: this.getStrConfigValue('docsifyTemplate') || '',
+      },
     ]);
 
     Object.entries(answers).forEach(([key, value]) => {
@@ -336,6 +337,7 @@ export class ConfigManager {
       webTheme: this.getStrConfigValue('webTheme'),
       webSearch: this.getBoolConfigValue('webSearch'),
       generateWebsite: this.getBoolConfigValue('generateWebsite'),
+      docsifyTemplate: this.getStrConfigValue('docsifyTemplate'),
     };
   }
 }

@@ -107,6 +107,7 @@ describe('CLI integration tests', () => {
       webTheme: 'https://theme.css',
       webSearch: true,
       generateWebsite: false,
+      docsifyTemplate: '',
     };
     const getAllMock = vi.fn().mockResolvedValue(buildConfig);
     ConfigManager.prototype.getAllStoredConfig = getAllMock;
