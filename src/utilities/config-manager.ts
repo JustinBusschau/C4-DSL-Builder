@@ -199,10 +199,6 @@ export class ConfigManager {
       this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('webSearch'))),
     );
     this.printConfigValue(
-      'Generate website',
-      this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('generateWebsite'))),
-    );
-    this.printConfigValue(
       'Docsify template',
       this.getPrintValue(this.getStrConfigValue('docsifyTemplate')),
     );
@@ -291,12 +287,6 @@ export class ConfigManager {
         default: this.getBoolConfigValue('webSearch') || true,
       },
       {
-        type: 'confirm',
-        name: 'generateWebsite',
-        message: 'Generate website?',
-        default: this.getBoolConfigValue('generateWebsite') || false,
-      },
-      {
         type: 'input',
         name: 'docsifyTemplate',
         message: 'Local path to a custom Docsify template:',
@@ -325,9 +315,9 @@ export class ConfigManager {
       repoName: this.getStrConfigValue('repoName'),
       webTheme: this.getStrConfigValue('webTheme'),
       webSearch: this.getBoolConfigValue('webSearch'),
-      generateWebsite: this.getBoolConfigValue('generateWebsite'),
       docsifyTemplate: this.getStrConfigValue('docsifyTemplate'),
       serve: this.getBoolConfigValue('serve'),
+      generateWebsite: this.getBoolConfigValue('generateWebsite'),
     };
   }
 }

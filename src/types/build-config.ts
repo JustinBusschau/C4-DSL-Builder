@@ -9,13 +9,12 @@ export type BuildConfig = {
   workspaceDsl: string;
   pdfCss: string;
   servePort: number;
-
-  // Not settable via `config` command - internally managed
-  serve: boolean;
-
   repoName: string;
   webTheme: string;
   webSearch: boolean;
-  generateWebsite: boolean;
   docsifyTemplate: string;
+
+  // Not settable via `config` command - internally managed
+  serve: boolean;
+  generateWebsite: boolean;
 };

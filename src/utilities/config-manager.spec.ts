@@ -49,9 +49,9 @@ const answers: BuildConfig = {
   repoName: 'https://github.com/user/repo',
   webTheme: 'https://theme.css',
   webSearch: true,
-  generateWebsite: false,
   docsifyTemplate: 'src/doc.template.js',
   serve: false,
+  generateWebsite: false,
 };
 
 describe('ConfigManager', () => {
@@ -222,12 +222,12 @@ describe('ConfigManager', () => {
     configStoreInstance.get.mockReturnValueOnce(answers.repoName);
     configStoreInstance.get.mockReturnValueOnce(answers.webTheme);
     configStoreInstance.get.mockReturnValueOnce(answers.webSearch);
-    configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
     configStoreInstance.get.mockReturnValueOnce(answers.docsifyTemplate);
     configStoreInstance.get.mockReturnValueOnce(answers.serve);
+    configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
     manager.listConfig();
 
-    expect(logSpy.log).toHaveBeenCalledTimes(15); // 14 for the settable config values, 1 for the header
+    expect(logSpy.log).toHaveBeenCalledTimes(14); // 13 for the settable config values, 1 for the header
     expect(logSpy.log).toHaveBeenNthCalledWith(1, expect.stringContaining('Current Configuration'));
     expect(logSpy.log).toHaveBeenNthCalledWith(
       2,
@@ -276,10 +276,6 @@ describe('ConfigManager', () => {
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(
       14,
-      `${'Generate website'.padEnd(40)} : ${answers.generateWebsite ? 'Yes' : 'No'}`,
-    );
-    expect(logSpy.log).toHaveBeenNthCalledWith(
-      15,
       `${'Docsify template'.padEnd(40)} : ${answers.docsifyTemplate}`,
     );
   });
@@ -340,9 +336,9 @@ describe('ConfigManager', () => {
       repoName: 'https://github.com/user/repo',
       webTheme: 'https://theme.css',
       webSearch: true,
-      generateWebsite: false,
       docsifyTemplate: '',
       serve: false,
+      generateWebsite: false,
     });
   });
 

@@ -105,9 +105,9 @@ describe('CLI integration tests', () => {
       repoName: 'https://github.com/user/repo',
       webTheme: 'https://theme.css',
       webSearch: true,
-      generateWebsite: false,
       docsifyTemplate: '',
       serve: true,
+      generateWebsite: false,
     };
     const getAllMock = vi.fn().mockResolvedValue(buildConfig);
     ConfigManager.prototype.getAllStoredConfig = getAllMock;

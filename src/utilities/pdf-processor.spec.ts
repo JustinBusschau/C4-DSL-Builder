@@ -47,9 +47,9 @@ describe('PdfProcessor', () => {
     repoName: 'https://github.com/user/repo',
     webTheme: 'https://theme.css',
     webSearch: true,
-    generateWebsite: false,
     docsifyTemplate: '',
     serve: false,
+    generateWebsite: false,
   };
 
   beforeEach(() => {
