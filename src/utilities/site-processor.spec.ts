@@ -27,8 +27,8 @@ import { CliLogger } from './cli-logger.js';
 import { SiteProcessor } from './site-processor.js';
 import { MermaidProcessor } from './mermaid-processor.js';
 
-describe('PdfProcessor', () => {
-  const logSpy = new CliLogger('PdfProcessor.test', 'debug');
+describe('SiteProcessor', () => {
+  const logSpy = new CliLogger('SiteProcessor.test', 'debug');
   let mermaid: MermaidProcessor;
   let processor: SiteProcessor;
   let safeFiles: SafeFiles;
@@ -56,7 +56,10 @@ describe('PdfProcessor', () => {
     safeFiles = {
       pathExists: vi.fn().mockResolvedValue(true),
       copyFile: vi.fn(),
-      readFileAsString: vi.fn().mockResolvedValue('graph TD; A-->B'),
+      readFileAsString: vi
+        .fn()
+        .mockResolvedValueOnce(JSON.stringify({ version: 1, files: {} }, null, 2))
+        .mockResolvedValue('graph TD; A-->B'),
       writeFile: vi.fn(),
       removeFile: vi.fn(),
       ensureDir: vi.fn(),
@@ -226,5 +229,57 @@ describe('PdfProcessor', () => {
 
     expect(indexWrite?.[1]).toContain('<!DOCTYPE html>');
     expect(logSpy.warn).toHaveBeenCalledWith(expect.stringContaining('does not export a valid'));
+  });
+
+  it('skips processing if only .mmd files are present and unchanged', async () => {
+    const mmdFile = {
+      name: 'diagram.mmd',
+      content: 'graph TD; A-->B',
+    };
+
+    const treeItem = {
+      dir: 'root/diagrams',
+      name: 'Diagrams',
+      level: 0,
+      mdFiles: [],
+      mmdFiles: [mmdFile],
+    };
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([treeItem]);
+
+    const hasChangedSpy = vi.spyOn(processor['cache'], 'hasChanged').mockResolvedValue(false);
+
+    await processor.prepareSite(buildConfig);
+
+    expect(hasChangedSpy).toHaveBeenCalledWith(path.join(treeItem.dir, mmdFile.name));
+    expect(logSpy.info).toHaveBeenCalledWith(
+      expect.stringContaining('Skipping unchanged item: Diagrams'),
+    );
+  });
+
+  it('marks .mmd files as processed if changed', async () => {
+    const mmdFile = {
+      name: 'diagram.mmd',
+      content: 'graph TD; A-->B',
+    };
+
+    const treeItem = {
+      dir: 'root/diagrams',
+      name: 'Diagrams',
+      level: 0,
+      mdFiles: [],
+      mmdFiles: [mmdFile],
+    };
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([treeItem]);
+
+    const hasChangedSpy = vi.spyOn(processor['cache'], 'hasChanged').mockResolvedValue(true);
+
+    const markProcessedSpy = vi.spyOn(processor['cache'], 'markProcessed').mockResolvedValue();
+
+    await processor.prepareSite(buildConfig);
+
+    expect(hasChangedSpy).toHaveBeenCalledWith(path.join(treeItem.dir, mmdFile.name));
+    expect(markProcessedSpy).toHaveBeenCalledWith(path.join(treeItem.dir, mmdFile.name));
   });
 });
