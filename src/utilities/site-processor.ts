@@ -8,14 +8,55 @@ import { BuildConfig } from '../types/build-config.js';
 import { TreeItem } from '../types/tree-item.js';
 import { docsifyTemplate } from '../assets/docsify.template.js';
 import { DocsifyOptions } from '../types/docsify-options.js';
+import { CacheManager } from './cache-manager.js';
+import * as Constants from '../types/constants.js';
 
 export class SiteProcessor extends ProcessorBase {
   constructor(
     protected readonly safeFiles: SafeFiles = new SafeFiles(),
     protected readonly logger: CliLogger = new CliLogger(SiteProcessor.name),
     protected readonly mermaid: MermaidProcessor = new MermaidProcessor(),
+    protected readonly cache: CacheManager = new CacheManager(
+      path.resolve(Constants.CACHE_FILENAME),
+      safeFiles,
+      logger,
+    ),
   ) {
     super(safeFiles, logger, mermaid);
+  }
+
+  private async shouldProcessItem(item: TreeItem): Promise<boolean> {
+    if (Array.isArray(item.mdFiles)) {
+      for (const md of item.mdFiles) {
+        const fullPath = path.join(item.dir, md.name);
+        if (await this.cache.hasChanged(fullPath)) return true;
+      }
+    }
+
+    if (Array.isArray(item.mmdFiles)) {
+      for (const mmd of item.mmdFiles) {
+        const fullPath = path.join(item.dir, mmd.name);
+        if (await this.cache.hasChanged(fullPath)) return true;
+      }
+    }
+
+    return false;
+  }
+
+  private async markProcessedItem(item: TreeItem): Promise<void> {
+    if (Array.isArray(item.mdFiles)) {
+      for (const md of item.mdFiles) {
+        const fullPath = path.join(item.dir, md.name);
+        await this.cache.markProcessed(fullPath);
+      }
+    }
+
+    if (Array.isArray(item.mmdFiles)) {
+      for (const mmd of item.mmdFiles) {
+        const fullPath = path.join(item.dir, mmd.name);
+        await this.cache.markProcessed(fullPath);
+      }
+    }
   }
 
   private getOutputFileName(buildConfig: BuildConfig, dir: string, name: string): string {
@@ -63,7 +104,13 @@ export class SiteProcessor extends ProcessorBase {
     await this.writeSidebar(tree, buildConfig);
 
     for (const item of tree) {
-      await this.writeUnifiedMarkdown(item, buildConfig);
+      const filesChanged = await this.shouldProcessItem(item);
+      if (filesChanged) {
+        await this.writeUnifiedMarkdown(item, buildConfig);
+        await this.markProcessedItem(item);
+      } else {
+        this.logger.info(`Skipping unchanged item: ${item.name}`);
+      }
     }
 
     const docOptions: DocsifyOptions = {
@@ -111,6 +158,8 @@ export class SiteProcessor extends ProcessorBase {
       this.logger.warn('Output folder preparation failed.');
       return;
     }
+
+    await this.cache.loadCache();
 
     const tree = await this.generateSourceTree(buildConfig);
     await this.generateSiteFromTree(tree, buildConfig);
