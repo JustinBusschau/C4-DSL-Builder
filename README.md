@@ -433,5 +433,8 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.0.2**
+  - Add the CacheManager to reduce repeat processing of unchanged source files.
+
 - **v0.0.1**
   - Initial build
