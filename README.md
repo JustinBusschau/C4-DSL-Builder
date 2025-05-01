@@ -423,6 +423,8 @@ You can set it to any of the following (from most to least verbose):
 > The items in this section will make this tool significantly better, so if you're wondering where
 > you can help out, start here :index_pointing_at_the_viewer:
 
+- [ ] See if we can improve the caching even more
+- [ ] Extend caching to the Markdown, PDF and DSL processing
 - [ ] Improve DI for easier testing, and to make extending features simpler
 - [ ] Clear separation of CLI command and behavior logic
 - [ ] Move static server (`serveStaticSite`) into it's own utility class
