@@ -4,7 +4,7 @@
   "description": "A CLI tool designed to compile a folder structure of markdowns and mermaid files into a site, pdf, single file markdown or a collection of markdowns with links - inspired by c4builder",
   "main": "index.js",
   "bin": {
-    "c4dslbuilder": "./lib/index.js"
+    "c4dslbuilder": "lib/index.js"
   },
   "type": "module",
   "homepage": "https://JustinBusschau.github.io/C4-DSL-Builder/",
@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/JustinBusschau/C4-DSL-Builder.git"
+    "url": "git+https://github.com/JustinBusschau/C4-DSL-Builder.git"
   },
   "scripts": {
     "clean": "rimraf lib coverage Example .c4dslbuilder",
