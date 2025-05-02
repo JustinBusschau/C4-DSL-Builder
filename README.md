@@ -401,6 +401,8 @@ Use with the `--port <portNum>` option to temporarily override the port setting.
 
 **_Note:_** This will not change the port setting in your project config.
 
+Use with the `--clean` option to clean the target folder before building.
+
 # Troubleshooting
 
 If you need to see more verbose output to troubleshoot, use the `LOG_LEVEL` environment variable.
@@ -432,6 +434,10 @@ You can set it to any of the following (from most to least verbose):
 ---
 
 # Changelog
+
+- **v0.0.3**
+  - Add a `clean` option to the `site` command so that we only clean up the target folder when
+    explicitly asked to.
 
 - **v0.0.2**
   - Add the CacheManager to reduce repeat processing of unchanged source files.

@@ -418,7 +418,11 @@ export class ProcessorBase {
     return `${docHeader}\n${toc}\n\n---`;
   }
 
-  async prepareOutputFolder(type: OutputType, buildConfig: BuildConfig): Promise<boolean> {
+  async prepareOutputFolder(
+    type: OutputType,
+    buildConfig: BuildConfig,
+    cleanBeforeBuild: boolean = true,
+  ): Promise<boolean> {
     const targetFolderBase = buildConfig.distFolder;
     if (!targetFolderBase?.trim?.() || targetFolderBase === 'undefined') {
       this.logger.error(`Please run \`config\` before attempting to run \`${type}\`.`);
@@ -426,9 +430,11 @@ export class ProcessorBase {
     }
 
     const targetFolder = path.join(targetFolderBase);
-    if (!(await this.safeFiles.emptySubFolder(targetFolder))) {
-      this.logger.error(`Failed to empty the target folder: ${targetFolder}`);
-      return false;
+    if (cleanBeforeBuild) {
+      if (!(await this.safeFiles.emptySubFolder(targetFolder))) {
+        this.logger.error(`Failed to empty the target folder: ${targetFolder}`);
+        return false;
+      }
     }
 
     this.logger.log(
