@@ -26,6 +26,7 @@ interface SiteOptions {
   watch?: boolean;
   port?: number;
   serve?: boolean;
+  clean?: boolean;
 }
 
 function getIntroText(version: string): string {
@@ -135,6 +136,7 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
     .option('-w, --watch', 'watch for changes and regenerate')
     .option('-n, --no-serve', 'do not serve the site - only generate files')
     .option('-p, --port <n>', 'port to serve the generated site on')
+    .option('-c, --clean', 'clean output folder before building')
     .action(async function () {
       logger.log(chalk.green('Generating docsify site ...'));
       const site = new SiteProcessor();
@@ -157,8 +159,10 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       const config = new ConfigManager();
       const buildConfig = await config.getAllStoredConfig();
       buildConfig.generateWebsite = true;
+      let cleanBeforeBuild = false;
 
       const options = this.opts<SiteOptions>();
+      console.log(options);
       if (options.port) {
         logger.log(chalk.bgGreen(`Serving on port ${options.port}`));
         buildConfig.servePort = options.port;
@@ -170,12 +174,15 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
         logger.log(chalk.grey('Serving docsify site'));
         buildConfig.serve = true;
       }
+      if (options.clean === true) {
+        cleanBeforeBuild = true;
+      }
       if (options.watch) {
         logger.log(`Watching for changes in ${buildConfig.rootFolder} ...`);
         const sourceWatcher: FSWatcher = chokidar.watch(buildConfig.rootFolder, sourceWatchOptions);
         const debouncedSiteBuild = debounce(async () => {
           logger.log('Rebuilding (debounced) ...');
-          await site.prepareSite(buildConfig);
+          await site.prepareSite(buildConfig, false);
         }, 300);
         sourceWatcher
           .on('ready', () => logger.log('... ready'))
@@ -204,7 +211,7 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
         });
       }
 
-      await site.prepareSite(buildConfig);
+      await site.prepareSite(buildConfig, cleanBeforeBuild);
 
       if (buildConfig.serve) {
         const availablePort = await findAvailablePort(buildConfig.servePort);

@@ -153,8 +153,8 @@ export class SiteProcessor extends ProcessorBase {
     await this.safeFiles.writeFile(path.join(buildConfig.distFolder, '.nojekyll'), '');
   }
 
-  async prepareSite(buildConfig: BuildConfig): Promise<void> {
-    if (!(await this.prepareOutputFolder(OutputType.site, buildConfig))) {
+  async prepareSite(buildConfig: BuildConfig, cleanBeforeBuild: boolean = true): Promise<void> {
+    if (!(await this.prepareOutputFolder(OutputType.site, buildConfig, cleanBeforeBuild))) {
       this.logger.warn('Output folder preparation failed.');
       return;
     }

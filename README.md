@@ -401,6 +401,8 @@ Use with the `--port <portNum>` option to temporarily override the port setting.
 
 **_Note:_** This will not change the port setting in your project config.
 
+Use with the `--clean` option to clean the target folder before building.
+
 # Troubleshooting
 
 If you need to see more verbose output to troubleshoot, use the `LOG_LEVEL` environment variable.

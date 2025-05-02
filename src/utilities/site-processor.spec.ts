@@ -104,7 +104,7 @@ describe('SiteProcessor', () => {
     it('logs error if dist folder cannot be prepared', async () => {
       vi.spyOn(safeFiles, 'emptySubFolder').mockResolvedValueOnce(false);
       buildConfig.distFolder = 'dest';
-      await processor.prepareSite(buildConfig);
+      await processor.prepareSite(buildConfig, true);
       expect(logSpy.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to empty the target folder'),
       );

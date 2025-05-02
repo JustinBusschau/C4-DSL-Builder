@@ -250,7 +250,31 @@ describe('CLI integration tests', () => {
     const { run } = await import('./cli.js');
     await run(logSpy);
 
-    expect(prepareMock).toHaveBeenCalledWith(buildConfig);
+    expect(prepareMock).toHaveBeenCalledWith(buildConfig, false);
+    expect(mockLogger.log).toHaveBeenCalledTimes(3);
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('Generating docsify site'),
+    );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('Serving docsify site'),
+    );
+    expect(mockLogger.log).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('Serving mock-distFolder at http://localhost:3030'),
+    );
+  });
+
+  it('runs "site" and generates docsify site files, with clean option', async () => {
+    const prepareMock = vi.fn();
+    SiteProcessor.prototype.prepareSite = prepareMock;
+
+    process.argv = ['node', 'cli', 'site', '--clean'];
+    const { run } = await import('./cli.js');
+    await run(logSpy);
+
+    expect(prepareMock).toHaveBeenCalledWith(buildConfig, true);
     expect(mockLogger.log).toHaveBeenCalledTimes(3);
     expect(mockLogger.log).toHaveBeenNthCalledWith(
       1,
