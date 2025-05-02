@@ -435,6 +435,10 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.0.3**
+  - Add a `clean` option to the `site` command so that we only clean up the target folder when
+    explicitly asked to.
+
 - **v0.0.2**
   - Add the CacheManager to reduce repeat processing of unchanged source files.
 

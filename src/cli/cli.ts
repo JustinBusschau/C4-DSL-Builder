@@ -162,7 +162,6 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       let cleanBeforeBuild = false;
 
       const options = this.opts<SiteOptions>();
-      console.log(options);
       if (options.port) {
         logger.log(chalk.bgGreen(`Serving on port ${options.port}`));
         buildConfig.servePort = options.port;
