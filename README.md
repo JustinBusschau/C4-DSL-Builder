@@ -435,6 +435,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.0.4**
+  - Bump `vite` to v6.3.4
+
 - **v0.0.3**
   - Add a `clean` option to the `site` command so that we only clean up the target folder when
     explicitly asked to.
