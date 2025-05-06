@@ -437,6 +437,21 @@ export class ProcessorBase {
       }
     }
 
+    const webTheme = buildConfig.webTheme.trim();
+    if (webTheme && !webTheme.startsWith('http')) {
+      const themePath = path.resolve(buildConfig.rootFolder, webTheme);
+      const themeExists = await this.safeFiles.pathExists(themePath);
+      if (!themeExists) {
+        this.logger.error(`Could not find docsufy theme (CSS) file at ${themePath}`);
+        return false;
+      }
+
+      const destPath = path.resolve(
+        themePath.replace(buildConfig.rootFolder, buildConfig.distFolder),
+      );
+      await this.safeFiles.copyFile(themePath, destPath);
+    }
+
     this.logger.log(
       chalk.green(`\nBuilding ${type.toUpperCase()} documentation in ./${targetFolder}`),
     );
