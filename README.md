@@ -431,9 +431,14 @@ You can set it to any of the following (from most to least verbose):
 - [ ] Clear separation of CLI command and behavior logic
 - [ ] Move static server (`serveStaticSite`) into it's own utility class
 
+- [x] If the `webTheme` setting points to a local file, copy that from `rootFolder` to `destFolder` and preserve relative path
+
 ---
 
 # Changelog
+
+- **v0.0.5**
+  - If the `webTheme` setting points to a local file, copy that from `rootFolder` to `destFolder` and preserve relative path
 
 - **v0.0.4**
   - Bump `vite` to v6.3.4

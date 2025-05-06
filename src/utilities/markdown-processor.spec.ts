@@ -51,6 +51,13 @@ describe('MarkdownProcessor', () => {
     dslCli: 'docker',
     workspaceDsl: '',
     pdfCss: '',
+    webTheme: '',
+    docsifyTemplate: '',
+    webSearch: false,
+    serve: false,
+    generateWebsite: false,
+    servePort: 3030,
+    repoName: '',
   };
 
   beforeEach(() => {

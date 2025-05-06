@@ -282,4 +282,18 @@ describe('SiteProcessor', () => {
     expect(hasChangedSpy).toHaveBeenCalledWith(path.join(treeItem.dir, mmdFile.name));
     expect(markProcessedSpy).toHaveBeenCalledWith(path.join(treeItem.dir, mmdFile.name));
   });
+
+  it('copies the webTheme, if a local file, to the dist folder', async () => {
+    await processor.prepareSite({ ...buildConfig, webTheme: 'theme.css' });
+    expect(safeFiles.copyFile).toHaveBeenCalled();
+  });
+
+  it('logs an error if the webTheme, as a local file, does not exist', async () => {
+    (safeFiles.pathExists as unknown as Mock).mockResolvedValue(false);
+    await processor.prepareSite({ ...buildConfig, webTheme: 'theme.css' });
+
+    expect(logSpy.error).toHaveBeenCalledWith(
+      expect.stringContaining('Could not find docsufy theme (CSS) file at'),
+    );
+  });
 });
