@@ -15,7 +15,7 @@ The project relies on the following:
 - [Mermaid](https://mermaid.js.org/intro/) lets you create diagrams and visualizations using text
 and code.
 - [Markdown](https://guides.github.com/features/mastering-markdown/) creates rich text documents
-from plant text.
+from plain text.
 - [C4Model](https://c4model.com/) for visualising software architecture
 - [Structurizr DSL](https://structurizr.com/dsl) provides a way to define a software architecture
 model based on C4.

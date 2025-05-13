@@ -15,7 +15,7 @@ The project relies on the following:
 - [Mermaid](https://mermaid.js.org/intro/) lets you create diagrams and visualizations using text
 and code.
 - [Markdown](https://guides.github.com/features/mastering-markdown/) creates rich text documents
-from plant text.
+from plain text.
 - [C4Model](https://c4model.com/) for visualising software architecture
 - [Structurizr DSL](https://structurizr.com/dsl) provides a way to define a software architecture
 model based on C4.
@@ -413,14 +413,16 @@ You can set it to any of the following (from most to least verbose):
 - [ ] Clear separation of CLI command and behavior logic
 - [ ] Move static server (`serveStaticSite`) into it's own utility class
 
-- [x] If the `webTheme` setting points to a local file, copy that from `rootFolder` to `destFolder` and preserve relative path
+- [x] If the `webTheme` setting points to a local file, copy that from `rootFolder` to `destFolder` and preserve
+      relative path
 
 ---
 
 # Changelog
 
 - **v0.0.5**
-  - If the `webTheme` setting points to a local file, copy that from `rootFolder` to `destFolder` and preserve relative path
+  - If the `webTheme` setting points to a local file, copy that from `rootFolder` to `destFolder` and preserve relative
+    path
 
 - **v0.0.4**
   - Bump `vite` to v6.3.4
