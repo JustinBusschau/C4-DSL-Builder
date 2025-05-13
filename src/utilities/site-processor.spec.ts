@@ -169,6 +169,34 @@ describe('SiteProcessor', () => {
     });
   });
 
+  it('properly processes mermaid files when not embedding mermaid blocks', async () => {
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([
+      {
+        dir: 'root/folder',
+        name: 'TestPage',
+        level: 0,
+        mdFiles: [
+          {
+            name: 'linked.md',
+            content: '# Mermaid\n\n```mermaid\nflowchart LR\n    id\n```\n',
+          },
+        ],
+      },
+    ]);
+
+    (safeFiles.pathExists as unknown as Mock).mockResolvedValue(true);
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('dummy content');
+    (safeFiles.copyFile as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.ensureDir as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.writeFile as unknown as Mock).mockResolvedValue(undefined);
+
+    await processor.prepareSite({ ...buildConfig, embedMermaidDiagrams: false });
+
+    expect(logSpy.info).toHaveBeenCalledWith(
+      expect.stringContaining('Converting Mermaid documents in linked.md to linked SVG images ...'),
+    );
+  });
+
   it('uses a custom docsify template if provided and valid', async () => {
     // Create a temporary custom template module
     const customTemplatePath = path.resolve('./__temp__/custom-template.js');
