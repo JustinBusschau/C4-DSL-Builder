@@ -1,6 +1,6 @@
 {
   "name": "c4dslbuilder",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A CLI tool designed to compile a folder structure of markdowns and mermaid files into a site, pdf, single file markdown or a collection of markdowns with links - inspired by c4builder",
   "main": "index.js",
   "bin": {

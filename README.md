@@ -425,6 +425,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.0.6**
+  - Add mermaid support to the docsify template.
+
 - **v0.0.5**
   - If the `webTheme` setting points to a local file, copy that from `rootFolder` to `destFolder` and preserve relative
     path
