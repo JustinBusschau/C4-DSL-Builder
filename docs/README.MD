@@ -15,7 +15,7 @@ The project relies on the following:
 - [Mermaid](https://mermaid.js.org/intro/) lets you create diagrams and visualizations using text
 and code.
 - [Markdown](https://guides.github.com/features/mastering-markdown/) creates rich text documents
-from plant text.
+from plain text.
 - [C4Model](https://c4model.com/) for visualising software architecture
 - [Structurizr DSL](https://structurizr.com/dsl) provides a way to define a software architecture
 model based on C4.
@@ -196,7 +196,12 @@ conviguration items.
       window.$docsify = ${JSON.stringify(options, null, 2)};
       </script>
       <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
-      <script src="//unpkg.com/docsify-plantuml/dist/docsify-plantuml.min.js"></script>
+      <script type="module">
+          import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+          mermaid.initialize({ startOnLoad: true });
+          window.mermaid = mermaid;
+      </script>
+      <script src="//unpkg.com/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"></script>
       <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
       ${
         !!options.supportSearch &&
