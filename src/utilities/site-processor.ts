@@ -99,8 +99,6 @@ export class SiteProcessor extends ProcessorBase {
   }
 
   async generateSiteFromTree(tree: TreeItem[], buildConfig: BuildConfig): Promise<void> {
-    buildConfig.embedMermaidDiagrams = false;
-
     await this.writeSidebar(tree, buildConfig);
 
     for (const item of tree) {
