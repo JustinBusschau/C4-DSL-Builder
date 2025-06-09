@@ -320,8 +320,8 @@ export class ProcessorBase {
           linkedItem.node.alt =
             linkedItem.node.alt ??
             path.basename(linkedItem.absolutePath, path.extname(linkedItem.absolutePath));
-        } else {
-          // links shouldnot be compiled (https://docsify.js.org/#/helpers?id=ignore-to-compile-link)
+        } else if (!linkedItem.node.url.endsWith('.md')) {
+          // non-md links should not be compiled (https://docsify.js.org/#/helpers?id=ignore-to-compile-link)
           linkedItem.node.url = `${linkedItem.node.url.replace(/\s/g, '%20')} ':ignore'`;
         }
         this.logger.info(`Copied file to ${linkedItem.relativePath}`);

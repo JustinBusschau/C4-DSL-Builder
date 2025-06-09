@@ -25,7 +25,7 @@ model based on C4.
 
 ## Installation
 
-Install globally ising npm.
+Install globally using npm.
 
 ```bash
 npm i -g c4dslbuilder

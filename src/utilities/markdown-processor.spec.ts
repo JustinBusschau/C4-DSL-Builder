@@ -125,6 +125,15 @@ describe('MarkdownProcessor', () => {
       expect(logSpy.info).toHaveBeenCalledWith(expect.stringContaining('Copied file to'));
     });
 
+    it('copies linked files and updates node URLs - excluding the ignore directive for .md files', async () => {
+      const node: Link = { type: 'link', url: 'doc.md', title: null, children: [] };
+      const markdown: Root = { type: 'root', children: [node] };
+      await processor.copyLinkedFiles(markdown, '/root/docs', buildConfig);
+      expect(safeFiles.copyFile).toHaveBeenCalled();
+      expect(node.url).toBe(`docs/doc.md`);
+      expect(logSpy.info).toHaveBeenCalledWith(expect.stringContaining('Copied file to'));
+    });
+
     it('logs an error if the copy fails', async () => {
       const err = new Error('Permission denied');
       vi.spyOn(safeFiles, 'copyFile').mockRejectedValue(err);
