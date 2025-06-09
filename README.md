@@ -425,6 +425,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.0.9**
+  - Exclure links to `.md` files from the links should not be compiled' rule for site building.
+
 - **v0.0.8**
   - :bug: Some of the code changes in v0.0.7 were not published to npm correctly.
 
