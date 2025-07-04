@@ -1,3 +1,7 @@
+export type MermaidConfig = {
+  querySelector: string;
+};
+
 export type DocsifyOptions = {
   name: string;
   repo: string;
@@ -6,4 +10,5 @@ export type DocsifyOptions = {
   homepage: string;
   stylesheet: string;
   supportSearch: boolean;
+  mermaidConfig: MermaidConfig;
 };
