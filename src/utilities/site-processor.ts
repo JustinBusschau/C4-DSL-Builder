@@ -119,6 +119,9 @@ export class SiteProcessor extends ProcessorBase {
       homepage: `${buildConfig.homepageName}.md`,
       stylesheet: buildConfig.webTheme,
       supportSearch: buildConfig.webSearch,
+      mermaidConfig: {
+        querySelector: '.mermaid',
+      },
     };
 
     let docTemplate = '';

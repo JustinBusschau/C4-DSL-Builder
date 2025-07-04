@@ -196,12 +196,14 @@ conviguration items.
       window.$docsify = ${JSON.stringify(options, null, 2)};
       </script>
       <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+      <script src="//cdn.jsdelivr.net/npm/d3@7"></script>
       <script type="module">
           import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
           mermaid.initialize({ startOnLoad: true });
           window.mermaid = mermaid;
       </script>
       <script src="//unpkg.com/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"></script>
+      <script src="//unpkg.com/docsify-mermaid-zoom/dist/docsify-mermaid-zoom.js"></script>
       <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
       ${
         !!options.supportSearch &&
@@ -424,6 +426,11 @@ You can set it to any of the following (from most to least verbose):
 ---
 
 # Changelog
+
+- **v0.1.0**
+  - **Minor release**
+  - This is a release to bump to minor version `0.1.0`.
+  - Zooming of mermaid documents in the Docsify output is now possible
 
 - **v0.0.9**
   - Exclure links to `.md` files from the links should not be compiled' rule for site building.

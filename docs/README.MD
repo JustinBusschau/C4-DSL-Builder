@@ -196,12 +196,14 @@ conviguration items.
       window.$docsify = ${JSON.stringify(options, null, 2)};
       </script>
       <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+      <script src="//cdn.jsdelivr.net/npm/d3@7"></script>
       <script type="module">
           import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
           mermaid.initialize({ startOnLoad: true });
           window.mermaid = mermaid;
       </script>
       <script src="//unpkg.com/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"></script>
+      <script src="//unpkg.com/docsify-mermaid-zoom/dist/docsify-mermaid-zoom.js"></script>
       <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
       ${
         !!options.supportSearch &&
