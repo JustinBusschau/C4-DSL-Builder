@@ -66,6 +66,7 @@ describe('SiteProcessor', () => {
         .fn()
         .mockResolvedValueOnce(JSON.stringify({ version: 1, files: {} }, null, 2))
         .mockResolvedValue('graph TD; A-->B'),
+      readDir: vi.fn().mockResolvedValue([]),
       writeFile: vi.fn(),
       removeFile: vi.fn(),
       ensureDir: vi.fn(),
@@ -425,5 +426,66 @@ describe('SiteProcessor', () => {
     await processor.prepareSite(buildConfig, false);
 
     expect(clearCacheSpy).not.toHaveBeenCalled();
+  });
+
+  it('generates OpenAPI page and sidebar link when openapi spec is found', async () => {
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    (safeFiles.readDir as unknown as Mock).mockResolvedValue(['api.yml', 'readme.md']);
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('openapi: 3.0.0\ninfo:');
+
+    await processor.prepareSite(buildConfig, false);
+
+    expect(safeFiles.copyFile).toHaveBeenCalledWith(
+      path.join(buildConfig.rootFolder, 'api.yml'),
+      path.join(buildConfig.distFolder, 'api.yml'),
+    );
+    expect(safeFiles.writeFile).toHaveBeenCalledWith(
+      path.join(buildConfig.distFolder, 'openapi.html'),
+      expect.stringContaining('swagger-ui'),
+    );
+
+    const sidebarWrite = (safeFiles.writeFile as unknown as Mock).mock.calls.find((call) =>
+      call[0].endsWith('_sidebar.md'),
+    );
+    expect(sidebarWrite?.[1]).toContain("* [OpenAPI](openapi.html ':ignore')");
+  });
+
+  it('ignores non-OpenAPI YAML files and does not generate OpenAPI page', async () => {
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    (safeFiles.readDir as unknown as Mock).mockResolvedValue(['config.yml']);
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('database: localhost');
+
+    await processor.prepareSite(buildConfig, false);
+
+    expect(safeFiles.copyFile).not.toHaveBeenCalledWith(
+      path.join(buildConfig.rootFolder, 'config.yml'),
+      expect.anything(),
+    );
+    expect(safeFiles.writeFile).not.toHaveBeenCalledWith(
+      path.join(buildConfig.distFolder, 'openapi.html'),
+      expect.anything(),
+    );
+
+    const sidebarWrite = (safeFiles.writeFile as unknown as Mock).mock.calls.find((call) =>
+      call[0].endsWith('_sidebar.md'),
+    );
+    expect(sidebarWrite?.[1]).not.toContain('OpenAPI');
+  });
+
+  it('finds swagger format spec files', async () => {
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    (safeFiles.readDir as unknown as Mock).mockResolvedValue(['legacy.yaml']);
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('swagger: "2.0"\ninfo:');
+
+    await processor.prepareSite(buildConfig, false);
+
+    expect(safeFiles.copyFile).toHaveBeenCalledWith(
+      path.join(buildConfig.rootFolder, 'legacy.yaml'),
+      path.join(buildConfig.distFolder, 'legacy.yaml'),
+    );
+    expect(safeFiles.writeFile).toHaveBeenCalledWith(
+      path.join(buildConfig.distFolder, 'openapi.html'),
+      expect.stringContaining('./legacy.yaml'),
+    );
   });
 });
