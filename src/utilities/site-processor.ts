@@ -82,14 +82,64 @@ export class SiteProcessor extends ProcessorBase {
     );
   }
 
-  private async writeSidebar(tree: TreeItem[], buildConfig: BuildConfig): Promise<void> {
-    const sidebar = tree
+  private async findOpenApiSpec(rootFolder: string): Promise<string | null> {
+    const files = await this.safeFiles.readDir(rootFolder);
+    for (const file of files) {
+      const ext = path.extname(file).toLowerCase();
+      if (ext === '.yml' || ext === '.yaml') {
+        const content = await this.safeFiles.readFileAsString(path.join(rootFolder, file));
+        if (content) {
+          const firstLine = content.trim().split('\n')[0].trim();
+          if (firstLine.startsWith('openapi:') || firstLine.startsWith('swagger:')) {
+            return file;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  private async generateOpenApiPage(buildConfig: BuildConfig, specFileName: string): Promise<void> {
+    const specSrc = path.join(buildConfig.rootFolder, specFileName);
+    const specDest = path.join(buildConfig.distFolder, specFileName);
+    await this.safeFiles.copyFile(specSrc, specDest);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OpenAPI Documentation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({ url: './${specFileName}', dom_id: '#swagger-ui' });
+  </script>
+</body>
+</html>`;
+
+    await this.safeFiles.writeFile(path.join(buildConfig.distFolder, 'openapi.html'), html);
+    this.logger.log(chalk.green(`OpenAPI documentation generated from ${specFileName}`));
+  }
+
+  private async writeSidebar(
+    tree: TreeItem[],
+    buildConfig: BuildConfig,
+    openApiSpec?: string,
+  ): Promise<void> {
+    let sidebar = tree
       .map((item) => {
         const indent = '    '.repeat(item.level);
         const mdPath = this.getOutputFileName(buildConfig, item.dir, item.name);
         return `${indent}* [${item.name}](${encodeURI(mdPath)})`;
       })
       .join('\n');
+
+    if (openApiSpec) {
+      sidebar += `\n\n* [OpenAPI](openapi.html ':ignore')`;
+    }
 
     await this.safeFiles.ensureDir(path.resolve(buildConfig.distFolder));
     await this.safeFiles.writeFile(
@@ -99,7 +149,8 @@ export class SiteProcessor extends ProcessorBase {
   }
 
   async generateSiteFromTree(tree: TreeItem[], buildConfig: BuildConfig): Promise<void> {
-    await this.writeSidebar(tree, buildConfig);
+    const openApiSpec = await this.findOpenApiSpec(buildConfig.rootFolder);
+    await this.writeSidebar(tree, buildConfig, openApiSpec || undefined);
 
     for (const item of tree) {
       const filesChanged = await this.shouldProcessItem(item);
@@ -167,6 +218,10 @@ export class SiteProcessor extends ProcessorBase {
       } else {
         this.logger.warn(`Logo file not found at ${logoSrc}`);
       }
+    }
+
+    if (openApiSpec) {
+      await this.generateOpenApiPage(buildConfig, openApiSpec);
     }
   }
 
