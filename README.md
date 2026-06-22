@@ -427,6 +427,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.1.5**
+  - Add decisions / adr support
+
 - **v0.1.4**
   - Add support and config for an optional client logo
 
