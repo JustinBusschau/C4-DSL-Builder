@@ -70,6 +70,11 @@ export class CacheManager {
     this.cache.files[absPath] = currentHash;
   }
 
+  async clearCache(): Promise<void> {
+    this.cache.files = {};
+    this.logger.info('Cache cleared');
+  }
+
   async persist(): Promise<void> {
     const serialized = JSON.stringify(this.cache, null, 2);
     await this.safeFiles.writeFile(this.cacheFilePath, serialized);

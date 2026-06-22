@@ -26,6 +26,7 @@ import { BuildConfig } from '../types/build-config.js';
 import { CliLogger } from './cli-logger.js';
 import { SiteProcessor } from './site-processor.js';
 import { MermaidProcessor } from './mermaid-processor.js';
+import { CacheManager } from './cache-manager.js';
 
 describe('SiteProcessor', () => {
   const logSpy = new CliLogger('SiteProcessor.test', 'debug');
@@ -392,5 +393,37 @@ describe('SiteProcessor', () => {
 
     const indexWrite = writeFileSpy.mock.calls.find((call) => call[0].endsWith('index.html'));
     expect(indexWrite?.[1]).toContain('"homepage": "home.md"');
+  });
+
+  it('delegates clearCache to the internal cache manager', async () => {
+    const clearCacheSpy = vi
+      .spyOn((processor as unknown as { cache: CacheManager }).cache, 'clearCache')
+      .mockResolvedValue();
+
+    await processor.clearCache();
+
+    expect(clearCacheSpy).toHaveBeenCalled();
+  });
+
+  it('clears cache when prepareSite is called with cleanBeforeBuild=true', async () => {
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    const clearCacheSpy = vi
+      .spyOn((processor as unknown as { cache: CacheManager }).cache, 'clearCache')
+      .mockResolvedValue();
+
+    await processor.prepareSite(buildConfig, true);
+
+    expect(clearCacheSpy).toHaveBeenCalled();
+  });
+
+  it('does not clear cache when prepareSite is called with cleanBeforeBuild=false', async () => {
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    const clearCacheSpy = vi
+      .spyOn((processor as unknown as { cache: CacheManager }).cache, 'clearCache')
+      .mockResolvedValue();
+
+    await processor.prepareSite(buildConfig, false);
+
+    expect(clearCacheSpy).not.toHaveBeenCalled();
   });
 });

@@ -384,6 +384,11 @@ describe('CLI integration tests', () => {
     const extractMock = vi.fn();
     Structurizr.prototype.extractMermaidDiagramsFromDsl = extractMock;
 
+    const prepareMock = vi.fn();
+    SiteProcessor.prototype.prepareSite = prepareMock;
+    const clearCacheMock = vi.fn();
+    SiteProcessor.prototype.clearCache = clearCacheMock;
+
     const { default: chokidar } = await import('chokidar');
     const watchMock = chokidar.watch as unknown as Mock;
 
@@ -406,6 +411,11 @@ describe('CLI integration tests', () => {
       buildConfig.rootFolder,
       buildConfig.workspaceDsl,
     );
+    expect(mockLogger.log).toHaveBeenCalledWith(
+      expect.stringContaining('Clearing cache and rebuilding site with new diagrams'),
+    );
+    expect(clearCacheMock).toHaveBeenCalled();
+    expect(prepareMock).toHaveBeenCalled();
   });
 
   it('sourceWatcher ignores dotfiles and underscore folders', async () => {
