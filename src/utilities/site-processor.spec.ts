@@ -48,6 +48,9 @@ describe('SiteProcessor', () => {
     docsifyTemplate: '',
     passwordProtected: false,
     passwordHash: '',
+    logo: '',
+    logoAlign: 'left',
+    logoPosition: 'above',
     serve: false,
     generateWebsite: false,
   };
@@ -357,5 +360,37 @@ describe('SiteProcessor', () => {
     expect(logSpy.error).toHaveBeenCalledWith(
       expect.stringContaining('Could not find docsufy theme (CSS) file at'),
     );
+  });
+
+  it('copies logo to dist when configured', async () => {
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    (safeFiles.pathExists as unknown as Mock).mockResolvedValue(true);
+
+    await processor.prepareSite({ ...buildConfig, logo: '_resources/logo.png' });
+
+    expect(safeFiles.copyFile).toHaveBeenCalledWith(
+      path.join(buildConfig.rootFolder, '_resources/logo.png'),
+      path.join(buildConfig.distFolder, '_resources/logo.png'),
+    );
+  });
+
+  it('warns when configured logo is not found', async () => {
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    (safeFiles.pathExists as unknown as Mock).mockResolvedValue(false);
+
+    await processor.prepareSite({ ...buildConfig, logo: '_resources/logo.png' });
+
+    expect(logSpy.warn).toHaveBeenCalledWith(expect.stringContaining('Logo file not found at'));
+  });
+
+  it('uses home.md for docsify homepage when homepageName is empty', async () => {
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+
+    const writeFileSpy = vi.spyOn(safeFiles, 'writeFile').mockResolvedValue();
+
+    await processor.prepareSite({ ...buildConfig, homepageName: ' ' });
+
+    const indexWrite = writeFileSpy.mock.calls.find((call) => call[0].endsWith('index.html'));
+    expect(indexWrite?.[1]).toContain('"homepage": "home.md"');
   });
 });

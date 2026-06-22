@@ -108,6 +108,9 @@ describe('CLI integration tests', () => {
       docsifyTemplate: '',
       passwordProtected: false,
       passwordHash: '',
+      logo: '',
+      logoAlign: 'left',
+      logoPosition: 'above',
       serve: true,
       generateWebsite: false,
     };

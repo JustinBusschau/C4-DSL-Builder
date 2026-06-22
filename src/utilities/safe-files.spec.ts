@@ -66,6 +66,11 @@ describe('SafeFiles', () => {
     expect(result).toBe('sub');
   });
 
+  it('getFolderName should return home when homepage is empty or whitespace', () => {
+    expect(safeFiles.getFolderName('/base', '/base', '')).toBe('home');
+    expect(safeFiles.getFolderName('/base', '/base', '  ')).toBe('home');
+  });
+
   it('pathExists should return true if path exists', async () => {
     (fsExtra.pathExists as Mock).mockResolvedValue(true);
     const result = await safeFiles.pathExists('/some/path');

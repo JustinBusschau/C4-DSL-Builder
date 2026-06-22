@@ -8,7 +8,9 @@ export class SafeFiles {
   constructor(private readonly logger: CliLogger = new CliLogger(SafeFiles.name)) {}
 
   getFolderName(dir: string, root: string, homepage: string): string {
-    return path.resolve(dir) === path.resolve(root) ? homepage : path.parse(dir).base;
+    return path.resolve(dir) === path.resolve(root)
+      ? homepage.trim() || 'home'
+      : path.parse(dir).base;
   }
 
   async pathExists(filePath: string): Promise<boolean> {

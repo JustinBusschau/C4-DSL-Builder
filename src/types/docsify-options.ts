@@ -12,4 +12,7 @@ export type DocsifyOptions = {
   supportSearch: boolean;
   mermaidConfig: MermaidConfig;
   authHash?: string;
+  logo?: string;
+  logoAlign?: 'left' | 'center' | 'right';
+  logoPosition?: 'above' | 'below';
 };

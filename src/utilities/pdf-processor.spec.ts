@@ -50,6 +50,9 @@ describe('PdfProcessor', () => {
     docsifyTemplate: '',
     passwordProtected: false,
     passwordHash: '',
+    logo: '',
+    logoAlign: 'left',
+    logoPosition: 'above',
     serve: false,
     generateWebsite: false,
   };
