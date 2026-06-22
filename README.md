@@ -427,6 +427,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.1.7**
+  - Improve rebuild on file save - include cache cleanup and rebuild when DSL changes
+
 - **v0.1.6**
   - Improve PDF generation
 

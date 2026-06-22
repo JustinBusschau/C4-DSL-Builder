@@ -56,6 +56,23 @@ describe('CacheManager', () => {
     expect(changed).toBe(false); // file unchanged
   });
 
+  it('should clear cache so all files are detected as changed', async () => {
+    await cacheManager.loadCache();
+    await cacheManager.markProcessed(testFilePath);
+    await cacheManager.persist();
+
+    const freshManager = new CacheManager(cachePath, safeFiles, logger);
+    await freshManager.loadCache();
+
+    let changed = await freshManager.hasChanged(testFilePath);
+    expect(changed).toBe(false); // cached
+
+    await freshManager.clearCache();
+
+    changed = await freshManager.hasChanged(testFilePath);
+    expect(changed).toBe(true); // cache cleared, so file appears changed
+  });
+
   it('should detect changed file content after update', async () => {
     await cacheManager.loadCache();
     await cacheManager.markProcessed(testFilePath);

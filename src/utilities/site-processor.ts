@@ -170,10 +170,18 @@ export class SiteProcessor extends ProcessorBase {
     }
   }
 
+  async clearCache(): Promise<void> {
+    await this.cache.clearCache();
+  }
+
   async prepareSite(buildConfig: BuildConfig, cleanBeforeBuild: boolean = true): Promise<void> {
     if (!(await this.prepareOutputFolder(OutputType.site, buildConfig, cleanBeforeBuild))) {
       this.logger.warn('Output folder preparation failed.');
       return;
+    }
+
+    if (cleanBeforeBuild) {
+      await this.cache.clearCache();
     }
 
     await this.cache.loadCache();

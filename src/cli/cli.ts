@@ -203,6 +203,9 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
             buildConfig.rootFolder,
             buildConfig.workspaceDsl,
           );
+          logger.log('Clearing cache and rebuilding site with new diagrams ...');
+          await site.clearCache();
+          await site.prepareSite(buildConfig, false);
         }, 300);
         dslWatcher.on('change', async (path: string) => {
           logger.log(`\n${path} changed. Extracting Mermaid diagrams from DSL ...`);
