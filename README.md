@@ -427,6 +427,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.1.1**
+  - Add support for AI assistants using the single AI_INSTRUCTIONS file and symlink for cursor
+
 - **v0.1.0**
   - **Minor release**
   - This is a release to bump to minor version `0.1.0`.
