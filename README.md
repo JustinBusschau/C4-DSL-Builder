@@ -427,6 +427,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.1.2**
+  - Ensure the template folder contents is included in the package (:bug: src folder was missing)
+
 - **v0.1.1**
   - Add support for AI assistants using the single AI_INSTRUCTIONS file and symlink for cursor
 
