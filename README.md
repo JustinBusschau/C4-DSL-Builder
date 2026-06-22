@@ -144,6 +144,33 @@ conviguration items.
 
   Whether or not to enable search for your generated docsify site.
 
+- **Logo**
+  
+  **default**: none
+
+  A path (relative to `rootFolder`) to a logo image that will be displayed on the generated docsify
+  site.
+
+- **Logo alignment**
+  
+  **default**: `left`
+
+  When a logo is configured, this controls the horizontal alignment. Options are `left`, `center`, or
+  `right`.
+
+- **Logo position**
+  
+  **default**: `above`
+
+  When a logo is configured, this controls whether the logo appears `above` the document title or
+  `below` it.
+
+- **Password protected**
+  
+  **default**: `false`
+
+  When enabled, the generated docsify site will require a password before any content is shown.
+
 - **Docsify template**
   
   **default**: none
@@ -171,6 +198,10 @@ conviguration items.
     homepage: string;
     stylesheet: string;
     supportSearch: boolean;
+    authHash?: string;
+    logo?: string;
+    logoAlign?: 'left' | 'center' | 'right';
+    logoPosition?: 'above' | 'below';
   };
   ```
 
@@ -392,6 +423,25 @@ Use with the `--port <portNum>` option to temporarily override the port setting.
 
 Use with the `--clean` option to clean the target folder before building.
 
+Use with the `--watch` option to watch for changes and automatically rebuild the site. This also
+watches the Structurizr DSL workspace and regenerates diagrams when the DSL changes:
+
+```bash
+⇒  c4dslbuilder site --watch
+```
+
+# OpenAPI / Swagger UI
+
+If you place a `.yml` or `.yaml` file containing a valid OpenAPI or Swagger spec in the root of your
+`src` folder, `c4dslbuilder site` will automatically:
+
+- Copy the spec into the generated site
+- Generate a `openapi.html` page powered by [Swagger UI](https://swagger.io/tools/swagger-ui/)
+- Add an **OpenAPI** link to the docsify sidebar
+
+No configuration is required — the spec is auto-detected by checking for `openapi:` or `swagger:`
+at the start of the file.
+
 # Troubleshooting
 
 If you need to see more verbose output to troubleshoot, use the `LOG_LEVEL` environment variable.
@@ -426,6 +476,22 @@ You can set it to any of the following (from most to least verbose):
 ---
 
 # Changelog
+
+- **v0.2.0**
+  - **Minor release**
+  - Added OpenAPI/Swagger UI support — auto-detected from `.yml`/`.yaml` files in `src`
+  - Added logo support with configurable alignment (`left`, `center`, `right`) and position (`above`,
+    `below`)
+  - Added password protection for generated docsify sites
+  - Improved PDF CSS with better page breaks, print-optimised font sizes, and running headers
+  - Fixed `site --watch` to correctly rebuild diagrams and the site when the DSL workspace changes
+  - Watch mode now clears the cache on `--clean` builds
+
+- **v0.1.9**
+  - Update documentation after recent feature improvements
+
+- **v0.1.8**
+  - Add swagger UI for OpenAPI specs
 
 - **v0.1.7**
   - Improve rebuild on file save - include cache cleanup and rebuild when DSL changes
