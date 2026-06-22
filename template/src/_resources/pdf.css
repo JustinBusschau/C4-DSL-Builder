@@ -3,6 +3,23 @@
  * CSS file bundled from: https://github.com/yzane/vscode-markdown-pdf.git and optimised
  */
 
+/* Page setup for PDF generation */
+@page {
+  margin: 2cm;
+  @bottom-right {
+    content: counter(page);
+    font-size: 10px;
+    color: #666;
+  }
+}
+
+/* Suppress running header on the first page (title page) */
+@page :first {
+  @top-center {
+    content: none;
+  }
+}
+
 body {
   font-family: 'Meiryo', 'Segoe WPC', 'Segoe UI', 'SFUIText-Light', 'HelveticaNeue-Light', sans-serif,
       'Droid Sans Fallback';
@@ -19,6 +36,8 @@ pre {
   overflow-x: auto;
   white-space: pre-wrap;
   overflow-wrap: break-word;
+  word-break: break-word;
+  page-break-inside: avoid;
 }
 
 pre:not(.hljs) {
@@ -32,6 +51,7 @@ blockquote {
   border-left: 5px solid;
   margin: 0 7px 0 5px;
   padding: 0 16px 0 10px;
+  page-break-inside: avoid;
 }
 
 .emoji {
@@ -48,6 +68,24 @@ blockquote {
 -------------------------------------------------------- */
 .page {
   page-break-after: always;
+}
+
+/* Additional page-break rules for better PDF output */
+li {
+  page-break-inside: avoid;
+}
+
+code {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Prevent code blocks from overflowing page width */
+pre code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 #code-csp-warning {
@@ -121,6 +159,9 @@ body.showEditorSelection li.code-line:hover:before {
 img {
   max-width: 100%;
   max-height: 100%;
+  page-break-inside: avoid;
+  display: block;
+  margin: 1.5em 0;
 }
 
 a {
@@ -147,12 +188,44 @@ h1 {
   line-height: 1.2;
   border-bottom-width: 1px;
   border-bottom-style: solid;
+  page-break-after: avoid;
+  page-break-before: auto;
+}
+
+h2 {
+  page-break-after: avoid;
+  page-break-before: avoid;
+}
+
+h3 {
+  page-break-after: avoid;
+  page-break-before: avoid;
+}
+
+h4 {
+  page-break-after: avoid;
+  page-break-before: avoid;
 }
 
 h1,
 h2,
 h3 {
   font-weight: normal;
+}
+
+/* Utility classes for page-break control */
+.chapter-break {
+  page-break-before: always;
+}
+
+.no-break {
+  page-break-before: auto !important;
+  page-break-after: auto !important;
+  page-break-inside: auto !important;
+}
+
+.break-before {
+  page-break-before: always;
 }
 
 h1 code,
@@ -172,6 +245,7 @@ a:hover {
 
 table {
   border-collapse: collapse;
+  page-break-inside: avoid;
 }
 
 table > thead > tr > th {
@@ -283,6 +357,91 @@ pre.hljs code > div {
 .vscode-high-contrast blockquote {
   background: transparent;
   border-color: #fff;
+}
+
+/* Technical documentation enhancements */
+p {
+  widows: 2;
+  orphans: 2;
+}
+
+/* Landscape page for very wide diagrams */
+@page landscape {
+  size: a4 landscape;
+}
+
+.landscape {
+  page: landscape;
+}
+
+/* Running header with document title */
+@page {
+  @top-center {
+    content: string(doctitle);
+    font-size: 9px;
+    color: #999;
+  }
+}
+
+/* Set document title from first h1 for running header */
+body h1:first-of-type {
+  string-set: doctitle content();
+}
+
+/* Figure caption styling for diagram labels */
+figcaption,
+.figure-caption,
+.caption {
+  text-align: center;
+  font-size: 12px;
+  color: #555;
+  margin-top: 0.5em;
+  font-style: italic;
+}
+
+/* Prevent large diagrams from overflowing */
+img.mermaid,
+img.diagram,
+.mermaid svg,
+.diagram svg {
+  max-height: 80vh;
+  width: auto;
+}
+
+.diagram-fit {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Keep sections together where possible */
+section,
+article {
+  page-break-inside: auto;
+}
+
+/* Print-optimised font sizes */
+@media print {
+  body {
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  h1 {
+    font-size: 20pt;
+  }
+
+  h2 {
+    font-size: 16pt;
+  }
+
+  h3 {
+    font-size: 14pt;
+  }
+
+  pre,
+  code {
+    font-size: 9pt;
+  }
 }
 
 /* Tomorrow Theme */
