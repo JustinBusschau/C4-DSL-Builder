@@ -20,6 +20,7 @@ export default defineConfig({
         '**/node_modules/**',
         '**/*.config.mjs',
         '**/*.config.ts',
+        'src/types/**',
       ],
     },
   },

@@ -53,6 +53,8 @@ describe('MarkdownProcessor', () => {
     pdfCss: '',
     webTheme: '',
     docsifyTemplate: '',
+    passwordProtected: false,
+    passwordHash: '',
     webSearch: false,
     serve: false,
     generateWebsite: false,

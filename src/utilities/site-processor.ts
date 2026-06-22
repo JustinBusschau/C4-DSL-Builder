@@ -122,6 +122,7 @@ export class SiteProcessor extends ProcessorBase {
       mermaidConfig: {
         querySelector: '.mermaid',
       },
+      authHash: buildConfig.passwordProtected ? buildConfig.passwordHash : undefined,
     };
 
     let docTemplate = '';

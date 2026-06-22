@@ -46,6 +46,8 @@ describe('SiteProcessor', () => {
     webTheme: 'https://theme.css',
     webSearch: true,
     docsifyTemplate: '',
+    passwordProtected: false,
+    passwordHash: '',
     serve: false,
     generateWebsite: false,
   };
@@ -238,6 +240,38 @@ describe('SiteProcessor', () => {
       expect.stringContaining('Error loading custom docsify template'),
       expect.anything(),
     );
+  });
+
+  it('includes auth script in generated HTML when password protection is enabled', async () => {
+    buildConfig.passwordProtected = true;
+    buildConfig.passwordHash = 'abc123hash';
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+
+    const writeFileSpy = vi.spyOn(safeFiles, 'writeFile').mockResolvedValue();
+
+    await processor.prepareSite(buildConfig);
+
+    const indexWrite = writeFileSpy.mock.calls.find((call) => call[0].endsWith('index.html'));
+
+    expect(indexWrite?.[1]).toContain('AUTH_HASH');
+    expect(indexWrite?.[1]).toContain('abc123hash');
+    expect(indexWrite?.[1]).toContain('Password Required');
+    expect(indexWrite?.[1]).toContain('sha256.min.js');
+  });
+
+  it('does not include auth script in generated HTML when password protection is disabled', async () => {
+    buildConfig.passwordProtected = false;
+    buildConfig.passwordHash = '';
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+
+    const writeFileSpy = vi.spyOn(safeFiles, 'writeFile').mockResolvedValue();
+
+    await processor.prepareSite(buildConfig);
+
+    const indexWrite = writeFileSpy.mock.calls.find((call) => call[0].endsWith('index.html'));
+
+    expect(indexWrite?.[1]).not.toContain('AUTH_HASH');
+    expect(indexWrite?.[1]).not.toContain('Password Required');
   });
 
   it('falls back to default template and logs warning if custom template is missing export', async () => {

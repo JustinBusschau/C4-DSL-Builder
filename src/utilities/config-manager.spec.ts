@@ -50,6 +50,8 @@ const answers: BuildConfig = {
   webTheme: 'https://theme.css',
   webSearch: true,
   docsifyTemplate: 'src/doc.template.js',
+  passwordProtected: false,
+  passwordHash: '',
   serve: false,
   generateWebsite: false,
 };
@@ -73,7 +75,9 @@ describe('ConfigManager', () => {
     await manager.setConfig();
 
     for (const [key, value] of Object.entries(answers)) {
-      expect(configStoreInstance.set).toHaveBeenCalledWith(key, String(value));
+      if (key !== 'password') {
+        expect(configStoreInstance.set).toHaveBeenCalledWith(key, String(value));
+      }
     }
 
     expect(logSpy.log).toHaveBeenCalledTimes(2);
@@ -82,6 +86,37 @@ describe('ConfigManager', () => {
       expect.stringContaining('Configure your project settings'),
     );
     expect(logSpy.log).toHaveBeenNthCalledWith(2, expect.stringContaining('Configuration updated'));
+  });
+
+  it('hashes and stores password when password protection is enabled', async () => {
+    const protectedAnswers = {
+      ...answers,
+      passwordProtected: true,
+      password: 'secret123',
+    };
+    (inquirer.prompt as unknown as Mock).mockResolvedValue(protectedAnswers);
+
+    await manager.setConfig();
+
+    expect(configStoreInstance.set).toHaveBeenCalledWith(
+      'passwordHash',
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+    );
+    expect(configStoreInstance.set).toHaveBeenCalledWith('passwordProtected', 'true');
+    expect(configStoreInstance.set).not.toHaveBeenCalledWith('password', expect.anything());
+  });
+
+  it('clears password hash when password protection is disabled', async () => {
+    const unprotectedAnswers = {
+      ...answers,
+      passwordProtected: false,
+    };
+    (inquirer.prompt as unknown as Mock).mockResolvedValue(unprotectedAnswers);
+
+    await manager.setConfig();
+
+    expect(configStoreInstance.delete).toHaveBeenCalledWith('passwordHash');
+    expect(configStoreInstance.set).toHaveBeenCalledWith('passwordProtected', 'false');
   });
 
   it('should correctly validate project name', async () => {
@@ -141,6 +176,37 @@ describe('ConfigManager', () => {
       expect(validate('https://example.com')).toBe(true);
       expect(validate('not-a-url')).toBe('Please enter a valid URL.');
       expect(validate('ftp://example.com')).toBe(true);
+    }
+  });
+
+  it('should correctly validate password prompt callbacks', async () => {
+    const promptSpy = vi.spyOn(inquirer, 'prompt').mockResolvedValue({} as BuildConfig);
+
+    await manager.setConfig();
+
+    const prompts = promptSpy.mock.calls[0][0] as unknown as Array<{
+      name: string;
+      when?: (answers: { passwordProtected: boolean }) => boolean;
+      validate?: (input: string) => string | boolean;
+    }>;
+
+    const passwordPrompt = prompts.find((q) => q.name === 'password');
+
+    expect(passwordPrompt).toBeDefined();
+
+    const when = passwordPrompt?.when;
+    const validate = passwordPrompt?.validate;
+    expect(when).toBeDefined();
+    expect(validate).toBeDefined();
+
+    if (when) {
+      expect(when({ passwordProtected: true })).toBe(true);
+      expect(when({ passwordProtected: false })).toBe(false);
+    }
+
+    if (validate) {
+      expect(validate('secret')).toBe(true);
+      expect(validate('')).toBe('Password cannot be empty');
     }
   });
 
@@ -223,11 +289,12 @@ describe('ConfigManager', () => {
     configStoreInstance.get.mockReturnValueOnce(answers.webTheme);
     configStoreInstance.get.mockReturnValueOnce(answers.webSearch);
     configStoreInstance.get.mockReturnValueOnce(answers.docsifyTemplate);
+    configStoreInstance.get.mockReturnValueOnce(answers.passwordProtected);
     configStoreInstance.get.mockReturnValueOnce(answers.serve);
     configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
     manager.listConfig();
 
-    expect(logSpy.log).toHaveBeenCalledTimes(14); // 13 for the settable config values, 1 for the header
+    expect(logSpy.log).toHaveBeenCalledTimes(15); // 14 for the settable config values, 1 for the header
     expect(logSpy.log).toHaveBeenNthCalledWith(1, expect.stringContaining('Current Configuration'));
     expect(logSpy.log).toHaveBeenNthCalledWith(
       2,
@@ -278,6 +345,10 @@ describe('ConfigManager', () => {
       14,
       `${'Docsify template'.padEnd(40)} : ${answers.docsifyTemplate}`,
     );
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      15,
+      `${'Password protected'.padEnd(40)} : ${answers.passwordProtected ? 'Yes' : 'No'}`,
+    );
   });
 
   it('prints "Not set" when config value is empty or invalid in listConfig', () => {
@@ -319,7 +390,9 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('https://theme.css')
       .mockReturnValueOnce(true)
       .mockReturnValueOnce('')
-      .mockReturnValueOnce(false);
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('');
 
     const config = await manager.getAllStoredConfig();
 
@@ -337,6 +410,8 @@ describe('ConfigManager', () => {
       webTheme: 'https://theme.css',
       webSearch: true,
       docsifyTemplate: '',
+      passwordProtected: false,
+      passwordHash: '',
       serve: false,
       generateWebsite: false,
     });
@@ -353,7 +428,9 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(true)
       .mockReturnValueOnce('_resources/pdf.css')
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce(8000);
+      .mockReturnValueOnce(8000)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('');
 
     const config = await manager.getAllStoredConfig();
 
@@ -372,6 +449,8 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(4000)
       .mockReturnValueOnce('')
       .mockReturnValueOnce('')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(false);
 
@@ -394,6 +473,8 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('_resources/pdf.css')
       .mockReturnValueOnce('4000')
       .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
       .mockReturnValueOnce(false);
 
     manager.listConfig();
@@ -414,6 +495,10 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
       .mockReturnValueOnce('not-a-number')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
       .mockReturnValueOnce(false);
 
     manager.listConfig();
@@ -434,7 +519,13 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce('workspace.dsl')
       .mockReturnValueOnce(false)
       .mockReturnValueOnce('_resources/pdf.css')
-      .mockReturnValueOnce(undefined);
+      .mockReturnValueOnce(undefined)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
 
     manager.listConfig();
 
