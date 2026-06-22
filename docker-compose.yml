@@ -1,0 +1,48 @@
+services:
+  c4-sonarqube-db:
+    image: postgres:15-alpine
+    container_name: c4-sonarqube-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - c4-sonarqube-db-data:/var/lib/postgresql/data
+    ports:
+      - "5439:5432"
+
+  c4-sonarqube:
+    image: sonarqube:community
+    container_name: c4-sonarqube
+    restart: unless-stopped
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://c4-sonarqube-db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+      # Memory settings for SonarQube JVM
+      SONAR_WEB_JAVAOPTS: "-Xmx1g -Xms512m"
+      SONAR_CE_JAVAOPTS: "-Xmx2g -Xms512m"
+      SONAR_SEARCH_JAVAOPTS: "-Xmx1g -Xms512m"
+    ports:
+      - "9009:9000"
+      # pass c4DslBuilder_pass
+    volumes:
+      - c4_sonarqube_data:/opt/sonarqube/data
+      - c4_sonarqube_logs:/opt/sonarqube/logs
+      - c4_sonarqube_extensions:/opt/sonarqube/extensions
+    depends_on:
+      - c4-sonarqube-db
+    # Resource limits to prevent container from consuming all host memory
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+volumes:
+  c4-sonarqube-db-data:
+  c4_sonarqube_data:
+  c4_sonarqube_logs:
+  c4_sonarqube_extensions:
