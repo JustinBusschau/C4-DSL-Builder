@@ -427,6 +427,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.1.6**
+  - Improve PDF generation
+
 - **v0.1.5**
   - Add decisions / adr support
 
