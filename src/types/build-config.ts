@@ -13,6 +13,8 @@ export type BuildConfig = {
   webTheme: string;
   webSearch: boolean;
   docsifyTemplate: string;
+  passwordProtected: boolean;
+  passwordHash: string;
 
   // Not settable via `config` command - internally managed
   serve: boolean;

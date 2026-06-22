@@ -11,4 +11,5 @@ export type DocsifyOptions = {
   stylesheet: string;
   supportSearch: boolean;
   mermaidConfig: MermaidConfig;
+  authHash?: string;
 };

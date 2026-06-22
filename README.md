@@ -427,6 +427,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.1.3**
+  - Add password protection option - simple hash password protection
+
 - **v0.1.2**
   - Ensure the template folder contents is included in the package (:bug: src folder was missing)
 

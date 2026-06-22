@@ -1,7 +1,8 @@
 import Configstore from 'configstore';
-import inquirer from 'inquirer';
+import inquirer, { DistinctQuestion } from 'inquirer';
 import chalk from 'chalk';
 import path from 'path';
+import { createHash } from 'crypto';
 import { CliLogger } from './cli-logger.js';
 import { BuildConfig } from '../types/build-config.js';
 import * as Constants from '../types/constants.js';
@@ -72,6 +73,10 @@ export class ConfigManager {
       /^[\w\s-]{2,}$/.test(input.trim()) ||
       'Project name must be at least 2 characters and only contain letters, numbers, spaces, hyphens, or underscores.'
     );
+  }
+
+  private hashPassword(password: string): string {
+    return createHash('sha256').update(password).digest('hex');
   }
 
   private isValidUrl(input: string): string | boolean {
@@ -202,12 +207,17 @@ export class ConfigManager {
       'Docsify template',
       this.getPrintValue(this.getStrConfigValue('docsifyTemplate')),
     );
+    this.printConfigValue(
+      'Password protected',
+      this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('passwordProtected'))),
+    );
   }
 
   async setConfig(): Promise<void> {
     this.logger.log(chalk.cyan('Configure your project settings:\n'));
 
-    const answers = await inquirer.prompt<BuildConfig>([
+    type ConfigAnswers = BuildConfig & { password?: string };
+    const questions: DistinctQuestion<ConfigAnswers>[] = [
       {
         type: 'input',
         name: 'projectName',
@@ -292,10 +302,33 @@ export class ConfigManager {
         message: 'Local path to a custom Docsify template:',
         default: this.getStrConfigValue('docsifyTemplate') || '',
       },
-    ]);
+      {
+        type: 'confirm',
+        name: 'passwordProtected',
+        message: 'Password protect the documentation site?',
+        default: this.getBoolConfigValue('passwordProtected') || false,
+      },
+      {
+        type: 'password',
+        name: 'password',
+        message: 'Enter password:',
+        when: (answers) => answers.passwordProtected,
+        validate: (input) => input.length >= 1 || 'Password cannot be empty',
+      },
+    ];
+    const answers = (await inquirer.prompt(questions)) as ConfigAnswers;
+
+    // Handle password separately: hash and store if enabled, clear if disabled
+    if (answers.passwordProtected && answers.password) {
+      this.setConfigValue('passwordHash', this.hashPassword(answers.password));
+    } else if (!answers.passwordProtected) {
+      this.deleteConfig('passwordHash');
+    }
 
     Object.entries(answers).forEach(([key, value]) => {
-      this.setConfigValue(key, String(value));
+      if (key !== 'password') {
+        this.setConfigValue(key, String(value));
+      }
     });
 
     this.logger.log(chalk.green('\n✅ Configuration updated successfully.'));
@@ -316,6 +349,8 @@ export class ConfigManager {
       webTheme: this.getStrConfigValue('webTheme'),
       webSearch: this.getBoolConfigValue('webSearch'),
       docsifyTemplate: this.getStrConfigValue('docsifyTemplate'),
+      passwordProtected: this.getBoolConfigValue('passwordProtected'),
+      passwordHash: this.getStrConfigValue('passwordHash'),
       serve: this.getBoolConfigValue('serve'),
       generateWebsite: this.getBoolConfigValue('generateWebsite'),
     };

@@ -106,6 +106,8 @@ describe('CLI integration tests', () => {
       webTheme: 'https://theme.css',
       webSearch: true,
       docsifyTemplate: '',
+      passwordProtected: false,
+      passwordHash: '',
       serve: true,
       generateWebsite: false,
     };
