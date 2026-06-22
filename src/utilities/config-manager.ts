@@ -211,6 +211,15 @@ export class ConfigManager {
       'Password protected',
       this.getPrintValue(this.boolValueToString(this.getBoolConfigValue('passwordProtected'))),
     );
+    this.printConfigValue('Logo', this.getPrintValue(this.getStrConfigValue('logo')));
+    this.printConfigValue(
+      'Logo alignment',
+      this.getPrintValue(this.getStrConfigValue('logoAlign')),
+    );
+    this.printConfigValue(
+      'Logo position',
+      this.getPrintValue(this.getStrConfigValue('logoPosition')),
+    );
   }
 
   async setConfig(): Promise<void> {
@@ -315,6 +324,28 @@ export class ConfigManager {
         when: (answers) => answers.passwordProtected,
         validate: (input) => input.length >= 1 || 'Password cannot be empty',
       },
+      {
+        type: 'input',
+        name: 'logo',
+        message: 'Logo file path (relative to root folder):',
+        default: this.getStrConfigValue('logo') || '',
+      },
+      {
+        type: 'list',
+        name: 'logoAlign',
+        message: 'Logo alignment:',
+        choices: ['left', 'center', 'right'],
+        default: this.getStrConfigValue('logoAlign') || 'left',
+        when: (answers) => !!answers.logo,
+      },
+      {
+        type: 'list',
+        name: 'logoPosition',
+        message: 'Logo position:',
+        choices: ['above', 'below'],
+        default: this.getStrConfigValue('logoPosition') || 'above',
+        when: (answers) => !!answers.logo,
+      },
     ];
     const answers = (await inquirer.prompt(questions)) as ConfigAnswers;
 
@@ -351,6 +382,9 @@ export class ConfigManager {
       docsifyTemplate: this.getStrConfigValue('docsifyTemplate'),
       passwordProtected: this.getBoolConfigValue('passwordProtected'),
       passwordHash: this.getStrConfigValue('passwordHash'),
+      logo: this.getStrConfigValue('logo'),
+      logoAlign: this.getStrConfigValue('logoAlign') as 'left' | 'center' | 'right',
+      logoPosition: this.getStrConfigValue('logoPosition') as 'above' | 'below',
       serve: this.getBoolConfigValue('serve'),
       generateWebsite: this.getBoolConfigValue('generateWebsite'),
     };

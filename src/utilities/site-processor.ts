@@ -111,18 +111,22 @@ export class SiteProcessor extends ProcessorBase {
       }
     }
 
+    const homepageName = buildConfig.homepageName.trim() || 'home';
     const docOptions: DocsifyOptions = {
       name: buildConfig.projectName,
       repo: buildConfig.repoName,
       loadSidebar: true,
       auto2top: true,
-      homepage: `${buildConfig.homepageName}.md`,
+      homepage: `${homepageName}.md`,
       stylesheet: buildConfig.webTheme,
       supportSearch: buildConfig.webSearch,
       mermaidConfig: {
         querySelector: '.mermaid',
       },
       authHash: buildConfig.passwordProtected ? buildConfig.passwordHash : undefined,
+      logo: buildConfig.logo || undefined,
+      logoAlign: buildConfig.logo ? buildConfig.logoAlign : undefined,
+      logoPosition: buildConfig.logo ? buildConfig.logoPosition : undefined,
     };
 
     let docTemplate = '';
@@ -153,6 +157,17 @@ export class SiteProcessor extends ProcessorBase {
     await this.safeFiles.ensureDir(path.resolve(buildConfig.distFolder));
     await this.safeFiles.writeFile(path.join(buildConfig.distFolder, 'index.html'), docTemplate);
     await this.safeFiles.writeFile(path.join(buildConfig.distFolder, '.nojekyll'), '');
+
+    if (buildConfig.logo) {
+      const logoSrc = path.join(buildConfig.rootFolder, buildConfig.logo);
+      const logoDest = path.join(buildConfig.distFolder, buildConfig.logo);
+      if (await this.safeFiles.pathExists(logoSrc)) {
+        await this.safeFiles.ensureDir(path.dirname(logoDest));
+        await this.safeFiles.copyFile(logoSrc, logoDest);
+      } else {
+        this.logger.warn(`Logo file not found at ${logoSrc}`);
+      }
+    }
   }
 
   async prepareSite(buildConfig: BuildConfig, cleanBeforeBuild: boolean = true): Promise<void> {

@@ -67,4 +67,79 @@ describe('docsifyTemplate', () => {
     expect(html).not.toContain('search.min.js');
     expect(html).not.toContain('searchScript');
   });
+
+  it('renders logo image when logo is provided', () => {
+    const html = docsifyTemplate({ ...baseOptions, logo: '_resources/logo.png' });
+
+    expect(html).toContain('./_resources/logo.png');
+    expect(html).toContain('text-align: left');
+    expect(html).toContain('max-width: 200px');
+  });
+
+  it('renders logo with center alignment when specified', () => {
+    const html = docsifyTemplate({
+      ...baseOptions,
+      logo: '_resources/logo.png',
+      logoAlign: 'center',
+    });
+
+    expect(html).toContain('text-align: center');
+  });
+
+  it('renders logo with right alignment when specified', () => {
+    const html = docsifyTemplate({
+      ...baseOptions,
+      logo: '_resources/logo.png',
+      logoAlign: 'right',
+    });
+
+    expect(html).toContain('text-align: right');
+  });
+
+  it('does not render logo when logo is not provided', () => {
+    const html = docsifyTemplate(baseOptions);
+
+    expect(html).not.toContain('Logo');
+    expect(html).not.toContain('./_resources/logo.png');
+  });
+
+  it('renders static logo when logoPosition is above', () => {
+    const html = docsifyTemplate({
+      ...baseOptions,
+      logo: '_resources/logo.png',
+      logoPosition: 'above',
+    });
+
+    expect(html).toContain('./_resources/logo.png');
+    expect(html).not.toContain('"plugins"');
+  });
+
+  it('does not render static logo but includes plugin when logoPosition is below', () => {
+    const html = docsifyTemplate({
+      ...baseOptions,
+      logo: '_resources/logo.png',
+      logoPosition: 'below',
+    });
+
+    // Logo should not be in the static HTML body
+    expect(html).not.toContain('<div style="text-align');
+    // But plugin should be in docsify config
+    expect(html).toContain('"plugins"');
+    expect(html).toContain('hook.doneEach');
+    expect(html).toContain('docsify-logo');
+    expect(html).toContain('./_resources/logo.png');
+  });
+
+  it('includes logo plugin with below position when authHash is present', () => {
+    const html = docsifyTemplate({
+      ...baseOptions,
+      logo: '_resources/logo.png',
+      logoPosition: 'below',
+      authHash: 'hash123',
+    });
+
+    expect(html).toContain('"plugins"');
+    expect(html).toContain('hook.doneEach');
+    expect(html).toContain('AUTH_HASH');
+  });
 });

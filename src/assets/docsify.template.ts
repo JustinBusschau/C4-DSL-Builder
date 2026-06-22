@@ -1,16 +1,25 @@
 import { DocsifyOptions } from '../types/docsify-options.js';
 
 function buildDocsifyConfig(options: DocsifyOptions): string {
-  const config = {
-    name: options.name,
-    repo: options.repo,
-    loadSidebar: options.loadSidebar,
-    auto2top: options.auto2top,
-    homepage: options.homepage,
-    stylesheet: options.stylesheet,
-    supportSearch: options.supportSearch,
-    mermaidConfig: options.mermaidConfig,
-  };
+  const plugins: string[] = [];
+
+  if (options.logo && options.logoPosition === 'below') {
+    plugins.push(`function(hook) {
+      hook.doneEach(function() {
+        var h1 = document.querySelector('article h1, .markdown-section h1, #main h1');
+        if (h1 && !h1.nextElementSibling?.classList?.contains('docsify-logo')) {
+          var logoDiv = document.createElement('div');
+          logoDiv.className = 'docsify-logo';
+          logoDiv.style.textAlign = '${options.logoAlign || 'left'}';
+          logoDiv.style.padding = '10px';
+          logoDiv.innerHTML = '<img src="./${options.logo}" alt="Logo" style="max-width: 200px;" />';
+          h1.parentNode.insertBefore(logoDiv, h1.nextSibling);
+        }
+      });
+    }`);
+  }
+
+  const pluginEntry = plugins.length ? `,\n  "plugins": [${plugins.join(', ')}]` : '';
 
   if (options.authHash) {
     return `{
@@ -23,11 +32,22 @@ function buildDocsifyConfig(options: DocsifyOptions): string {
   "supportSearch": sessionStorage.getItem('docsify-auth') === AUTH_HASH,
   "mermaidConfig": {
     "querySelector": ".mermaid"
-  }
+  }${pluginEntry}
 }`;
   }
 
-  return JSON.stringify(config, null, 2);
+  return `{
+  "name": ${JSON.stringify(options.name)},
+  "repo": ${JSON.stringify(options.repo)},
+  "loadSidebar": ${options.loadSidebar},
+  "auto2top": ${options.auto2top},
+  "homepage": ${JSON.stringify(options.homepage)},
+  "stylesheet": ${JSON.stringify(options.stylesheet)},
+  "supportSearch": ${options.supportSearch},
+  "mermaidConfig": {
+    "querySelector": ".mermaid"
+  }${pluginEntry}
+}`;
 }
 
 export function docsifyTemplate(options: DocsifyOptions) {
@@ -84,6 +104,13 @@ export function docsifyTemplate(options: DocsifyOptions) {
       : `<script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>`
     : '';
 
+  const logoHtml =
+    options.logo && options.logoPosition !== 'below'
+      ? `<div style="text-align: ${options.logoAlign || 'left'}; padding: 10px;">
+      <img src="./${options.logo}" alt="Logo" style="max-width: 200px;" />
+    </div>`
+      : '';
+
   return `<!DOCTYPE html>
   <html lang="en">
 
@@ -99,6 +126,7 @@ export function docsifyTemplate(options: DocsifyOptions) {
 
   <body>
       ${authScript}
+      ${logoHtml}
       <div id="app"></div>
       <script>
       window.$docsify = ${buildDocsifyConfig(options)};

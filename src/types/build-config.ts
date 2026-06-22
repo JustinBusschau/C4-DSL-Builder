@@ -15,6 +15,9 @@ export type BuildConfig = {
   docsifyTemplate: string;
   passwordProtected: boolean;
   passwordHash: string;
+  logo: string;
+  logoAlign: 'left' | 'center' | 'right';
+  logoPosition: 'above' | 'below';
 
   // Not settable via `config` command - internally managed
   serve: boolean;

@@ -427,6 +427,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.1.4**
+  - Add support and config for an optional client logo
+
 - **v0.1.3**
   - Add password protection option - simple hash password protection
 

@@ -52,6 +52,9 @@ const answers: BuildConfig = {
   docsifyTemplate: 'src/doc.template.js',
   passwordProtected: false,
   passwordHash: '',
+  logo: '_resources/logo.png',
+  logoAlign: 'left',
+  logoPosition: 'above',
   serve: false,
   generateWebsite: false,
 };
@@ -210,6 +213,52 @@ describe('ConfigManager', () => {
     }
   });
 
+  it('should conditionally show logo alignment prompt based on logo input', async () => {
+    const promptSpy = vi.spyOn(inquirer, 'prompt').mockResolvedValue({} as BuildConfig);
+
+    await manager.setConfig();
+
+    const prompts = promptSpy.mock.calls[0][0] as unknown as Array<{
+      name: string;
+      when?: (answers: { logo: string }) => boolean;
+    }>;
+
+    const logoAlignPrompt = prompts.find((q) => q.name === 'logoAlign');
+
+    expect(logoAlignPrompt).toBeDefined();
+
+    const when = logoAlignPrompt?.when;
+    expect(when).toBeDefined();
+
+    if (when) {
+      expect(when({ logo: 'logo.png' })).toBe(true);
+      expect(when({ logo: '' })).toBe(false);
+    }
+  });
+
+  it('should conditionally show logo position prompt based on logo input', async () => {
+    const promptSpy = vi.spyOn(inquirer, 'prompt').mockResolvedValue({} as BuildConfig);
+
+    await manager.setConfig();
+
+    const prompts = promptSpy.mock.calls[0][0] as unknown as Array<{
+      name: string;
+      when?: (answers: { logo: string }) => boolean;
+    }>;
+
+    const logoPositionPrompt = prompts.find((q) => q.name === 'logoPosition');
+
+    expect(logoPositionPrompt).toBeDefined();
+
+    const when = logoPositionPrompt?.when;
+    expect(when).toBeDefined();
+
+    if (when) {
+      expect(when({ logo: 'logo.png' })).toBe(true);
+      expect(when({ logo: '' })).toBe(false);
+    }
+  });
+
   it('gets string config value when valid', () => {
     configStoreInstance.get.mockReturnValue('my-value');
     expect(manager.getStrConfigValue('myKey')).toBe('my-value');
@@ -290,11 +339,14 @@ describe('ConfigManager', () => {
     configStoreInstance.get.mockReturnValueOnce(answers.webSearch);
     configStoreInstance.get.mockReturnValueOnce(answers.docsifyTemplate);
     configStoreInstance.get.mockReturnValueOnce(answers.passwordProtected);
+    configStoreInstance.get.mockReturnValueOnce(answers.logo);
+    configStoreInstance.get.mockReturnValueOnce(answers.logoAlign);
+    configStoreInstance.get.mockReturnValueOnce(answers.logoPosition);
     configStoreInstance.get.mockReturnValueOnce(answers.serve);
     configStoreInstance.get.mockReturnValueOnce(answers.generateWebsite);
     manager.listConfig();
 
-    expect(logSpy.log).toHaveBeenCalledTimes(15); // 14 for the settable config values, 1 for the header
+    expect(logSpy.log).toHaveBeenCalledTimes(18); // 17 for the settable config values, 1 for the header
     expect(logSpy.log).toHaveBeenNthCalledWith(1, expect.stringContaining('Current Configuration'));
     expect(logSpy.log).toHaveBeenNthCalledWith(
       2,
@@ -349,11 +401,20 @@ describe('ConfigManager', () => {
       15,
       `${'Password protected'.padEnd(40)} : ${answers.passwordProtected ? 'Yes' : 'No'}`,
     );
+    expect(logSpy.log).toHaveBeenNthCalledWith(16, `${'Logo'.padEnd(40)} : ${answers.logo}`);
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      17,
+      `${'Logo alignment'.padEnd(40)} : ${answers.logoAlign}`,
+    );
+    expect(logSpy.log).toHaveBeenNthCalledWith(
+      18,
+      `${'Logo position'.padEnd(40)} : ${answers.logoPosition}`,
+    );
   });
 
   it('prints "Not set" when config value is empty or invalid in listConfig', () => {
     configStoreInstance.get.mockImplementation((key: string) => {
-      if (['projectName', 'homepageName'].includes(key)) return '';
+      if (['projectName', 'homepageName', 'logo'].includes(key)) return '';
       if (['rootFolder'].includes(key)) return 'undefined';
       return undefined;
     });
@@ -363,6 +424,7 @@ describe('ConfigManager', () => {
     expect(logSpy.log).toHaveBeenCalledWith(expect.stringMatching(/Project name.*Not set/));
     expect(logSpy.log).toHaveBeenCalledWith(expect.stringMatching(/Homepage Name.*Not set/));
     expect(logSpy.log).toHaveBeenCalledWith(expect.stringMatching(/Root Folder.*Not set/));
+    expect(logSpy.log).toHaveBeenCalledWith(expect.stringMatching(/Logo.*Not set/));
   });
 
   it('handles invalid config store instance gracefully', () => {
@@ -391,8 +453,12 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(true)
       .mockReturnValueOnce('')
       .mockReturnValueOnce(false)
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce('left')
+      .mockReturnValueOnce('above')
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce('');
+      .mockReturnValueOnce(false);
 
     const config = await manager.getAllStoredConfig();
 
@@ -412,6 +478,9 @@ describe('ConfigManager', () => {
       docsifyTemplate: '',
       passwordProtected: false,
       passwordHash: '',
+      logo: '',
+      logoAlign: 'left',
+      logoPosition: 'above',
       serve: false,
       generateWebsite: false,
     });
@@ -430,7 +499,13 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(8000)
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce('');
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce('left')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
 
     const config = await manager.getAllStoredConfig();
 
@@ -452,7 +527,9 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce(false);
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce('left');
 
     manager.listConfig();
 
@@ -475,7 +552,9 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce(false);
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce('left');
 
     manager.listConfig();
 
@@ -499,7 +578,9 @@ describe('ConfigManager', () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(false)
-      .mockReturnValueOnce(false);
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce('left');
 
     manager.listConfig();
 
