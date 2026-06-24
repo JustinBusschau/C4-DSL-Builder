@@ -1,7 +1,7 @@
-import path from 'path';
+import path from 'node:path';
 import chalk from 'chalk';
-import { promisify } from 'util';
-import { execFile } from 'child_process';
+import { promisify } from 'node:util';
+import { execFile } from 'node:child_process';
 import { CliLogger } from './cli-logger.js';
 import { Paths } from './paths.js';
 import { SafeFiles } from './safe-files.js';

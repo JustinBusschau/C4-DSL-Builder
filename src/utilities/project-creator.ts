@@ -1,5 +1,5 @@
 import inquirer from 'inquirer';
-import path from 'path';
+import path from 'node:path';
 import Configstore from 'configstore';
 import chalk from 'chalk';
 import { CliLogger } from './cli-logger.js';

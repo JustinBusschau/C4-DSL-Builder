@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import chalk from 'chalk';
 import { BuildConfig } from '../types/build-config.js';
 import { CliLogger } from './cli-logger.js';

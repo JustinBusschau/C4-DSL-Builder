@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import fs from 'fs-extra';
-import path from 'path';
-import os from 'os';
+import path from 'node:path';
+import os from 'node:os';
 
 import { CacheManager } from './cache-manager.js';
 import { SafeFiles } from './safe-files.js';

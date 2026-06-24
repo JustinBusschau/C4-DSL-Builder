@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import chalk from 'chalk';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -322,7 +322,7 @@ export class ProcessorBase {
             path.basename(linkedItem.absolutePath, path.extname(linkedItem.absolutePath));
         } else if (!linkedItem.node.url.endsWith('.md')) {
           // non-md links should not be compiled (https://docsify.js.org/#/helpers?id=ignore-to-compile-link)
-          linkedItem.node.url = `${linkedItem.node.url.replace(/\s/g, '%20')} ':ignore'`;
+          linkedItem.node.url = `${linkedItem.node.url.replaceAll(/\s/g, '%20')} ':ignore'`;
         }
         this.logger.info(`Copied file to ${linkedItem.relativePath}`);
       } catch (err) {
@@ -395,7 +395,7 @@ export class ProcessorBase {
       docBody += `\n\n# ${name}`;
 
       if (name !== buildConfig.homepageName) {
-        docBody += `\n\n[${buildConfig.homepageName}](#${encodeURI(buildConfig.projectName).replace(/%20/g, '-')})`;
+        docBody += `\n\n[${buildConfig.homepageName}](#${encodeURI(buildConfig.projectName).replaceAll('%20', '-')})`;
       }
 
       docBody += '\n\n';
@@ -411,7 +411,7 @@ export class ProcessorBase {
     const toc = tree
       .map((item) => {
         const indent = '    '.repeat(item.level);
-        return `${indent}* [${item.name}](#${encodeURI(item.name).replace(/%20/g, '-')})`;
+        return `${indent}* [${item.name}](#${encodeURI(item.name).replaceAll('%20', '-')})`;
       })
       .join('\n');
 

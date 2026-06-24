@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import path from 'path';
+import path from 'node:path';
 import { ProjectCreator } from './project-creator.js';
 import { SafeFiles } from './safe-files.js';
 import { Paths } from './paths.js';

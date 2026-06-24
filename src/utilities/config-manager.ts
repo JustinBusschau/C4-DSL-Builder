@@ -1,8 +1,8 @@
 import Configstore from 'configstore';
 import inquirer, { DistinctQuestion } from 'inquirer';
 import chalk from 'chalk';
-import path from 'path';
-import { createHash } from 'crypto';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { CliLogger } from './cli-logger.js';
 import { BuildConfig } from '../types/build-config.js';
 import * as Constants from '../types/constants.js';

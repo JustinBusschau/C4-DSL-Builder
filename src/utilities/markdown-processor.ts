@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import { BuildConfig } from '../types/build-config.js';
 import chalk from 'chalk';
 import { SafeFiles } from './safe-files.js';

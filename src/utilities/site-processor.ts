@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import chalk from 'chalk';
 import { OutputType, ProcessorBase } from './processor-base.js';
 import { SafeFiles } from './safe-files.js';
