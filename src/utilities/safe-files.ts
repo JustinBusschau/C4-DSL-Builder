@@ -160,7 +160,7 @@ export class SafeFiles {
       descendants: [],
     };
 
-    const files = await this.readDir(dir);
+    const files = (await this.readDir(dir)).sort((a, b) => a.localeCompare(b));
 
     for (const file of files) {
       const filePath = path.join(dir, file);
@@ -179,7 +179,7 @@ export class SafeFiles {
           tree,
         );
         if (childTreeItem) {
-          tree.unshift(childTreeItem);
+          tree.push(childTreeItem);
         }
       }
     }
@@ -213,7 +213,7 @@ export class SafeFiles {
       tree,
     );
     if (rootBranch) {
-      tree.unshift(rootBranch);
+      tree.push(rootBranch);
     }
 
     return tree;

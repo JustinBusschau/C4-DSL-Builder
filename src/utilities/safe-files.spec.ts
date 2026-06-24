@@ -354,4 +354,38 @@ describe('SafeFiles generateTree', () => {
     expect(fsExtra.ensureDir).toHaveBeenCalledWith('/docs/sub');
     expect(tree).toHaveLength(2);
   });
+
+  it('should sort directories and files alphabetically', async () => {
+    (fs.readdir as Mock).mockImplementation(async (dir) => {
+      // Return folders in non-alphabetical order (simulating OS-dependent readdir)
+      if (dir === '/docs') return ['Appendix B', 'Appendix A', 'glossary'];
+      if (dir === '/docs/Appendix A') return ['appendix.a.md'];
+      if (dir === '/docs/Appendix B') return ['appendix.b.md'];
+      if (dir === '/docs/glossary') return ['glossary.md'];
+      return [];
+    });
+
+    (fs.stat as Mock).mockImplementation(async (filePath) => {
+      if (
+        filePath.includes('Appendix A') ||
+        filePath.includes('Appendix B') ||
+        filePath.includes('glossary')
+      ) {
+        return makeStats(!filePath.endsWith('.md'));
+      }
+      return makeStats(false);
+    });
+
+    (fs.readFile as Mock).mockResolvedValue('# Content');
+
+    const tree = await safeFiles.generateTree('/docs', '/docs', 'home');
+
+    // Tree order should be: Appendix A, Appendix B, glossary, root (home)
+    const names = tree.map((t) => t.name);
+    expect(names).toEqual(['Appendix A', 'Appendix B', 'glossary', 'home']);
+
+    // Verify descendants are also sorted
+    const rootItem = tree.find((t) => t.name === 'home');
+    expect(rootItem?.descendants).toEqual(['Appendix A', 'Appendix B', 'glossary']);
+  });
 });
