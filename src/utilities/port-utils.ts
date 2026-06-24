@@ -1,4 +1,4 @@
-import net from 'net';
+import net from 'node:net';
 
 export async function findAvailablePort(preferredPort: number): Promise<number> {
   let port = preferredPort;

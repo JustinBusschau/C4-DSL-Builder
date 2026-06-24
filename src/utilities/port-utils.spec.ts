@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import net from 'net';
+import net from 'node:net';
 import { findAvailablePort } from './port-utils.js';
 
 vi.mock('net');

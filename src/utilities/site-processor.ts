@@ -148,6 +148,68 @@ export class SiteProcessor extends ProcessorBase {
     );
   }
 
+  private buildDocsifyOptions(buildConfig: BuildConfig): DocsifyOptions {
+    const homepageName = buildConfig.homepageName.trim() || 'home';
+    return {
+      name: buildConfig.projectName,
+      repo: buildConfig.repoName,
+      loadSidebar: true,
+      auto2top: true,
+      homepage: `${homepageName}.md`,
+      stylesheet: buildConfig.webTheme,
+      supportSearch: buildConfig.webSearch,
+      mermaidConfig: { querySelector: '.mermaid' },
+      authHash: buildConfig.passwordProtected ? buildConfig.passwordHash : undefined,
+      logo: buildConfig.logo || undefined,
+      logoAlign: buildConfig.logo ? buildConfig.logoAlign : undefined,
+      logoPosition: buildConfig.logo ? buildConfig.logoPosition : undefined,
+    };
+  }
+
+  private async loadDocsifyTemplate(
+    buildConfig: BuildConfig,
+    docOptions: DocsifyOptions,
+  ): Promise<string> {
+    if (buildConfig.docsifyTemplate === '') {
+      return docsifyTemplate(docOptions);
+    }
+
+    try {
+      const templateModulePath = path.resolve(buildConfig.docsifyTemplate);
+      const templateModule = await import(templateModulePath);
+
+      if (typeof templateModule.docsifyTemplate === 'function') {
+        return templateModule.docsifyTemplate(docOptions);
+      }
+
+      this.logger.warn(
+        `Custom docsify template module at ${buildConfig.docsifyTemplate} does not export a valid 'docsifyTemplate' function. Using default.`,
+      );
+      return docsifyTemplate(docOptions);
+    } catch (error) {
+      this.logger.error(
+        `Error loading custom docsify template at ${buildConfig.docsifyTemplate}. Using default.`,
+        error,
+      );
+      return docsifyTemplate(docOptions);
+    }
+  }
+
+  private async copyLogo(buildConfig: BuildConfig): Promise<void> {
+    if (!buildConfig.logo) return;
+
+    const logoSrc = path.join(buildConfig.rootFolder, buildConfig.logo);
+    const logoDest = path.join(buildConfig.distFolder, buildConfig.logo);
+
+    if (!(await this.safeFiles.pathExists(logoSrc))) {
+      this.logger.warn(`Logo file not found at ${logoSrc}`);
+      return;
+    }
+
+    await this.safeFiles.ensureDir(path.dirname(logoDest));
+    await this.safeFiles.copyFile(logoSrc, logoDest);
+  }
+
   async generateSiteFromTree(tree: TreeItem[], buildConfig: BuildConfig): Promise<void> {
     const openApiSpec = await this.findOpenApiSpec(buildConfig.rootFolder);
     await this.writeSidebar(tree, buildConfig, openApiSpec || undefined);
@@ -162,63 +224,14 @@ export class SiteProcessor extends ProcessorBase {
       }
     }
 
-    const homepageName = buildConfig.homepageName.trim() || 'home';
-    const docOptions: DocsifyOptions = {
-      name: buildConfig.projectName,
-      repo: buildConfig.repoName,
-      loadSidebar: true,
-      auto2top: true,
-      homepage: `${homepageName}.md`,
-      stylesheet: buildConfig.webTheme,
-      supportSearch: buildConfig.webSearch,
-      mermaidConfig: {
-        querySelector: '.mermaid',
-      },
-      authHash: buildConfig.passwordProtected ? buildConfig.passwordHash : undefined,
-      logo: buildConfig.logo || undefined,
-      logoAlign: buildConfig.logo ? buildConfig.logoAlign : undefined,
-      logoPosition: buildConfig.logo ? buildConfig.logoPosition : undefined,
-    };
-
-    let docTemplate = '';
-    if (buildConfig.docsifyTemplate === '') {
-      docTemplate = docsifyTemplate(docOptions);
-    } else {
-      try {
-        const templateModulePath = path.resolve(buildConfig.docsifyTemplate);
-        const templateModule = await import(templateModulePath);
-
-        if (typeof templateModule.docsifyTemplate === 'function') {
-          docTemplate = templateModule.docsifyTemplate(docOptions);
-        } else {
-          this.logger.warn(
-            `Custom docsify template module at ${buildConfig.docsifyTemplate} does not export a valid 'docsifyTemplate' function. Using default.`,
-          );
-          docTemplate = docsifyTemplate(docOptions);
-        }
-      } catch (error) {
-        this.logger.error(
-          `Error loading custom docsify template at ${buildConfig.docsifyTemplate}. Using default.`,
-          error,
-        );
-        docTemplate = docsifyTemplate(docOptions);
-      }
-    }
+    const docOptions = this.buildDocsifyOptions(buildConfig);
+    const docTemplate = await this.loadDocsifyTemplate(buildConfig, docOptions);
 
     await this.safeFiles.ensureDir(path.resolve(buildConfig.distFolder));
     await this.safeFiles.writeFile(path.join(buildConfig.distFolder, 'index.html'), docTemplate);
     await this.safeFiles.writeFile(path.join(buildConfig.distFolder, '.nojekyll'), '');
 
-    if (buildConfig.logo) {
-      const logoSrc = path.join(buildConfig.rootFolder, buildConfig.logo);
-      const logoDest = path.join(buildConfig.distFolder, buildConfig.logo);
-      if (await this.safeFiles.pathExists(logoSrc)) {
-        await this.safeFiles.ensureDir(path.dirname(logoDest));
-        await this.safeFiles.copyFile(logoSrc, logoDest);
-      } else {
-        this.logger.warn(`Logo file not found at ${logoSrc}`);
-      }
-    }
+    await this.copyLogo(buildConfig);
 
     if (openApiSpec) {
       await this.generateOpenApiPage(buildConfig, openApiSpec);
