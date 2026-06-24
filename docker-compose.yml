@@ -34,13 +34,21 @@ services:
       - c4_sonarqube_extensions:/opt/sonarqube/extensions
     depends_on:
       - c4-sonarqube-db
-    # Resource limits to prevent container from consuming all host memory
+    # Resource limits - increased for JS/TS analysis
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 6G
         reservations:
-          memory: 2G
+          memory: 4G
+    # Healthcheck to ensure SonarQube is fully ready before scanning
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9000/api/system/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
 volumes:
   c4-sonarqube-db-data:
   c4_sonarqube_data:

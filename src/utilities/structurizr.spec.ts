@@ -19,8 +19,8 @@ vi.mock('./safe-files.js', () => ({
   })),
 }));
 
-import path from 'path';
-import { execSync } from 'child_process';
+import path from 'node:path';
+import { execSync } from 'node:child_process';
 import { Structurizr } from './structurizr.js';
 import { SafeFiles } from './safe-files.js';
 import { CliLogger } from './cli-logger.js';

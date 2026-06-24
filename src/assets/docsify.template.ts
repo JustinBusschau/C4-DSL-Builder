@@ -92,17 +92,20 @@ export function docsifyTemplate(options: DocsifyOptions) {
       </script>`
     : '';
 
-  const searchScript = options.supportSearch
-    ? options.authHash
-      ? `<script>
+  let searchScript = '';
+  if (options.supportSearch) {
+    if (options.authHash) {
+      searchScript = `<script>
       if (sessionStorage.getItem('docsify-auth') === AUTH_HASH) {
           const searchScript = document.createElement('script');
           searchScript.src = '//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js';
           document.head.appendChild(searchScript);
       }
-      </script>`
-      : `<script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>`
-    : '';
+      </script>`;
+    } else {
+      searchScript = `<script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>`;
+    }
+  }
 
   const logoHtml =
     options.logo && options.logoPosition !== 'below'

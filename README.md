@@ -477,6 +477,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.2.2**
+  - Sonarqube: maintainability improvements
+
 - **v0.2.1**
   - Added a fix to correctly order files and folders in the generated docsify site
 

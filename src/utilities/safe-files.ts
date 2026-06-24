@@ -1,5 +1,5 @@
-import path from 'path';
-import { promises as fs, Stats } from 'fs';
+import path from 'node:path';
+import { promises as fs, Stats } from 'node:fs';
 import fsExtra from 'fs-extra';
 import { CliLogger } from './cli-logger.js';
 import { TreeItem } from '../types/tree-item.js';

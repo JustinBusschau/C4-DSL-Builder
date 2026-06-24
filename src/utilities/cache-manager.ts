@@ -1,5 +1,5 @@
-import { createHash } from 'crypto';
-import path from 'path';
+import { createHash } from 'node:crypto';
+import path from 'node:path';
 import { SafeFiles } from './safe-files.js';
 import { CliLogger } from './cli-logger.js';
 
