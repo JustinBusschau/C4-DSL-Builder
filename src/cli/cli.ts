@@ -181,17 +181,18 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
 
       let watchUI: WatchModeUI | undefined;
 
-      if (buildConfig.serve) {
-        const availablePort = await findAvailablePort(buildConfig.servePort);
-        if (availablePort !== buildConfig.servePort) {
-          logger.log(
-            chalk.yellow(
-              `Port ${buildConfig.servePort} is busy. Using available port ${availablePort} instead.`,
-            ),
-          );
-          buildConfig.servePort = availablePort;
-        }
+      // Resolve the port first - needed for both serve and watch modes
+      const availablePort = await findAvailablePort(buildConfig.servePort);
+      if (availablePort !== buildConfig.servePort) {
+        logger.log(
+          chalk.yellow(
+            `Port ${buildConfig.servePort} is busy. Using available port ${availablePort} instead.`,
+          ),
+        );
+        buildConfig.servePort = availablePort;
+      }
 
+      if (buildConfig.serve) {
         await serveStaticSite(buildConfig.distFolder, buildConfig.servePort, logger);
       }
 
