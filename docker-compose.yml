@@ -27,7 +27,6 @@ services:
       SONAR_SEARCH_JAVAOPTS: "-Xmx1g -Xms512m"
     ports:
       - "9009:9000"
-      # pass c4DslBuilder_pass
     volumes:
       - c4_sonarqube_data:/opt/sonarqube/data
       - c4_sonarqube_logs:/opt/sonarqube/logs

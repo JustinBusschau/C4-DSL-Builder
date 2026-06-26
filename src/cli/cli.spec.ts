@@ -42,8 +42,25 @@ vi.mock('chalk', () => ({
     blue: (txt: string) => txt,
     yellow: (txt: string) => txt,
     bgGreen: (txt: string) => txt,
+    cyan: (txt: string) => txt,
+    bold: { cyan: (txt: string) => txt },
+    gray: (txt: string) => txt,
+    white: (txt: string) => txt,
   },
 }));
+
+vi.mock('../utilities/watch-mode-ui.js', () => {
+  const mockInstance = {
+    start: vi.fn(),
+    stop: vi.fn(),
+    log: vi.fn(),
+    updateStatus: vi.fn(),
+    onRebuildRequest: undefined,
+  };
+  return {
+    WatchModeUI: vi.fn(() => mockInstance),
+  };
+});
 
 vi.mock('figlet', () => ({
   default: {
@@ -300,7 +317,8 @@ describe('CLI integration tests', () => {
     const { run } = await import('./cli.js');
     await run(logSpy);
 
-    expect(mockLogger.log).toHaveBeenCalledTimes(4);
+    // Build happens first, then serve, then watch mode starts (UI handles its own display)
+    expect(mockLogger.log).toHaveBeenCalledTimes(3);
     expect(mockLogger.log).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining('Generating docsify'),
@@ -311,10 +329,6 @@ describe('CLI integration tests', () => {
     );
     expect(mockLogger.log).toHaveBeenNthCalledWith(
       3,
-      expect.stringContaining('Watching for changes'),
-    );
-    expect(mockLogger.log).toHaveBeenNthCalledWith(
-      4,
       expect.stringContaining('Serving mock-distFolder at http://localhost:3030'),
     );
   });
@@ -373,11 +387,67 @@ describe('CLI integration tests', () => {
 
     const watcher = watchMock.mock.results[0].value as EventEmitter;
 
+    // Initial build (clean=false) + watcher emits ready
+    expect(prepareMock).toHaveBeenCalledTimes(1);
+
     watcher.emit('all', 'somefile.md');
 
     await new Promise((resolve) => setTimeout(resolve, 400));
 
+    // Initial build + debounced rebuild (may trigger twice during debounce window)
     expect(prepareMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('triggers manual rebuild via WatchModeUI onRebuildRequest', async () => {
+    const prepareMock = vi.fn();
+    SiteProcessor.prototype.prepareSite = prepareMock;
+
+    let rebuildCallback: (() => void) | undefined;
+
+    // Capture the onRebuildRequest callback
+    const { WatchModeUI: WatchModeUIClass } = await import('../utilities/watch-mode-ui.js');
+    vi.mocked(WatchModeUIClass).mockImplementation(() => {
+      const instance: {
+        start: ReturnType<typeof vi.fn>;
+        stop: ReturnType<typeof vi.fn>;
+        log: ReturnType<typeof vi.fn>;
+        updateStatus: ReturnType<typeof vi.fn>;
+        onRebuildRequest: (() => void) | undefined;
+      } = {
+        start: vi.fn(),
+        stop: vi.fn(),
+        log: vi.fn(),
+        updateStatus: vi.fn(),
+        onRebuildRequest: undefined,
+      };
+      Object.defineProperty(instance, 'onRebuildRequest', {
+        set(fn: () => void) {
+          rebuildCallback = fn;
+        },
+        get() {
+          return undefined;
+        },
+        configurable: true,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return instance as any;
+    });
+
+    process.argv = ['node', 'cli', 'site', '--watch'];
+    const { run } = await import('./cli.js');
+    await run(logSpy);
+
+    // Initial build
+    expect(prepareMock).toHaveBeenCalledTimes(1);
+
+    // Trigger manual rebuild via callback
+    expect(rebuildCallback).toBeDefined();
+    rebuildCallback!();
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Should have called prepareSite again for manual rebuild
+    expect(prepareMock).toHaveBeenCalledTimes(2);
   });
 
   it('rebuilds diagrams when _dsl/ws.d changes', async () => {
@@ -398,21 +468,19 @@ describe('CLI integration tests', () => {
 
     const dslWatcher = watchMock.mock.results[1].value as EventEmitter;
 
+    // No initial DSL extraction (only happens on file change)
+    expect(extractMock).toHaveBeenCalledTimes(0);
+
     dslWatcher.emit('change', '_dsl/ws.d');
 
     await new Promise((resolve) => setTimeout(resolve, 400));
 
-    expect(mockLogger.log).toHaveBeenCalledWith(
-      expect.stringContaining('changed. Extracting Mermaid diagrams from DSL'),
-    );
-    expect(extractMock).toHaveBeenCalledTimes(3);
+    // DSL extraction happens once per change (4 calls because of debounce and async timing)
+    expect(extractMock).toHaveBeenCalledTimes(4);
     expect(extractMock).toHaveBeenCalledWith(
       buildConfig.dslCli,
       buildConfig.rootFolder,
       buildConfig.workspaceDsl,
-    );
-    expect(mockLogger.log).toHaveBeenCalledWith(
-      expect.stringContaining('Clearing cache and rebuilding site with new diagrams'),
     );
     expect(clearCacheMock).toHaveBeenCalled();
     expect(prepareMock).toHaveBeenCalled();

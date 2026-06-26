@@ -64,6 +64,14 @@ export class SafeFiles {
     }
   }
 
+  async removeDir(dir: string): Promise<void> {
+    try {
+      await fsExtra.remove(dir);
+    } catch (error) {
+      this.logger.error(`Error removing directory ${dir}`, error);
+    }
+  }
+
   async accessFile(path: string): Promise<void> {
     try {
       await fs.access(path);

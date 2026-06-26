@@ -4,11 +4,15 @@ import chalk from 'chalk';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { CliLogger } from './cli-logger.js';
+import { SafeFiles } from './safe-files.js';
 import { BuildConfig } from '../types/build-config.js';
 import * as Constants from '../types/constants.js';
 
 export class ConfigManager {
-  constructor(private readonly logger: CliLogger = new CliLogger(ConfigManager.name)) {}
+  constructor(
+    private readonly logger: CliLogger = new CliLogger(ConfigManager.name),
+    private readonly safeFiles: SafeFiles = new SafeFiles(),
+  ) {}
 
   private openConfigStore(): Configstore | null {
     let config: Configstore;
@@ -225,7 +229,7 @@ export class ConfigManager {
   async setConfig(): Promise<void> {
     this.logger.log(chalk.cyan('Configure your project settings:\n'));
 
-    type ConfigAnswers = BuildConfig & { password?: string };
+    type ConfigAnswers = BuildConfig & { password?: string; projectTemplate?: 'clean' | 'sample' };
     const questions: DistinctQuestion<ConfigAnswers>[] = [
       {
         type: 'input',
@@ -346,6 +350,16 @@ export class ConfigManager {
         default: this.getStrConfigValue('logoPosition') || 'above',
         when: (answers) => !!answers.logo,
       },
+      {
+        type: 'list',
+        name: 'projectTemplate',
+        message: 'Choose project template:',
+        choices: [
+          { name: 'Clean start (empty project)', value: 'clean' },
+          { name: 'Sample project (with example documents)', value: 'sample' },
+        ],
+        default: 'clean',
+      },
     ];
     const answers = (await inquirer.prompt(questions)) as ConfigAnswers;
 
@@ -363,6 +377,41 @@ export class ConfigManager {
     });
 
     this.logger.log(chalk.green('\n✅ Configuration updated successfully.'));
+
+    // Handle template selection
+    if (answers.projectTemplate === 'clean') {
+      await this.cleanSampleFiles(answers.rootFolder);
+    }
+  }
+
+  private async cleanSampleFiles(rootFolder: string): Promise<void> {
+    const sampleFiles = [
+      'c4dslbuilder.figlet.png',
+      'context.md',
+      'context.mmd',
+      'inline.md',
+      'kanban.mmd',
+      'linked.md',
+    ];
+
+    this.logger.log(chalk.yellow('\nCleaning sample files for fresh start...'));
+
+    for (const file of sampleFiles) {
+      const filePath = path.join(process.cwd(), rootFolder, file);
+      if (await this.safeFiles.pathExists(filePath)) {
+        await this.safeFiles.removeFile(filePath);
+        this.logger.log(chalk.gray(`  Removed: ${file}`));
+      }
+    }
+
+    // Remove Other Files folder
+    const otherFilesPath = path.join(process.cwd(), rootFolder, 'Other Files');
+    if (await this.safeFiles.pathExists(otherFilesPath)) {
+      await this.safeFiles.removeDir(otherFilesPath);
+      this.logger.log(chalk.gray(`  Removed: Other Files/`));
+    }
+
+    this.logger.log(chalk.green('Sample files cleaned successfully.\n'));
   }
 
   async getAllStoredConfig(): Promise<BuildConfig> {

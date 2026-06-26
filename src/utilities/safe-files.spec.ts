@@ -16,6 +16,7 @@ vi.mock('fs-extra', () => {
       emptyDir: vi.fn(),
       copy: vi.fn(),
       ensureDir: vi.fn(),
+      remove: vi.fn(),
     },
   };
 });
@@ -152,6 +153,20 @@ describe('SafeFiles', () => {
     await safeFiles.removeFile('/bad/file.txt');
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('Error removing file'),
+      fsError,
+    );
+  });
+
+  it('removeDir should call fsExtra.remove', async () => {
+    await safeFiles.removeDir('/some/dir');
+    expect(fsExtra.remove).toHaveBeenCalledWith('/some/dir');
+  });
+
+  it('removeDir should log error on failure', async () => {
+    (fsExtra.remove as Mock).mockRejectedValue(fsError);
+    await safeFiles.removeDir('/bad/dir');
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Error removing directory'),
       fsError,
     );
   });

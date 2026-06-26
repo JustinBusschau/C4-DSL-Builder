@@ -16,6 +16,7 @@ import { ConfigManager } from '../utilities/config-manager.js';
 import { CliLogger } from '../utilities/cli-logger.js';
 import { PdfProcessor } from '../utilities/pdf-processor.js';
 import { SiteProcessor } from '../utilities/site-processor.js';
+import { WatchModeUI } from '../utilities/watch-mode-ui.js';
 
 interface ConfigOptions {
   list?: boolean;
@@ -176,44 +177,9 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
       if (options.clean === true) {
         cleanBeforeBuild = true;
       }
-      if (options.watch) {
-        logger.log(`Watching for changes in ${buildConfig.rootFolder} ...`);
-        const sourceWatcher: FSWatcher = chokidar.watch(buildConfig.rootFolder, sourceWatchOptions);
-        const debouncedSiteBuild = debounce(async () => {
-          logger.log('Rebuilding (debounced) ...');
-          await site.prepareSite(buildConfig, false);
-        }, 300);
-        sourceWatcher
-          .on('ready', () => logger.log('... ready'))
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .on('all', async (_event: any, path: string) => {
-            logger.log(`\n${path} touched (added, changed or removed). Rebuilding ...`);
-            debouncedSiteBuild();
-          });
-
-        const dslWatcher: FSWatcher = chokidar.watch(
-          path.join(buildConfig.rootFolder, '_dsl', buildConfig.workspaceDsl),
-          dslWatchOptions,
-        );
-        const debouncedDslBuild = debounce(async () => {
-          logger.log('Regenerating Structurizr diagrams (debounced) ...');
-          const structurizr = new Structurizr();
-          await structurizr.extractMermaidDiagramsFromDsl(
-            buildConfig.dslCli,
-            buildConfig.rootFolder,
-            buildConfig.workspaceDsl,
-          );
-          logger.log('Clearing cache and rebuilding site with new diagrams ...');
-          await site.clearCache();
-          await site.prepareSite(buildConfig, false);
-        }, 300);
-        dslWatcher.on('change', async (path: string) => {
-          logger.log(`\n${path} changed. Extracting Mermaid diagrams from DSL ...`);
-          debouncedDslBuild();
-        });
-      }
-
       await site.prepareSite(buildConfig, cleanBeforeBuild);
+
+      let watchUI: WatchModeUI | undefined;
 
       if (buildConfig.serve) {
         const availablePort = await findAvailablePort(buildConfig.servePort);
@@ -227,6 +193,60 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
         }
 
         await serveStaticSite(buildConfig.distFolder, buildConfig.servePort, logger);
+      }
+
+      if (options.watch) {
+        watchUI = new WatchModeUI(buildConfig.servePort, logger);
+        watchUI.onRebuildRequest = () => {
+          void (async () => {
+            watchUI?.updateStatus('building');
+            watchUI?.log(chalk.cyan('Manual rebuild triggered'));
+            await site.prepareSite(buildConfig, false);
+            watchUI?.updateStatus('watching');
+            watchUI?.log(chalk.green('Build complete'));
+          })();
+        };
+        watchUI.start();
+
+        const sourceWatcher: FSWatcher = chokidar.watch(buildConfig.rootFolder, sourceWatchOptions);
+        const debouncedSiteBuild = debounce(async () => {
+          watchUI?.updateStatus('building');
+          watchUI?.log(chalk.yellow('Rebuilding site...'));
+          await site.prepareSite(buildConfig, false);
+          watchUI?.updateStatus('watching');
+          watchUI?.log(chalk.green('Build complete'));
+        }, 300);
+        sourceWatcher
+          .on('ready', () => watchUI?.log(chalk.green('Ready watching files')))
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .on('all', async (_event: any, filepath: string) => {
+            watchUI?.log(chalk.gray(`${filepath} changed`));
+            debouncedSiteBuild();
+          });
+
+        const dslWatcher: FSWatcher = chokidar.watch(
+          path.join(buildConfig.rootFolder, '_dsl', buildConfig.workspaceDsl),
+          dslWatchOptions,
+        );
+        const debouncedDslBuild = debounce(async () => {
+          watchUI?.updateStatus('building');
+          watchUI?.log(chalk.yellow('Regenerating diagrams from DSL...'));
+          const structurizr = new Structurizr();
+          await structurizr.extractMermaidDiagramsFromDsl(
+            buildConfig.dslCli,
+            buildConfig.rootFolder,
+            buildConfig.workspaceDsl,
+          );
+          watchUI?.log(chalk.yellow('Clearing cache and rebuilding...'));
+          await site.clearCache();
+          await site.prepareSite(buildConfig, false);
+          watchUI?.updateStatus('watching');
+          watchUI?.log(chalk.green('Build complete'));
+        }, 300);
+        dslWatcher.on('change', async (filepath: string) => {
+          watchUI?.log(chalk.gray(`${filepath} changed (DSL)`));
+          debouncedDslBuild();
+        });
       }
     });
 
