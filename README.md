@@ -479,6 +479,7 @@ You can set it to any of the following (from most to least verbose):
 
 - **v0.2.3**
   - Add option to create a clean project without example files from the `new` command
+  - Replace endless console logs with a structured terminal UI for watch mode featuring a scrolling activity log, fixed status section, and keyboard controls
 
 - **v0.2.2**
   - Sonarqube: maintainability improvements
