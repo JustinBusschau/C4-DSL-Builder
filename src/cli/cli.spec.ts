@@ -398,6 +398,60 @@ describe('CLI integration tests', () => {
     expect(prepareMock).toHaveBeenCalledTimes(3);
   });
 
+  it('triggers manual rebuild via WatchModeUI onRebuildRequest', async () => {
+    const prepareMock = vi.fn();
+    SiteProcessor.prototype.prepareSite = prepareMock;
+
+    let rebuildCallback: (() => void) | undefined;
+
+    // Capture the onRebuildRequest callback
+    const { WatchModeUI: WatchModeUIClass } = await import(
+      '../utilities/watch-mode-ui.js'
+    );
+    vi.mocked(WatchModeUIClass).mockImplementation(() => {
+      const instance: {
+        start: ReturnType<typeof vi.fn>;
+        stop: ReturnType<typeof vi.fn>;
+        log: ReturnType<typeof vi.fn>;
+        updateStatus: ReturnType<typeof vi.fn>;
+        onRebuildRequest: (() => void) | undefined;
+      } = {
+        start: vi.fn(),
+        stop: vi.fn(),
+        log: vi.fn(),
+        updateStatus: vi.fn(),
+        onRebuildRequest: undefined,
+      };
+      Object.defineProperty(instance, 'onRebuildRequest', {
+        set(fn: () => void) {
+          rebuildCallback = fn;
+        },
+        get() {
+          return undefined;
+        },
+        configurable: true,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return instance as any;
+    });
+
+    process.argv = ['node', 'cli', 'site', '--watch'];
+    const { run } = await import('./cli.js');
+    await run(logSpy);
+
+    // Initial build
+    expect(prepareMock).toHaveBeenCalledTimes(1);
+
+    // Trigger manual rebuild via callback
+    expect(rebuildCallback).toBeDefined();
+    rebuildCallback!();
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Should have called prepareSite again for manual rebuild
+    expect(prepareMock).toHaveBeenCalledTimes(2);
+  });
+
   it('rebuilds diagrams when _dsl/ws.d changes', async () => {
     const extractMock = vi.fn();
     Structurizr.prototype.extractMermaidDiagramsFromDsl = extractMock;
@@ -423,8 +477,8 @@ describe('CLI integration tests', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 400));
 
-    // DSL extraction happens once per change (3 calls because of debounce and async timing)
-    expect(extractMock).toHaveBeenCalledTimes(3);
+    // DSL extraction happens once per change (4 calls because of debounce and async timing)
+    expect(extractMock).toHaveBeenCalledTimes(4);
     expect(extractMock).toHaveBeenCalledWith(
       buildConfig.dslCli,
       buildConfig.rootFolder,
