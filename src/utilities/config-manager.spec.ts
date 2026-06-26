@@ -30,8 +30,18 @@ const mockLogger = {
   log: vi.fn(),
 };
 
+const mockSafeFiles = {
+  removeFile: vi.fn(),
+  removeDir: vi.fn(),
+  pathExists: vi.fn(),
+};
+
 vi.mock('../utilities/cli-logger.js', () => ({
   CliLogger: vi.fn(() => mockLogger),
+}));
+
+vi.mock('./safe-files.js', () => ({
+  SafeFiles: vi.fn(() => mockSafeFiles),
 }));
 
 import { ConfigManager } from './config-manager.js';
@@ -627,5 +637,63 @@ describe('ConfigManager', () => {
     expect(logSpy.log).toHaveBeenCalledWith(
       expect.stringContaining('Embed Mermaid diagrams?'.padEnd(40) + ' : No'),
     );
+  });
+
+  it('removes sample files when clean template is selected', async () => {
+    const cleanAnswers = {
+      ...answers,
+      projectTemplate: 'clean',
+    };
+    (inquirer.prompt as unknown as Mock).mockResolvedValue(cleanAnswers);
+    (mockSafeFiles.pathExists as Mock).mockResolvedValue(true);
+
+    await manager.setConfig();
+
+    // Should remove all sample files
+    expect(mockSafeFiles.removeFile).toHaveBeenCalledTimes(6);
+    expect(mockSafeFiles.removeFile).toHaveBeenCalledWith(
+      expect.stringContaining('c4dslbuilder.figlet.png'),
+    );
+    expect(mockSafeFiles.removeFile).toHaveBeenCalledWith(expect.stringContaining('context.md'));
+    expect(mockSafeFiles.removeFile).toHaveBeenCalledWith(expect.stringContaining('context.mmd'));
+    expect(mockSafeFiles.removeFile).toHaveBeenCalledWith(expect.stringContaining('inline.md'));
+    expect(mockSafeFiles.removeFile).toHaveBeenCalledWith(expect.stringContaining('kanban.mmd'));
+    expect(mockSafeFiles.removeFile).toHaveBeenCalledWith(expect.stringContaining('linked.md'));
+
+    // Should remove Other Files folder
+    expect(mockSafeFiles.removeDir).toHaveBeenCalledWith(expect.stringContaining('Other Files'));
+
+    expect(logSpy.log).toHaveBeenCalledWith(
+      expect.stringContaining('Sample files cleaned successfully'),
+    );
+  });
+
+  it('skips removing files that do not exist when cleaning sample files', async () => {
+    const cleanAnswers = {
+      ...answers,
+      projectTemplate: 'clean',
+    };
+    (inquirer.prompt as unknown as Mock).mockResolvedValue(cleanAnswers);
+    (mockSafeFiles.pathExists as Mock).mockResolvedValue(false);
+
+    await manager.setConfig();
+
+    // Should not attempt to remove files that don't exist
+    expect(mockSafeFiles.removeFile).not.toHaveBeenCalled();
+    expect(mockSafeFiles.removeDir).not.toHaveBeenCalled();
+  });
+
+  it('keeps sample files when sample template is selected', async () => {
+    const sampleAnswers = {
+      ...answers,
+      projectTemplate: 'sample',
+    };
+    (inquirer.prompt as unknown as Mock).mockResolvedValue(sampleAnswers);
+
+    await manager.setConfig();
+
+    // Should not remove any files
+    expect(mockSafeFiles.removeFile).not.toHaveBeenCalled();
+    expect(mockSafeFiles.removeDir).not.toHaveBeenCalled();
   });
 });
