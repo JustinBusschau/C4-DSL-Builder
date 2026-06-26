@@ -13,7 +13,7 @@ export class WatchModeUI {
   state: WatchModeState;
   logHistory: string[] = [];
   stdin: typeof process.stdin;
-  
+
   private readonly maxLogLines = 20;
   private isActive = false;
 
@@ -148,10 +148,10 @@ export class WatchModeUI {
     console.log(chalk.bold.cyan('─'.repeat(60)));
     console.log(
       chalk.gray('Press ') +
-      chalk.bold.white('r') +
-      chalk.gray(' to force refresh, ') +
-      chalk.bold.white('q') +
-      chalk.gray(' to stop')
+        chalk.bold.white('r') +
+        chalk.gray(' to force refresh, ') +
+        chalk.bold.white('q') +
+        chalk.gray(' to stop'),
     );
     console.log(chalk.bold.cyan('─'.repeat(60)));
   }
