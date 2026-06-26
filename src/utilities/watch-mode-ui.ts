@@ -9,12 +9,13 @@ interface WatchModeState {
 }
 
 export class WatchModeUI {
-  private logger: CliLogger;
-  private state: WatchModeState;
-  private logHistory: string[] = [];
+  logger: CliLogger;
+  state: WatchModeState;
+  logHistory: string[] = [];
+  stdin: typeof process.stdin;
+  
   private readonly maxLogLines = 20;
   private isActive = false;
-  private stdin: typeof process.stdin;
 
   constructor(port: number, logger: CliLogger) {
     this.logger = logger;
@@ -126,16 +127,21 @@ export class WatchModeUI {
 
     // Status section
     console.log(chalk.bold('Status:'));
-    const statusColor = this.state.status === 'watching'
-      ? chalk.green
-      : this.state.status === 'building'
-        ? chalk.yellow
-        : chalk.red;
+    let statusColor;
+    if (this.state.status === 'watching') {
+      statusColor = chalk.green;
+    } else if (this.state.status === 'building') {
+      statusColor = chalk.yellow;
+    } else {
+      statusColor = chalk.red;
+    }
+
+    const serverUrl = `http://localhost:${this.state.port}`;
 
     console.log(`  Status:      ${statusColor(this.state.status.toUpperCase())}`);
     console.log(`  Rebuilds:    ${chalk.cyan(this.state.rebuildCount.toString())}`);
     console.log(`  Last update: ${chalk.gray(this.state.lastActivity)}`);
-    console.log(`  Server:      ${chalk.cyan(`http://localhost:${this.state.port}`)}`);
+    console.log(`  Server:      ${chalk.cyan(serverUrl)}`);
     console.log();
 
     // Help section
