@@ -405,9 +405,7 @@ describe('CLI integration tests', () => {
     let rebuildCallback: (() => void) | undefined;
 
     // Capture the onRebuildRequest callback
-    const { WatchModeUI: WatchModeUIClass } = await import(
-      '../utilities/watch-mode-ui.js'
-    );
+    const { WatchModeUI: WatchModeUIClass } = await import('../utilities/watch-mode-ui.js');
     vi.mocked(WatchModeUIClass).mockImplementation(() => {
       const instance: {
         start: ReturnType<typeof vi.fn>;

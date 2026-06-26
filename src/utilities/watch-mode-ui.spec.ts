@@ -25,9 +25,7 @@ describe('WatchModeUI', () => {
     // Mock console methods
     consoleClearSpy = vi.spyOn(console, 'clear').mockImplementation(() => {});
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    processExitSpy = vi
-      .spyOn(process, 'exit')
-      .mockImplementation(() => undefined as never);
+    processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
 
     // Mock stdin
     stdinMock = {
@@ -121,9 +119,7 @@ describe('WatchModeUI', () => {
       stdinMock.isTTY = true;
       ui.start();
 
-      const dataHandler = stdinMock.on.mock.calls.find(
-        (call) => call[0] === 'data',
-      )?.[1];
+      const dataHandler = stdinMock.on.mock.calls.find((call) => call[0] === 'data')?.[1];
 
       expect(dataHandler).toBeDefined();
       dataHandler('q');
@@ -135,9 +131,7 @@ describe('WatchModeUI', () => {
       stdinMock.isTTY = true;
       ui.start();
 
-      const dataHandler = stdinMock.on.mock.calls.find(
-        (call) => call[0] === 'data',
-      )?.[1];
+      const dataHandler = stdinMock.on.mock.calls.find((call) => call[0] === 'data')?.[1];
 
       dataHandler('\u0003');
       expect(processExitSpy).toHaveBeenCalledWith(0);
@@ -150,9 +144,7 @@ describe('WatchModeUI', () => {
 
       ui.start();
 
-      const dataHandler = stdinMock.on.mock.calls.find(
-        (call) => call[0] === 'data',
-      )?.[1];
+      const dataHandler = stdinMock.on.mock.calls.find((call) => call[0] === 'data')?.[1];
 
       dataHandler('r');
       expect(rebuildMock).toHaveBeenCalled();
@@ -167,9 +159,7 @@ describe('WatchModeUI', () => {
 
       ui.start();
 
-      const dataHandler = stdinMock.on.mock.calls.find(
-        (call) => call[0] === 'data',
-      )?.[1];
+      const dataHandler = stdinMock.on.mock.calls.find((call) => call[0] === 'data')?.[1];
 
       // Don't await here since we want to test the fire-and-forget pattern
       dataHandler('r');
@@ -270,17 +260,13 @@ describe('WatchModeUI', () => {
 
     it('should render header', () => {
       ui.start();
-      const calls = consoleLogSpy.mock.calls.map(
-        (call) => call[0] as string | undefined,
-      );
+      const calls = consoleLogSpy.mock.calls.map((call) => call[0] as string | undefined);
       expect(calls.some((text) => text?.includes('C4 DSL Builder'))).toBe(true);
     });
 
     it('should show no activity message when history is empty', () => {
       ui.start();
-      const calls = consoleLogSpy.mock.calls.map(
-        (call) => call[0] as string | undefined,
-      );
+      const calls = consoleLogSpy.mock.calls.map((call) => call[0] as string | undefined);
       expect(calls.some((text) => text?.includes('No activity yet'))).toBe(true);
     });
 
@@ -289,9 +275,7 @@ describe('WatchModeUI', () => {
       ui.log('Test entry 2');
       ui.start();
 
-      const calls = consoleLogSpy.mock.calls.map(
-        (call) => call[0] as string | undefined,
-      );
+      const calls = consoleLogSpy.mock.calls.map((call) => call[0] as string | undefined);
       expect(calls.some((text) => text?.includes('Test entry 1'))).toBe(true);
       expect(calls.some((text) => text?.includes('Test entry 2'))).toBe(true);
     });
@@ -300,9 +284,7 @@ describe('WatchModeUI', () => {
       ui.updateStatus('watching');
       ui.start();
 
-      const calls = consoleLogSpy.mock.calls.map(
-        (call) => call[0] as string | undefined,
-      );
+      const calls = consoleLogSpy.mock.calls.map((call) => call[0] as string | undefined);
       expect(calls.some((text) => text?.includes('WATCHING'))).toBe(true);
     });
 
@@ -310,9 +292,7 @@ describe('WatchModeUI', () => {
       ui.updateStatus('building');
       ui.start();
 
-      const calls = consoleLogSpy.mock.calls.map(
-        (call) => call[0] as string | undefined,
-      );
+      const calls = consoleLogSpy.mock.calls.map((call) => call[0] as string | undefined);
       expect(calls.some((text) => text?.includes('BUILDING'))).toBe(true);
     });
 
@@ -320,9 +300,7 @@ describe('WatchModeUI', () => {
       ui.updateStatus('error');
       ui.start();
 
-      const calls = consoleLogSpy.mock.calls.map(
-        (call) => call[0] as string | undefined,
-      );
+      const calls = consoleLogSpy.mock.calls.map((call) => call[0] as string | undefined);
       expect(calls.some((text) => text?.includes('ERROR'))).toBe(true);
     });
 
@@ -331,27 +309,19 @@ describe('WatchModeUI', () => {
       ui.updateStatus('building');
       ui.start();
 
-      const calls = consoleLogSpy.mock.calls.map(
-        (call) => call[0] as string | undefined,
-      );
+      const calls = consoleLogSpy.mock.calls.map((call) => call[0] as string | undefined);
       expect(calls.some((text) => text?.includes('2'))).toBe(true);
     });
 
     it('should display server URL', () => {
       ui.start();
-      const calls = consoleLogSpy.mock.calls.map(
-        (call) => call[0] as string | undefined,
-      );
-      expect(calls.some((text) => text?.includes('http://localhost:3666'))).toBe(
-        true,
-      );
+      const calls = consoleLogSpy.mock.calls.map((call) => call[0] as string | undefined);
+      expect(calls.some((text) => text?.includes('http://localhost:3666'))).toBe(true);
     });
 
     it('should render help section with keyboard shortcuts', () => {
       ui.start();
-      const calls = consoleLogSpy.mock.calls.map(
-        (call) => call[0] as string | undefined,
-      );
+      const calls = consoleLogSpy.mock.calls.map((call) => call[0] as string | undefined);
       expect(calls.some((text) => text?.includes('r'))).toBe(true);
       expect(calls.some((text) => text?.includes('q'))).toBe(true);
       expect(calls.some((text) => text?.includes('force refresh'))).toBe(true);
