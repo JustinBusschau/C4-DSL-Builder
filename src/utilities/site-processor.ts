@@ -62,7 +62,8 @@ export class SiteProcessor extends ProcessorBase {
   private getOutputFileName(buildConfig: BuildConfig, dir: string, name: string): string {
     const destFldr = path.resolve(buildConfig.distFolder);
     const destPath = path.resolve(dir.replace(buildConfig.rootFolder, buildConfig.distFolder));
-    const destFileName = path.join(destPath, `${name}.md`);
+    // Only add .md if the file doesn't already have an extension
+    const destFileName = path.join(destPath, path.extname(name) ? name : `${name}.md`);
     return path.relative(destFldr, destFileName);
   }
 
@@ -129,22 +130,42 @@ export class SiteProcessor extends ProcessorBase {
     buildConfig: BuildConfig,
     openApiSpec?: string,
   ): Promise<void> {
-    let sidebar = tree
-      .map((item) => {
-        const indent = '    '.repeat(item.level);
-        const mdPath = this.getOutputFileName(buildConfig, item.dir, item.name);
-        return `${indent}* [${item.name}](${encodeURI(mdPath)})`;
-      })
-      .join('\n');
+    // Find the root branch (contains root-level files)
+    const rootBranch = tree.find((item) => item.level === 0);
+
+    // Get subfolders (all other items)
+    const subfolders = tree.filter((item) => item.level > 0);
+
+    // Build sidebar: root files first, then subfolders
+    let sidebar = '';
+
+    // Add root-level files (no indentation)
+    if (rootBranch) {
+      const rootFiles = [
+        ...(rootBranch.mdFiles || []).map((f) => ({ name: f.name, type: 'md' })),
+        ...(rootBranch.mmdFiles || []).map((f) => ({ name: f.name, type: 'mmd' })),
+      ];
+      rootFiles.forEach((file) => {
+        const mdPath = this.getOutputFileName(buildConfig, rootBranch.dir, file.name);
+        sidebar += `* [${file.name}](${encodeURI(mdPath)})\n`;
+      });
+    }
+
+    // Add subfolders with proper indentation
+    subfolders.forEach((item) => {
+      const indent = '    '.repeat(item.level - 1); // Adjust indentation
+      const mdPath = this.getOutputFileName(buildConfig, item.dir, item.name);
+      sidebar += `${indent}* [${item.name}](${encodeURI(mdPath)})\n`;
+    });
 
     if (openApiSpec) {
-      sidebar += `\n\n* [OpenAPI](openapi.html ':ignore')`;
+      sidebar += `\n* [OpenAPI](openapi.html ':ignore')`;
     }
 
     await this.safeFiles.ensureDir(path.resolve(buildConfig.distFolder));
     await this.safeFiles.writeFile(
       path.resolve(path.join(buildConfig.distFolder, '_sidebar.md')),
-      sidebar,
+      sidebar.trim(),
     );
   }
 

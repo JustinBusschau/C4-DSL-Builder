@@ -477,6 +477,9 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
+- **v0.2.5**
+  - Fix: Ensure sidebar is generated correctly when using `site --watch`
+
 - **v0.2.4**
   - Fix: Ensure server port is correctly shown when using `serve -w`
 
