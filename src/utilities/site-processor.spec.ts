@@ -488,4 +488,122 @@ describe('SiteProcessor', () => {
       expect.stringContaining('./legacy.yaml'),
     );
   });
+
+  it('generates sidebar with proper indentation for subfolders', async () => {
+    const mockTree = [
+      {
+        dir: 'root',
+        name: 'home',
+        level: 0,
+        parent: null,
+        mdFiles: [{ name: 'Overview.md', content: '# Overview' }],
+        mmdFiles: [{ name: 'diagram.mmd', content: 'graph TD; A-->B;' }],
+        descendants: [],
+      },
+      {
+        dir: 'root/folder1',
+        name: 'folder1',
+        level: 1,
+        parent: 'root',
+        mdFiles: [{ name: 'folder1.md', content: '# Folder 1' }],
+        mmdFiles: [],
+        descendants: [],
+      },
+      {
+        dir: 'root/folder2',
+        name: 'folder2',
+        level: 1,
+        parent: 'root',
+        mdFiles: [{ name: 'folder2.md', content: '# Folder 2' }],
+        mmdFiles: [],
+        descendants: [],
+      },
+      {
+        dir: 'root/folder1/subfolder',
+        name: 'subfolder',
+        level: 2,
+        parent: 'root/folder1',
+        mdFiles: [{ name: 'subfolder.md', content: '# Subfolder' }],
+        mmdFiles: [],
+        descendants: [],
+      },
+    ];
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue(mockTree);
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('# Content');
+    (safeFiles.copyFile as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.ensureDir as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.writeFile as unknown as Mock).mockResolvedValue(undefined);
+
+    await processor.prepareSite(buildConfig, false);
+
+    // Check that sidebar was written with correct structure
+    const sidebarWrite = (safeFiles.writeFile as unknown as Mock).mock.calls.find((call) =>
+      call[0].endsWith('_sidebar.md'),
+    );
+    expect(sidebarWrite).toBeDefined();
+
+    const sidebarContent = sidebarWrite![1];
+
+    // Root files should have no indentation
+    expect(sidebarContent).toContain('* [Overview.md](Overview.md)');
+    expect(sidebarContent).toContain('* [diagram.mmd](diagram.mmd)');
+
+    // Level 1 folders should have 4 spaces indentation (but no indentation in actual output)
+    expect(sidebarContent).toContain('* [folder1](folder1/folder1.md)');
+    expect(sidebarContent).toContain('* [folder2](folder2/folder2.md)');
+
+    // Level 2 subfolder should have 4 spaces indentation (level - 1 = 1)
+    expect(sidebarContent).toContain('    * [subfolder](folder1/subfolder/subfolder.md)');
+
+    // Check the order: root files first, then folders
+    const lines = sidebarContent.split('\n').filter((line: string) => line.trim());
+    expect(lines[0]).toBe('* [Overview.md](Overview.md)');
+    expect(lines[1]).toBe('* [diagram.mmd](diagram.mmd)');
+    expect(lines[2]).toBe('* [folder1](folder1/folder1.md)');
+  });
+
+  it('handles null mdFiles and mmdFiles in root branch', async () => {
+    const mockTree = [
+      {
+        dir: 'root',
+        name: 'home',
+        level: 0,
+        parent: null,
+        mdFiles: null, // Test null case
+        mmdFiles: null, // Test null case
+        descendants: [],
+      },
+      {
+        dir: 'root/folder1',
+        name: 'folder1',
+        level: 1,
+        parent: 'root',
+        mdFiles: [{ name: 'folder1.md', content: '# Folder 1' }],
+        mmdFiles: [],
+        descendants: [],
+      },
+    ];
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue(mockTree);
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('# Content');
+    (safeFiles.copyFile as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.ensureDir as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.writeFile as unknown as Mock).mockResolvedValue(undefined);
+
+    await processor.prepareSite(buildConfig, false);
+
+    // Check that sidebar was written without errors
+    const sidebarWrite = (safeFiles.writeFile as unknown as Mock).mock.calls.find((call) =>
+      call[0].endsWith('_sidebar.md'),
+    );
+    expect(sidebarWrite).toBeDefined();
+
+    const sidebarContent = sidebarWrite![1];
+
+    // Should only contain the folder, no root files
+    expect(sidebarContent).toContain('* [folder1](folder1/folder1.md)');
+    expect(sidebarContent).not.toContain('Overview.md');
+    expect(sidebarContent).not.toContain('diagram.mmd');
+  });
 });
