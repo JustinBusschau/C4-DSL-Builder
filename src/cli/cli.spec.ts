@@ -156,6 +156,25 @@ describe('CLI integration tests', () => {
     );
   });
 
+  it('runs "new" and then the config prompts in the new project', async () => {
+    const createMock = vi.fn().mockResolvedValue('/fake/new-project');
+    const setMock = vi.fn();
+    const chdirMock = vi.spyOn(process, 'chdir').mockImplementation(() => {});
+    ProjectCreator.prototype.createNewProject = createMock;
+    ConfigManager.prototype.setConfig = setMock;
+
+    process.argv = ['node', 'cli', 'new'];
+    const { run } = await import('./cli.js');
+    await run(logSpy);
+
+    expect(chdirMock).toHaveBeenCalledWith('/fake/new-project');
+    expect(setMock).toHaveBeenCalled();
+    expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Next steps:'));
+    expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('cd new-project'));
+    expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Build something'));
+    chdirMock.mockRestore();
+  });
+
   it('runs "config --list" and lists config', async () => {
     const listMock = vi.fn();
     ConfigManager.prototype.listConfig = listMock;

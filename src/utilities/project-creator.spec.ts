@@ -98,9 +98,9 @@ describe('ProjectCreator', () => {
 
     it('creates a new project and logs steps', async () => {
       const result = await creator.createNewProject();
-      expect(result).toBe(true);
 
       const projectPath = path.resolve(process.cwd(), 'newproj');
+      expect(result).toBe(projectPath);
 
       expect(safeFiles.createDir).toHaveBeenCalledWith(projectPath);
       expect(safeFiles.copyFile).toHaveBeenCalledWith(
@@ -123,16 +123,13 @@ describe('ProjectCreator', () => {
       expect(mockLogger.log).toHaveBeenCalledWith(
         expect.stringContaining("Project 'newproj' created successfully"),
       );
-      expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Next steps:'));
-      expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('cd newproj'));
-      expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('c4dslbuilder config'));
     });
 
-    it('logs and returns false on error', async () => {
+    it('logs and returns null on error', async () => {
       vi.spyOn(safeFiles, 'copyFile').mockRejectedValueOnce(new Error('copy failed'));
 
       const result = await creator.createNewProject();
-      expect(result).toBe(false);
+      expect(result).toBeNull();
       expect(mockLogger.error).toHaveBeenCalledWith('Error creating project.', expect.any(Error));
     });
   });

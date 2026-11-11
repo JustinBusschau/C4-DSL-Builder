@@ -30,13 +30,27 @@ interface SiteOptions {
   clean?: boolean;
 }
 
-function getIntroText(version: string): string {
+function getSplashText(version: string): string {
   return (
     chalk.green(figlet.textSync('C4-DSL-Builder')) +
     '\n' +
     chalk.grey(`Version ${version}`) +
+    '\n\n'
+  );
+}
+
+function getIntroText(version: string): string {
+  return getSplashText(version) + chalk.blue('Enhance your C4 Modelling') + '\n\n';
+}
+
+function getOutroText(version: string, projectName: string): string {
+  return (
+    getSplashText(version) +
+    chalk.blue('Next steps:') +
+    '\n' +
+    chalk.white(`  cd ${projectName}`) +
     '\n\n' +
-    chalk.blue('Enhance your C4 Modelling') +
+    chalk.bgGreen('Build something well...') +
     '\n\n'
   );
 }
@@ -72,7 +86,17 @@ export function registerCommands(logger: CliLogger = new CliLogger('CLI.register
     .action(async () => {
       logger.log(getIntroText(pkg.version));
       const creator = new ProjectCreator();
-      await creator.createNewProject();
+      const projectPath = await creator.createNewProject();
+      if (!projectPath) {
+        return;
+      }
+
+      // Run the config prompts inside the new project so the user does not
+      // have to exit, `cd` into the folder, and run `c4dslbuilder config`.
+      process.chdir(projectPath);
+      logger.log(chalk.green('Generating new configuration ...'));
+      await new ConfigManager().setConfig();
+      logger.log(getOutroText(pkg.version, path.basename(projectPath)));
     });
 
   program
