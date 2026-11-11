@@ -44,7 +44,7 @@ export class ProjectCreator {
     return projectName;
   }
 
-  async createNewProject(): Promise<boolean> {
+  async createNewProject(): Promise<string | null> {
     try {
       const projectName = await this.promptForProjectName();
 
@@ -70,14 +70,11 @@ export class ProjectCreator {
       );
 
       this.logger.log(chalk.green(`\n✅ Project '${projectName}' created successfully.`));
-      this.logger.log(chalk.blue(`\nNext steps:`));
-      this.logger.log(chalk.white(`  cd ${projectName}`));
-      this.logger.log(chalk.white(`  c4dslbuilder config\n`));
 
-      return true;
+      return targetPath;
     } catch (error) {
       this.logger.error('Error creating project.', error);
-      return false;
+      return null;
     }
   }
 }

@@ -40,7 +40,8 @@ c4dslbuilder new
 ```
 
 You will be prompted for a project name - which must be at least two characters long and be a valid
-file name - and a folder will be created with a set of sample files and minimal configuration.
+file name - and a folder will be created with a set of sample files and minimal configuration. You
+will then be prompted to configure the new project straight away.
 
 ## Configure your project
 
@@ -48,8 +49,9 @@ file name - and a folder will be created with a set of sample files and minimal 
 c4dslbuilder config
 ```
 
-You will be prompted to configure your project. See below for more information on the various
-conviguration items.
+You will be prompted to configure your project. Running `c4dslbuilder new` does this automatically for
+a new project; run `c4dslbuilder config` at any time to change the settings of an existing project.
+See below for more information on the various configuration items.
 
 - **Project name**
   
@@ -249,7 +251,8 @@ conviguration items.
 
 ## `new`
 
-Create a new project folder, with example files and minimal config, in the current folder.
+Create a new project folder, with example files and minimal config, in the current folder, then
+immediately prompt for the project configuration.
 
 ```bash
 ⇒  c4dslbuilder new
@@ -267,10 +270,26 @@ Enhance your C4 Modelling
 ✔ Enter your project name: Example
 
 ✅ Project 'Example' created successfully.
+Generating new configuration ...
+Configure your project settings:
+
+✔ Project name: Example
+✔ Homepage name: Overview
+✔ Root folder: src
+✔ Destination folder: docs
+...
+
+✅ Configuration updated successfully.
+   ____ _  _         ____  ____  _          ____        _ _     _           
+  / ___| || |       |  _ \/ ___|| |        | __ ) _   _(_) | __| | ___ _ __ 
+ | |   | || |_ _____| | | \___ \| |   _____|  _ \| | | | | |/ _` |/ _ \ '__|
+ | |___|__   _|_____| |_| |___) | |__|_____| |_) | |_| | | | (_| |  __/ |   
+  \____|  |_|       |____/|____/|_____|    |____/ \__,_|_|_|\__,_|\___|_|   
+                                                                            
+Version 0.0.1
 
 Next steps:
   cd Example
-  c4dslbuilder config
 
 ⇒
 ```
@@ -476,6 +495,9 @@ You can set it to any of the following (from most to least verbose):
 ---
 
 # Changelog
+
+- **v0.5.6**
+  - Remove the second setup step. `new` now also includes a configuration pass, so no need to call `config` separately.
 
 - **v0.2.5**
   - Fix: Ensure sidebar is generated correctly when using `site --watch`
