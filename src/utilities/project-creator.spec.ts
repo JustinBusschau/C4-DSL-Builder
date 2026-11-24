@@ -91,9 +91,34 @@ describe('ProjectCreator', () => {
     });
   });
 
+  describe('promptForProjectTemplate', () => {
+    it('offers sample, clean and empty templates', async () => {
+      mockPrompt.mockResolvedValueOnce({ projectTemplate: 'empty' });
+
+      const result = await creator.promptForProjectTemplate();
+
+      expect(result).toBe('empty');
+      const questions = mockPrompt.mock.calls[0][0] as Array<{
+        name: string;
+        choices: Array<{ name: string; value: string }>;
+      }>;
+      expect(questions[0].name).toBe('projectTemplate');
+      expect(questions[0].choices.map((choice) => choice.value)).toEqual([
+        'sample',
+        'clean',
+        'empty',
+      ]);
+      expect(questions[0].choices.map((choice) => choice.name)).toContain(
+        "Leave the folder empty, I'll create the folder structure myself",
+      );
+    });
+  });
+
   describe('createNewProject', () => {
     beforeEach(() => {
-      mockPrompt.mockResolvedValue({ projectName: 'newproj' });
+      mockPrompt
+        .mockResolvedValueOnce({ projectName: 'newproj' })
+        .mockResolvedValue({ projectTemplate: 'sample' });
     });
 
     it('creates a new project and logs steps', async () => {
@@ -123,6 +148,63 @@ describe('ProjectCreator', () => {
       expect(mockLogger.log).toHaveBeenCalledWith(
         expect.stringContaining("Project 'newproj' created successfully"),
       );
+    });
+
+    it('copies the template without sample documents for a clean project', async () => {
+      mockPrompt.mockReset();
+      mockPrompt
+        .mockResolvedValueOnce({ projectName: 'newproj' })
+        .mockResolvedValue({ projectTemplate: 'clean' });
+      const templatePath = path.resolve('/some/base/path/src/project-creator.js', '../../template');
+
+      await creator.createNewProject();
+
+      expect(safeFiles.copyFile).toHaveBeenCalledTimes(1);
+      const call = (safeFiles.copyFile as Mock).mock.calls[0];
+      expect(call[0]).toBe(templatePath);
+      expect(call[1]).toBe(path.resolve(process.cwd(), 'newproj'));
+      expect(call[2]).toBeTypeOf('function');
+
+      const filter = call[2] as (source: string) => boolean;
+      expect(filter(path.join(templatePath, 'src/context.md'))).toBe(false);
+      expect(filter(path.join(templatePath, 'src/Other Files'))).toBe(false);
+      expect(filter(path.join(templatePath, 'src/_dsl/workspace.dsl'))).toBe(true);
+    });
+
+    it('does not copy the template for an empty project', async () => {
+      mockPrompt.mockReset();
+      mockPrompt
+        .mockResolvedValueOnce({ projectName: 'newproj' })
+        .mockResolvedValue({ projectTemplate: 'empty' });
+
+      const result = await creator.createNewProject();
+
+      expect(result).toBe(path.resolve(process.cwd(), 'newproj'));
+      expect(safeFiles.createDir).toHaveBeenCalledWith(path.resolve(process.cwd(), 'newproj'));
+      expect(safeFiles.copyFile).not.toHaveBeenCalled();
+    });
+
+    it('refuses to create a project outside the current folder', async () => {
+      mockPrompt.mockReset();
+      mockPrompt
+        .mockResolvedValueOnce({ projectName: '../escape' })
+        .mockResolvedValue({ projectTemplate: 'sample' });
+
+      const result = await creator.createNewProject();
+
+      expect(result).toBeNull();
+      expect(safeFiles.createDir).not.toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith('Error creating project.', expect.any(Error));
+    });
+
+    it('refuses to overwrite an existing folder', async () => {
+      vi.spyOn(safeFiles, 'pathExists').mockResolvedValueOnce(true);
+
+      const result = await creator.createNewProject();
+
+      expect(result).toBeNull();
+      expect(safeFiles.createDir).not.toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith('Error creating project.', expect.any(Error));
     });
 
     it('logs and returns null on error', async () => {

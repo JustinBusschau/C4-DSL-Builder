@@ -134,6 +134,14 @@ describe('SafeFiles', () => {
     expect(fsExtra.copy).toHaveBeenCalledWith('/src/file.txt', '/dest/file.txt');
   });
 
+  it('copyFile should pass a filter through to fs-extra', async () => {
+    const filter = (source: string) => !source.includes('skip');
+
+    await safeFiles.copyFile('/src', '/dest', filter);
+
+    expect(fsExtra.copy).toHaveBeenCalledWith('/src', '/dest', { filter });
+  });
+
   it('copyFile should log error on failure', async () => {
     (fsExtra.copy as Mock).mockRejectedValue(fsError);
     await safeFiles.copyFile('/bad/src', '/bad/dest');
