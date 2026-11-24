@@ -40,8 +40,15 @@ c4dslbuilder new
 ```
 
 You will be prompted for a project name - which must be at least two characters long and be a valid
-file name - and a folder will be created with a set of sample files and minimal configuration. You
-will then be prompted to configure the new project straight away.
+file name - and then choose one of three templates:
+
+- **Sample project** - copies the example documents and the folder scaffolding.
+- **Clean start** - copies only the folder scaffolding (`_dsl`, `_resources`, `_decisions`, etc.),
+  without any example documents.
+- **Empty project** - creates just the project folder and minimal configuration, so you can create
+  the folder structure yourself.
+
+You will then be prompted to configure the new project straight away.
 
 ## Configure your project
 
@@ -51,6 +58,7 @@ c4dslbuilder config
 
 You will be prompted to configure your project. Running `c4dslbuilder new` does this automatically for
 a new project; run `c4dslbuilder config` at any time to change the settings of an existing project.
+The template choice is only offered during `new`, so re-running `config` never removes your documents.
 See below for more information on the various configuration items.
 
 - **Project name**
@@ -495,6 +503,9 @@ You can set it to any of the following (from most to least verbose):
 ---
 
 # Changelog
+
+- **v0.5.7**
+  - Restructure config approach to be more flexible and easier to maintain
 
 - **v0.5.6**
   - Remove the second setup step. `new` now also includes a configuration pass, so no need to call `config` separately.

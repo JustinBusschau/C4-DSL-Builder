@@ -48,9 +48,13 @@ export class SafeFiles {
     }
   }
 
-  async copyFile(src: string, dest: string): Promise<void> {
+  async copyFile(src: string, dest: string, filter?: (source: string) => boolean): Promise<void> {
     try {
-      await fsExtra.copy(src, dest);
+      if (filter) {
+        await fsExtra.copy(src, dest, { filter });
+      } else {
+        await fsExtra.copy(src, dest);
+      }
     } catch (error) {
       this.logger.error(`Error copying file from ${src} to ${dest}`, error);
     }

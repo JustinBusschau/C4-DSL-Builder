@@ -7,6 +7,18 @@ import { Paths } from './paths.js';
 import { SafeFiles } from './safe-files.js';
 import * as Constants from '../types/constants.js';
 
+export type ProjectTemplate = 'sample' | 'clean' | 'empty';
+
+const SAMPLE_DOCUMENT_PATHS = [
+  'src/c4dslbuilder.figlet.png',
+  'src/context.md',
+  'src/context.mmd',
+  'src/inline.md',
+  'src/kanban.mmd',
+  'src/linked.md',
+  'src/Other Files',
+];
+
 export class ProjectCreator {
   logger: CliLogger;
 
@@ -44,18 +56,62 @@ export class ProjectCreator {
     return projectName;
   }
 
+  async promptForProjectTemplate(): Promise<ProjectTemplate> {
+    const { projectTemplate } = await inquirer.prompt<{ projectTemplate: ProjectTemplate }>([
+      {
+        name: 'projectTemplate',
+        type: 'list',
+        message: 'Choose project template:',
+        choices: [
+          { name: 'Sample project (with example documents)', value: 'sample' },
+          { name: 'Clean start (scaffold folders only)', value: 'clean' },
+          {
+            name: "Leave the folder empty, I'll create the folder structure myself",
+            value: 'empty',
+          },
+        ],
+        default: 'clean',
+      },
+    ]);
+    return projectTemplate;
+  }
+
+  private sampleExclusionFilter(templatePath: string): (source: string) => boolean {
+    const samplePaths = new Set(
+      SAMPLE_DOCUMENT_PATHS.map((item) => path.resolve(templatePath, item)),
+    );
+    return (source: string) => !samplePaths.has(path.resolve(source));
+  }
+
   async createNewProject(): Promise<string | null> {
     try {
       const projectName = await this.promptForProjectName();
+      const projectTemplate = await this.promptForProjectTemplate();
 
       const targetPath = path.resolve(process.cwd(), projectName);
+      if (path.dirname(targetPath) !== process.cwd()) {
+        throw new Error(`Refusing to create project outside the current folder: ${targetPath}`);
+      }
+      if (await this.safeFiles.pathExists(targetPath)) {
+        throw new Error(`A folder with this name already exists: ${targetPath}`);
+      }
+
       const templatePath = path.resolve(
         this.paths.getPathFromMeta(import.meta.url),
         '../../template',
       );
 
       await this.safeFiles.createDir(targetPath);
-      await this.safeFiles.copyFile(templatePath, targetPath);
+
+      if (projectTemplate === 'sample') {
+        await this.safeFiles.copyFile(templatePath, targetPath);
+      } else if (projectTemplate === 'clean') {
+        await this.safeFiles.copyFile(
+          templatePath,
+          targetPath,
+          this.sampleExclusionFilter(templatePath),
+        );
+      }
 
       new this.configstoreFactory(
         process.cwd().split(path.sep).splice(1).join('_'),
@@ -65,7 +121,7 @@ export class ProjectCreator {
           distFolder: Constants.DEFAULT_DIST,
         },
         {
-          configPath: path.join(process.cwd(), projectName, Constants.CONFIG_FILENAME),
+          configPath: path.join(targetPath, Constants.CONFIG_FILENAME),
         },
       );
 
