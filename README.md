@@ -468,8 +468,8 @@ name is case-insensitive), `c4dslbuilder site` will automatically:
 - Add an **OpenAPI** link to the docsify sidebar
 
 No configuration is required — the spec is auto-detected by checking for `openapi:` or `swagger:`
-at the start of the file. The root folder is searched first, so a spec in `src` takes precedence
-over one in `src/API`; otherwise the first matching file found wins.
+on the first line that is not blank or a `#` comment. The root folder is searched first, so a spec
+in `src` takes precedence over one in `src/API`; otherwise the first matching file found wins.
 
 # Troubleshooting
 
@@ -505,6 +505,9 @@ You can set it to any of the following (from most to least verbose):
 ---
 
 # Changelog
+
+- **v0.2.10**
+  - Skip empty and comment lines in YAML scans
 
 - **v0.2.9**
   - Allow OpenAPI `.yaml` files to be placed in an `API` folder under the root folder

@@ -93,8 +93,14 @@ export class SiteProcessor extends ProcessorBase {
       if (ext === '.yml' || ext === '.yaml') {
         const content = await this.safeFiles.readFileAsString(path.join(folder, file));
         if (content) {
-          const firstLine = content.trim().split('\n')[0].trim();
-          if (firstLine.startsWith('openapi:') || firstLine.startsWith('swagger:')) {
+          const firstMeaningfulLine = content
+            .split('\n')
+            .map((line) => line.trim())
+            .find((line) => line !== '' && !line.startsWith('#'));
+          if (
+            firstMeaningfulLine?.startsWith('openapi:') ||
+            firstMeaningfulLine?.startsWith('swagger:')
+          ) {
             return path.join(folder, file);
           }
         }
