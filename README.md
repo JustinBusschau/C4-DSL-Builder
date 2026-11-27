@@ -460,14 +460,16 @@ watches the Structurizr DSL workspace and regenerates diagrams when the DSL chan
 # OpenAPI / Swagger UI
 
 If you place a `.yml` or `.yaml` file containing a valid OpenAPI or Swagger spec in the root of your
-`src` folder, `c4dslbuilder site` will automatically:
+`src` folder, or in a magic `API` folder beneath it (for example `src/API/openapi.yml`; the folder
+name is case-insensitive), `c4dslbuilder site` will automatically:
 
-- Copy the spec into the generated site
+- Copy the spec into the root of the generated site (`dist`), using its original filename
 - Generate a `openapi.html` page powered by [Swagger UI](https://swagger.io/tools/swagger-ui/)
 - Add an **OpenAPI** link to the docsify sidebar
 
 No configuration is required — the spec is auto-detected by checking for `openapi:` or `swagger:`
-at the start of the file.
+at the start of the file. The root folder is searched first, so a spec in `src` takes precedence
+over one in `src/API`; otherwise the first matching file found wins.
 
 # Troubleshooting
 
@@ -503,6 +505,9 @@ You can set it to any of the following (from most to least verbose):
 ---
 
 # Changelog
+
+- **v0.2.9**
+  - Allow OpenAPI `.yaml` files to be placed in an `API` folder under the root folder
 
 - **v0.2.8**
   - Fix: Sidebar homepage link generation error

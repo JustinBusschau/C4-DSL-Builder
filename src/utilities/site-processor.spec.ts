@@ -67,6 +67,7 @@ describe('SiteProcessor', () => {
         .mockResolvedValueOnce(JSON.stringify({ version: 1, files: {} }, null, 2))
         .mockResolvedValue('graph TD; A-->B'),
       readDir: vi.fn().mockResolvedValue([]),
+      stat: vi.fn().mockResolvedValue(null),
       writeFile: vi.fn(),
       removeFile: vi.fn(),
       ensureDir: vi.fn(),
@@ -487,6 +488,96 @@ describe('SiteProcessor', () => {
       path.join(buildConfig.distFolder, 'openapi.html'),
       expect.stringContaining('./legacy.yaml'),
     );
+  });
+
+  it('finds an OpenAPI spec in a case-insensitive API folder', async () => {
+    const config = { ...buildConfig, distFolder: 'dist', docsifyTemplate: '' };
+    const apiFolder = path.join(config.rootFolder, 'aPi');
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    (safeFiles.readDir as unknown as Mock).mockImplementation(async (dir: string) =>
+      dir === apiFolder ? ['openapi.yaml'] : ['README.md', 'aPi'],
+    );
+    (safeFiles.stat as unknown as Mock).mockResolvedValue({ isDirectory: () => true });
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('openapi: 3.0.0\ninfo:');
+
+    await processor.prepareSite(config, false);
+
+    expect(safeFiles.copyFile).toHaveBeenCalledWith(
+      path.join(apiFolder, 'openapi.yaml'),
+      path.join(config.distFolder, 'openapi.yaml'),
+    );
+    expect(safeFiles.writeFile).toHaveBeenCalledWith(
+      path.join(config.distFolder, 'openapi.html'),
+      expect.stringContaining('./openapi.yaml'),
+    );
+  });
+
+  it('prefers a spec in the root folder over one in the API folder', async () => {
+    const config = { ...buildConfig, distFolder: 'dist', docsifyTemplate: '' };
+    const apiFolder = path.join(config.rootFolder, 'API');
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    (safeFiles.readDir as unknown as Mock).mockImplementation(async (dir: string) =>
+      dir === apiFolder ? ['openapi.yml'] : ['api.yml', 'API'],
+    );
+    (safeFiles.stat as unknown as Mock).mockResolvedValue({ isDirectory: () => true });
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('openapi: 3.0.0\ninfo:');
+
+    await processor.prepareSite(config, false);
+
+    expect(safeFiles.copyFile).toHaveBeenCalledWith(
+      path.join(config.rootFolder, 'api.yml'),
+      path.join(config.distFolder, 'api.yml'),
+    );
+    expect(safeFiles.copyFile).not.toHaveBeenCalledWith(
+      path.join(apiFolder, 'openapi.yml'),
+      expect.anything(),
+    );
+    expect(safeFiles.writeFile).toHaveBeenCalledWith(
+      path.join(config.distFolder, 'openapi.html'),
+      expect.stringContaining('./api.yml'),
+    );
+  });
+
+  it('ignores an API folder with no OpenAPI spec', async () => {
+    const config = { ...buildConfig, distFolder: 'dist', docsifyTemplate: '' };
+    const apiFolder = path.join(config.rootFolder, 'API');
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    (safeFiles.readDir as unknown as Mock).mockImplementation(async (dir: string) =>
+      dir === apiFolder ? ['notes.yml'] : ['README.md', 'API'],
+    );
+    (safeFiles.stat as unknown as Mock).mockResolvedValue({ isDirectory: () => true });
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('database: localhost');
+
+    await processor.prepareSite(config, false);
+
+    expect(safeFiles.copyFile).not.toHaveBeenCalled();
+    expect(safeFiles.writeFile).not.toHaveBeenCalledWith(
+      path.join(config.distFolder, 'openapi.html'),
+      expect.anything(),
+    );
+    const sidebarWrite = (safeFiles.writeFile as unknown as Mock).mock.calls.find((call) =>
+      call[0].endsWith('_sidebar.md'),
+    );
+    expect(sidebarWrite?.[1]).not.toContain('OpenAPI');
+  });
+
+  it('ignores API entries that are not directories', async () => {
+    const config = { ...buildConfig, distFolder: 'dist', docsifyTemplate: '' };
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue([]);
+    (safeFiles.readDir as unknown as Mock).mockResolvedValue(['API', 'api']);
+    (safeFiles.stat as unknown as Mock)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ isDirectory: () => false });
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('openapi: 3.0.0\ninfo:');
+
+    await processor.prepareSite(config, false);
+
+    expect(safeFiles.readDir).not.toHaveBeenCalledWith(path.join(config.rootFolder, 'API'));
+    expect(safeFiles.copyFile).not.toHaveBeenCalled();
   });
 
   it('generates sidebar with proper indentation for subfolders', async () => {
