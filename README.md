@@ -504,10 +504,13 @@ You can set it to any of the following (from most to least verbose):
 
 # Changelog
 
-- **v0.5.7**
+- **v0.2.8**
+  - Fix: Sidebar homepage link generation error
+
+- **v0.2.7**
   - Restructure config approach to be more flexible and easier to maintain
 
-- **v0.5.6**
+- **v0.2.6**
   - Remove the second setup step. `new` now also includes a configuration pass, so no need to call `config` separately.
 
 - **v0.2.5**

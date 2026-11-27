@@ -493,7 +493,7 @@ describe('SiteProcessor', () => {
     const mockTree = [
       {
         dir: 'root',
-        name: 'home',
+        name: 'Home',
         level: 0,
         parent: null,
         mdFiles: [{ name: 'Overview.md', content: '# Overview' }],
@@ -545,9 +545,10 @@ describe('SiteProcessor', () => {
 
     const sidebarContent = sidebarWrite![1];
 
-    // Root files should have no indentation
-    expect(sidebarContent).toContain('* [Overview.md](Overview.md)');
-    expect(sidebarContent).toContain('* [diagram.mmd](diagram.mmd)');
+    // The root folder is emitted as one homepage page, not as raw source files
+    expect(sidebarContent).toContain('* [Home](Home.md)');
+    expect(sidebarContent).not.toContain('Overview.md');
+    expect(sidebarContent).not.toContain('diagram.mmd');
 
     // Level 1 folders should have 4 spaces indentation (but no indentation in actual output)
     expect(sidebarContent).toContain('* [folder1](folder1/folder1.md)');
@@ -556,11 +557,90 @@ describe('SiteProcessor', () => {
     // Level 2 subfolder should have 4 spaces indentation (level - 1 = 1)
     expect(sidebarContent).toContain('    * [subfolder](folder1/subfolder/subfolder.md)');
 
-    // Check the order: root files first, then folders
+    // Check the order: homepage first, then folders
     const lines = sidebarContent.split('\n').filter((line: string) => line.trim());
-    expect(lines[0]).toBe('* [Overview.md](Overview.md)');
-    expect(lines[1]).toBe('* [diagram.mmd](diagram.mmd)');
-    expect(lines[2]).toBe('* [folder1](folder1/folder1.md)');
+    expect(lines[0]).toBe('* [Home](Home.md)');
+    expect(lines[1]).toBe('* [folder1](folder1/folder1.md)');
+    expect(lines[2]).toBe('* [folder2](folder2/folder2.md)');
+  });
+
+  it('links the sidebar homepage to the generated page when source filename case differs', async () => {
+    const mockTree = [
+      {
+        dir: 'root',
+        name: 'Overview',
+        level: 0,
+        parent: null,
+        mdFiles: [{ name: 'overview.md', content: '# Overview' }],
+        mmdFiles: [],
+        descendants: [],
+      },
+    ];
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue(mockTree);
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('# Overview');
+    (safeFiles.copyFile as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.ensureDir as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.writeFile as unknown as Mock).mockResolvedValue(undefined);
+
+    await processor.prepareSite({ ...buildConfig, homepageName: 'Overview' }, false);
+
+    const writeCalls = (safeFiles.writeFile as unknown as Mock).mock.calls;
+    const sidebarWrite = writeCalls.find((call) => call[0].endsWith('_sidebar.md'));
+    const indexWrite = writeCalls.find((call) => call[0].endsWith('index.html'));
+    const overviewWrite = writeCalls.find((call) => call[0].endsWith(path.join('Overview.md')));
+
+    expect(overviewWrite?.[1]).toContain('# Overview');
+    expect(indexWrite?.[1]).toContain('"homepage": "Overview.md"');
+    expect(sidebarWrite?.[1]).toContain('* [Overview](Overview.md)');
+    expect(sidebarWrite?.[1]).not.toContain('](overview.md)');
+  });
+
+  it('preserves an existing extension in generated page filenames', async () => {
+    const mockTree = [
+      {
+        dir: 'root',
+        name: 'Overview.md',
+        level: 0,
+        parent: null,
+        mdFiles: [{ name: 'overview.md', content: '# Overview' }],
+        mmdFiles: [],
+        descendants: [],
+      },
+      {
+        dir: 'root/api.v2',
+        name: 'api.v2',
+        level: 1,
+        parent: 'root',
+        mdFiles: [{ name: 'api.md', content: '# API' }],
+        mmdFiles: [],
+        descendants: [],
+      },
+    ];
+
+    (safeFiles.generateTree as unknown as Mock).mockResolvedValue(mockTree);
+    (safeFiles.readFileAsString as unknown as Mock).mockResolvedValue('# Content');
+    (safeFiles.copyFile as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.ensureDir as unknown as Mock).mockResolvedValue(undefined);
+    (safeFiles.writeFile as unknown as Mock).mockResolvedValue(undefined);
+
+    const config = { ...buildConfig, distFolder: 'dist', docsifyTemplate: '' };
+    await processor.prepareSite(config, false);
+
+    const writeCalls = (safeFiles.writeFile as unknown as Mock).mock.calls;
+    const pagePaths = writeCalls.map((call) => call[0]);
+    expect(
+      pagePaths.some((p: string) => p.endsWith(path.join(config.distFolder, 'Overview.md'))),
+    ).toBe(true);
+    expect(
+      pagePaths.some((p: string) => p.endsWith(path.join(config.distFolder, 'api.v2', 'api.v2'))),
+    ).toBe(true);
+    expect(pagePaths.some((p: string) => p.endsWith('Overview.md.md'))).toBe(false);
+    expect(pagePaths.some((p: string) => p.endsWith(path.join('api.v2', 'api.v2.md')))).toBe(false);
+
+    const sidebarWrite = writeCalls.find((call) => call[0].endsWith('_sidebar.md'));
+    expect(sidebarWrite?.[1]).toContain('* [Overview.md](Overview.md)');
+    expect(sidebarWrite?.[1]).toContain('* [api.v2](api.v2/api.v2)');
   });
 
   it('handles null mdFiles and mmdFiles in root branch', async () => {
