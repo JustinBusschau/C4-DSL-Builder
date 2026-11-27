@@ -83,16 +83,19 @@ export class SiteProcessor extends ProcessorBase {
     );
   }
 
-  private async findOpenApiSpec(rootFolder: string): Promise<string | null> {
-    const files = await this.safeFiles.readDir(rootFolder);
+  private async findOpenApiSpecInFolder(
+    folder: string,
+    entries?: string[],
+  ): Promise<string | null> {
+    const files = entries ?? (await this.safeFiles.readDir(folder));
     for (const file of files) {
       const ext = path.extname(file).toLowerCase();
       if (ext === '.yml' || ext === '.yaml') {
-        const content = await this.safeFiles.readFileAsString(path.join(rootFolder, file));
+        const content = await this.safeFiles.readFileAsString(path.join(folder, file));
         if (content) {
           const firstLine = content.trim().split('\n')[0].trim();
           if (firstLine.startsWith('openapi:') || firstLine.startsWith('swagger:')) {
-            return file;
+            return path.join(folder, file);
           }
         }
       }
@@ -100,10 +103,29 @@ export class SiteProcessor extends ProcessorBase {
     return null;
   }
 
-  private async generateOpenApiPage(buildConfig: BuildConfig, specFileName: string): Promise<void> {
-    const specSrc = path.join(buildConfig.rootFolder, specFileName);
+  private async findOpenApiSpec(rootFolder: string): Promise<string | null> {
+    const rootEntries = await this.safeFiles.readDir(rootFolder);
+    const rootSpec = await this.findOpenApiSpecInFolder(rootFolder, rootEntries);
+    if (rootSpec) return rootSpec;
+
+    for (const entry of rootEntries) {
+      if (entry.toLowerCase() !== 'api') continue;
+
+      const apiFolder = path.join(rootFolder, entry);
+      const stats = await this.safeFiles.stat(apiFolder);
+      if (!stats?.isDirectory()) continue;
+
+      const apiSpec = await this.findOpenApiSpecInFolder(apiFolder);
+      if (apiSpec) return apiSpec;
+    }
+
+    return null;
+  }
+
+  private async generateOpenApiPage(buildConfig: BuildConfig, specPath: string): Promise<void> {
+    const specFileName = path.basename(specPath);
     const specDest = path.join(buildConfig.distFolder, specFileName);
-    await this.safeFiles.copyFile(specSrc, specDest);
+    await this.safeFiles.copyFile(specPath, specDest);
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -128,7 +150,7 @@ export class SiteProcessor extends ProcessorBase {
   private async writeSidebar(
     tree: TreeItem[],
     buildConfig: BuildConfig,
-    openApiSpec?: string,
+    openApiSpecPath?: string,
   ): Promise<void> {
     // Find the root branch (contains root-level files)
     const rootBranch = tree.find((item) => item.level === 0);
@@ -153,7 +175,7 @@ export class SiteProcessor extends ProcessorBase {
       sidebar += `${indent}* [${item.name}](${encodeURI(mdPath)})\n`;
     });
 
-    if (openApiSpec) {
+    if (openApiSpecPath) {
       sidebar += `\n* [OpenAPI](openapi.html ':ignore')`;
     }
 
@@ -227,8 +249,8 @@ export class SiteProcessor extends ProcessorBase {
   }
 
   async generateSiteFromTree(tree: TreeItem[], buildConfig: BuildConfig): Promise<void> {
-    const openApiSpec = await this.findOpenApiSpec(buildConfig.rootFolder);
-    await this.writeSidebar(tree, buildConfig, openApiSpec || undefined);
+    const openApiSpecPath = await this.findOpenApiSpec(buildConfig.rootFolder);
+    await this.writeSidebar(tree, buildConfig, openApiSpecPath || undefined);
 
     for (const item of tree) {
       const filesChanged = await this.shouldProcessItem(item);
@@ -249,8 +271,8 @@ export class SiteProcessor extends ProcessorBase {
 
     await this.copyLogo(buildConfig);
 
-    if (openApiSpec) {
-      await this.generateOpenApiPage(buildConfig, openApiSpec);
+    if (openApiSpecPath) {
+      await this.generateOpenApiPage(buildConfig, openApiSpecPath);
     }
   }
 
