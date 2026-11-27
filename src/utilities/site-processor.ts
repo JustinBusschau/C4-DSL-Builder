@@ -136,19 +136,14 @@ export class SiteProcessor extends ProcessorBase {
     // Get subfolders (all other items)
     const subfolders = tree.filter((item) => item.level > 0);
 
-    // Build sidebar: root files first, then subfolders
+    // Build sidebar: homepage first, then subfolders
     let sidebar = '';
 
-    // Add root-level files (no indentation)
+    // The root folder is emitted as one page named after the homepage, so link
+    // to that generated page rather than to the individual source filenames.
     if (rootBranch) {
-      const rootFiles = [
-        ...(rootBranch.mdFiles || []).map((f) => ({ name: f.name, type: 'md' })),
-        ...(rootBranch.mmdFiles || []).map((f) => ({ name: f.name, type: 'mmd' })),
-      ];
-      rootFiles.forEach((file) => {
-        const mdPath = this.getOutputFileName(buildConfig, rootBranch.dir, file.name);
-        sidebar += `* [${file.name}](${encodeURI(mdPath)})\n`;
-      });
+      const homepagePath = this.getOutputFileName(buildConfig, rootBranch.dir, rootBranch.name);
+      sidebar += `* [${rootBranch.name}](${encodeURI(homepagePath)})\n`;
     }
 
     // Add subfolders with proper indentation
